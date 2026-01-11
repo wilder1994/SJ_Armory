@@ -33,4 +33,24 @@ class Weapon extends Model
     {
         return $this->hasMany(WeaponDocument::class);
     }
+
+    public function custodies()
+    {
+        return $this->hasMany(WeaponCustody::class);
+    }
+
+    public function activeCustody()
+    {
+        return $this->hasOne(WeaponCustody::class)->where('is_active', true);
+    }
+
+    public function clientAssignments()
+    {
+        return $this->hasMany(WeaponClientAssignment::class);
+    }
+
+    public function activeClientAssignment()
+    {
+        return $this->hasOne(WeaponClientAssignment::class)->where('is_active', true);
+    }
 }

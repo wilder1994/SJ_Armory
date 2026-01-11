@@ -15,12 +15,19 @@ class WeaponController extends Controller
     public function index(Request $request)
     {
         $query = Weapon::query();
+        $user = $request->user();
+
+        if ($user->isResponsible() && !$user->isAdmin()) {
+            $query->whereHas('custodies', function ($custodyQuery) use ($user) {
+                $custodyQuery->where('custodian_user_id', $user->id)->where('is_active', true);
+            });
+        }
 
         if ($request->filled('operational_status')) {
             $query->where('operational_status', $request->string('operational_status')->toString());
         }
 
-        $weapons = $query->orderByDesc('id')->paginate(15)->withQueryString();
+        $weapons = $query->with(['activeClientAssignment.client'])->orderByDesc('id')->paginate(15)->withQueryString();
         $statuses = $this->statusOptions();
 
         return view('weapons.index', compact('weapons', 'statuses'));
@@ -65,12 +72,24 @@ class WeaponController extends Controller
                 $query->orderByDesc('id');
             },
             'documents.file',
+            'activeCustody.custodian',
+            'activeClientAssignment.client',
         ]);
         $statuses = $this->statusOptions();
         $ownershipTypes = $this->ownershipOptions();
         $docTypes = $this->documentTypeOptions();
+        $responsibles = [];
+        $portfolioClients = [];
 
-        return view('weapons.show', compact('weapon', 'statuses', 'ownershipTypes', 'docTypes'));
+        if (request()->user()?->isAdmin()) {
+            $responsibles = \App\Models\User::where('role', 'RESPONSABLE')->orderBy('name')->get();
+        }
+
+        if (request()->user()?->isResponsible()) {
+            $portfolioClients = request()->user()?->clients()->orderBy('name')->get() ?? collect();
+        }
+
+        return view('weapons.show', compact('weapon', 'statuses', 'ownershipTypes', 'docTypes', 'responsibles', 'portfolioClients'));
     }
 
     public function edit(Weapon $weapon)

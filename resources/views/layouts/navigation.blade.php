@@ -25,6 +25,17 @@
                             {{ __('Clientes') }}
                         </x-nav-link>
                     @endcan
+                    @if (Auth::user()?->isAdmin())
+                        <x-nav-link :href="route('portfolios.index')" :active="request()->routeIs('portfolios.*')">
+                            {{ __('Carteras') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
+                            {{ __('Reportes') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('alerts.documents')" :active="request()->routeIs('alerts.*')">
+                            {{ __('Alertas') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -90,6 +101,17 @@
                     {{ __('Clientes') }}
                 </x-responsive-nav-link>
             @endcan
+            @if (Auth::user()?->isAdmin())
+                <x-responsive-nav-link :href="route('portfolios.index')" :active="request()->routeIs('portfolios.*')">
+                    {{ __('Carteras') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
+                    {{ __('Reportes') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('alerts.documents')" :active="request()->routeIs('alerts.*')">
+                    {{ __('Alertas') }}
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->

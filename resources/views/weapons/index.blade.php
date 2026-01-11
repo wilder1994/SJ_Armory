@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Armamento') }}
+                {{ Auth::user()->isResponsible() && !Auth::user()->isAdmin() ? __('Mis armas') : __('Armamento') }}
             </h2>
             @can('create', App\Models\Weapon::class)
                 <a href="{{ route('weapons.create') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-900">
@@ -45,6 +45,9 @@
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Código interno') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Serie') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Tipo') }}</th>
+                                @if (Auth::user()->isResponsible() && !Auth::user()->isAdmin())
+                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Cliente') }}</th>
+                                @endif
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Estado') }}</th>
                                 <th class="px-3 py-2 text-right font-medium text-gray-600">{{ __('Acciones') }}</th>
                             </tr>
@@ -55,6 +58,9 @@
                                     <td class="px-3 py-2">{{ $weapon->internal_code }}</td>
                                     <td class="px-3 py-2">{{ $weapon->serial_number }}</td>
                                     <td class="px-3 py-2">{{ $weapon->weapon_type }}</td>
+                                    @if (Auth::user()->isResponsible() && !Auth::user()->isAdmin())
+                                        <td class="px-3 py-2">{{ $weapon->activeClientAssignment?->client?->name ?? __('Sin destino') }}</td>
+                                    @endif
                                     <td class="px-3 py-2">{{ $statuses[$weapon->operational_status] ?? $weapon->operational_status }}</td>
                                     <td class="px-3 py-2 text-right space-x-2">
                                         <a href="{{ route('weapons.show', $weapon) }}" class="text-indigo-600 hover:text-indigo-900">

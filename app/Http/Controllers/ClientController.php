@@ -14,7 +14,13 @@ class ClientController extends Controller
 
     public function index()
     {
-        $clients = Client::orderBy('name')->paginate(15);
+        $user = request()->user();
+
+        if ($user->isResponsible() && !$user->isAdmin()) {
+            $clients = $user->clients()->orderBy('name')->paginate(15);
+        } else {
+            $clients = Client::orderBy('name')->paginate(15);
+        }
 
         return view('clients.index', compact('clients'));
     }

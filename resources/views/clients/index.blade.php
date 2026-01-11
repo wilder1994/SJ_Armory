@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Clientes') }}
+                {{ Auth::user()->isResponsible() && !Auth::user()->isAdmin() ? __('Mis clientes') : __('Clientes') }}
             </h2>
             @can('create', App\Models\Client::class)
                 <a href="{{ route('clients.create') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-900">

@@ -72,6 +72,151 @@
                 </div>
             </div>
 
+            @if (Auth::user()?->isAdmin())
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-gray-900">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold">{{ __('Estado operativo') }}</h3>
+                        </div>
+                        <form method="POST" action="{{ route('weapons.status.update', $weapon) }}" class="mt-3 flex flex-wrap items-end gap-3">
+                            @csrf
+                            @method('PATCH')
+                            <div>
+                                <label class="text-sm text-gray-600">{{ __('Estado') }}</label>
+                                <select name="operational_status" class="mt-1 block rounded-md border-gray-300 text-sm">
+                                    @foreach ($statuses as $value => $label)
+                                        <option value="{{ $value }}" @selected($weapon->operational_status === $value)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                <x-input-error :messages="$errors->get('operational_status')" class="mt-2" />
+                            </div>
+                            @if ($weapon->activeClientAssignment && $weapon->operational_status !== 'assigned')
+                                <div class="text-xs text-amber-600">
+                                    {{ __('Sugerencia: hay un destino activo, considere marcar como "Asignada".') }}
+                                </div>
+                            @endif
+                            <button type="submit" class="text-xs text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1 rounded">
+                                {{ __('Actualizar estado') }}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @endif
+
+            @can('assignToClient', $weapon)
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-gray-900">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold">{{ __('Destino operativo') }}</h3>
+                        </div>
+
+                        <div class="mt-3 text-sm text-gray-700">
+                            <div>{{ __('Cliente actual:') }}
+                                <span class="font-medium">
+                                    {{ $weapon->activeClientAssignment?->client?->name ?? __('Sin destino') }}
+                                </span>
+                            </div>
+                            @if ($weapon->activeClientAssignment)
+                                <div class="text-gray-500">{{ __('Desde:') }} {{ $weapon->activeClientAssignment->start_at?->format('Y-m-d H:i') }}</div>
+                            @endif
+                        </div>
+
+                        <form method="POST" action="{{ route('weapons.assignments.store', $weapon) }}" class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+                            @csrf
+                            <div class="md:col-span-1">
+                                <label class="text-sm text-gray-600">{{ __('Cliente') }}</label>
+                                <select name="client_id" class="mt-1 block w-full rounded-md border-gray-300 text-sm" required>
+                                    <option value="">{{ __('Seleccione') }}</option>
+                                    @foreach ($portfolioClients as $client)
+                                        <option value="{{ $client->id }}">{{ $client->name }}</option>
+                                    @endforeach
+                                </select>
+                                <x-input-error :messages="$errors->get('client_id')" class="mt-2" />
+                            </div>
+                            <div class="md:col-span-1">
+                                <label class="text-sm text-gray-600">{{ __('Inicio') }}</label>
+                                <input type="datetime-local" name="start_at" class="mt-1 block w-full rounded-md border-gray-300 text-sm">
+                                <x-input-error :messages="$errors->get('start_at')" class="mt-2" />
+                            </div>
+                            <div class="md:col-span-1">
+                                <label class="text-sm text-gray-600">{{ __('Motivo') }}</label>
+                                <input type="text" name="reason" class="mt-1 block w-full rounded-md border-gray-300 text-sm">
+                            </div>
+                            <div class="md:col-span-3 flex items-center justify-between">
+                                <div class="text-xs text-gray-500">
+                                    {{ __('Nivel actual:') }} {{ Auth::user()->responsibilityLevel?->level ?? '-' }}
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    @if ($weapon->activeClientAssignment && (Auth::user()->isAdmin() || (Auth::user()->responsibilityLevel?->level ?? 0) >= 3))
+                                        <a href="#" class="text-xs text-red-600 hover:text-red-900" onclick="event.preventDefault(); document.getElementById('retire-destino-form').submit();">
+                                            {{ __('Retirar destino') }}
+                                        </a>
+                                    @endif
+                                    <button type="submit" class="text-xs text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1 rounded">
+                                        {{ $weapon->activeClientAssignment ? __('Reasignar') : __('Asignar') }}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        @if ($weapon->activeClientAssignment && (Auth::user()->isAdmin() || (Auth::user()->responsibilityLevel?->level ?? 0) >= 3))
+                            <form id="retire-destino-form" method="POST" action="{{ route('weapons.assignments.retire', $weapon) }}" class="hidden">
+                                @csrf
+                                @method('PATCH')
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            @endcan
+
+            @if (Auth::user()?->isAdmin())
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-gray-900">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold">{{ __('Custodia primaria') }}</h3>
+                        </div>
+
+                        <div class="mt-3 text-sm text-gray-700">
+                            <div>{{ __('Custodio actual:') }}
+                                <span class="font-medium">
+                                    {{ $weapon->activeCustody?->custodian?->name ?? __('Sin asignar') }}
+                                </span>
+                            </div>
+                            @if ($weapon->activeCustody)
+                                <div class="text-gray-500">{{ __('Desde:') }} {{ $weapon->activeCustody->start_at?->format('Y-m-d H:i') }}</div>
+                            @endif
+                        </div>
+
+                        <form method="POST" action="{{ route('weapons.custodies.store', $weapon) }}" class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+                            @csrf
+                            <div class="md:col-span-1">
+                                <label class="text-sm text-gray-600">{{ __('Responsable') }}</label>
+                                <select name="custodian_user_id" class="mt-1 block w-full rounded-md border-gray-300 text-sm" required>
+                                    <option value="">{{ __('Seleccione') }}</option>
+                                    @foreach ($responsibles as $responsible)
+                                        <option value="{{ $responsible->id }}">{{ $responsible->name }}</option>
+                                    @endforeach
+                                </select>
+                                <x-input-error :messages="$errors->get('custodian_user_id')" class="mt-2" />
+                            </div>
+                            <div class="md:col-span-1">
+                                <label class="text-sm text-gray-600">{{ __('Inicio') }}</label>
+                                <input type="datetime-local" name="start_at" class="mt-1 block w-full rounded-md border-gray-300 text-sm">
+                                <x-input-error :messages="$errors->get('start_at')" class="mt-2" />
+                            </div>
+                            <div class="md:col-span-1">
+                                <label class="text-sm text-gray-600">{{ __('Motivo') }}</label>
+                                <input type="text" name="reason" class="mt-1 block w-full rounded-md border-gray-300 text-sm">
+                            </div>
+                            <div class="md:col-span-3 flex justify-end">
+                                <x-primary-button class="text-xs">
+                                    {{ __('Asignar / Cambiar custodia') }}
+                                </x-primary-button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            @endif
+
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <div class="flex items-center justify-between">

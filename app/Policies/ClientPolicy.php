@@ -14,7 +14,15 @@ class ClientPolicy
 
     public function view(User $user, Client $client): bool
     {
-        return $this->viewAny($user);
+        if ($user->isAdmin() || $user->isAuditor()) {
+            return true;
+        }
+
+        if ($user->isResponsible()) {
+            return $user->clients()->whereKey($client->id)->exists();
+        }
+
+        return false;
     }
 
     public function create(User $user): bool

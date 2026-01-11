@@ -14,7 +14,28 @@ class WeaponPolicy
 
     public function view(User $user, Weapon $weapon): bool
     {
-        return $this->viewAny($user);
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        if ($user->isResponsible()) {
+            return $weapon->activeCustody?->custodian_user_id === $user->id;
+        }
+
+        return $user->isAuditor();
+    }
+
+    public function assignToClient(User $user, Weapon $weapon): bool
+    {
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        if (!$user->isResponsible()) {
+            return false;
+        }
+
+        return $weapon->activeCustody?->custodian_user_id === $user->id;
     }
 
     public function create(User $user): bool
