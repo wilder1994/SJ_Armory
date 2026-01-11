@@ -1,3 +1,102 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    :root {
+        --sj-navy: #0b123c;
+        --sj-blue: #0b6fb6;
+        --sj-blue-dark: #0a5f9c;
+        --sj-gold: #f2c200;
+        --sj-ice: #f4f7fb;
+        --sj-ink: #0f172a;
+    }
+
+    body.sj-app {
+        background:
+            radial-gradient(1200px 600px at 15% -10%, rgba(11, 111, 182, 0.2), transparent 60%),
+            linear-gradient(180deg, #0b123c 0, #0b123c 140px, #f4f7fb 140px, #f4f7fb 100%);
+        color: var(--sj-ink);
+    }
+}
+
+@layer components {
+    .sj-shell {
+        min-height: 100vh;
+    }
+
+    .sj-nav {
+        background: var(--sj-navy);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        color: #e2e8f0;
+    }
+
+    .sj-nav a {
+        color: #dbe7ff;
+    }
+
+    .sj-nav a:hover {
+        color: #ffffff;
+    }
+
+    .sj-nav .sj-active {
+        color: var(--sj-gold);
+        border-color: var(--sj-gold);
+    }
+
+    .sj-mobile-menu {
+        background: var(--sj-navy);
+    }
+
+    .sj-page-header {
+        background: rgba(255, 255, 255, 0.95);
+        border-bottom: 1px solid #e2e8f0;
+        backdrop-filter: blur(6px);
+    }
+
+    .sj-shell main .bg-white {
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    }
+
+    .sj-shell .text-indigo-600 {
+        color: var(--sj-blue);
+    }
+
+    .sj-shell .hover\:text-indigo-900:hover {
+        color: var(--sj-blue-dark);
+    }
+
+    .sj-shell .bg-indigo-600 {
+        background: var(--sj-blue);
+    }
+
+    .sj-shell .hover\:bg-indigo-700:hover {
+        background: var(--sj-blue-dark);
+    }
+
+    .sj-shell .border-indigo-200 {
+        border-color: rgba(11, 111, 182, 0.2);
+    }
+
+    .sj-btn-primary {
+        background: var(--sj-blue);
+        border-color: var(--sj-blue);
+        color: #ffffff;
+    }
+
+    .sj-btn-primary:hover {
+        background: var(--sj-blue-dark);
+        border-color: var(--sj-blue-dark);
+    }
+
+    .sj-btn-secondary {
+        background: #ffffff;
+        border-color: #cbd5f5;
+        color: #1f2a5a;
+    }
+
+    .sj-btn-secondary:hover {
+        background: #f4f7fb;
+    }
+}
