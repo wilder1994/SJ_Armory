@@ -32,7 +32,7 @@
                     <table class="min-w-full divide-y divide-gray-200 text-sm">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Código') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Codigo') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Serie') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Cliente') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Desde') }}</th>
@@ -55,6 +55,9 @@
                             @endforelse
                         </tbody>
                     </table>
+                    <div class="mt-4">
+                        {{ $weapons->links() }}
+                    </div>
                 </div>
             </div>
         </div>

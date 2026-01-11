@@ -7,7 +7,9 @@ use App\Models\File;
 use App\Models\Weapon;
 use App\Models\WeaponPhoto;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class WeaponPhotoController extends Controller
 {
@@ -23,37 +25,44 @@ class WeaponPhotoController extends Controller
         $file = $data['photo'];
         $path = $file->store('weapons/' . $weapon->id . '/photos', 'public');
 
-        $storedFile = File::create([
-            'disk' => 'public',
-            'path' => $path,
-            'original_name' => $file->getClientOriginalName(),
-            'mime_type' => $file->getClientMimeType(),
-            'size' => $file->getSize(),
-            'checksum' => hash_file('sha256', $file->getRealPath()),
-            'uploaded_by' => $request->user()?->id,
-        ]);
+        try {
+            DB::transaction(function () use ($data, $file, $path, $request, $weapon) {
+                $storedFile = File::create([
+                    'disk' => 'public',
+                    'path' => $path,
+                    'original_name' => $file->getClientOriginalName(),
+                    'mime_type' => $file->getClientMimeType(),
+                    'size' => $file->getSize(),
+                    'checksum' => hash_file('sha256', $file->getRealPath()),
+                    'uploaded_by' => $request->user()?->id,
+                ]);
 
-        $isPrimary = (bool)($data['is_primary'] ?? false);
-        if ($isPrimary) {
-            $weapon->photos()->update(['is_primary' => false]);
+                $isPrimary = (bool)($data['is_primary'] ?? false);
+                if ($isPrimary) {
+                    $weapon->photos()->update(['is_primary' => false]);
+                }
+
+                $photo = $weapon->photos()->create([
+                    'file_id' => $storedFile->id,
+                    'is_primary' => $isPrimary,
+                ]);
+
+                AuditLog::create([
+                    'user_id' => $request->user()?->id,
+                    'action' => 'upload_photo',
+                    'auditable_type' => Weapon::class,
+                    'auditable_id' => $weapon->id,
+                    'before' => null,
+                    'after' => [
+                        'photo_id' => $photo->id,
+                        'file_id' => $storedFile->id,
+                    ],
+                ]);
+            });
+        } catch (Throwable $e) {
+            Storage::disk('public')->delete($path);
+            throw $e;
         }
-
-        $photo = $weapon->photos()->create([
-            'file_id' => $storedFile->id,
-            'is_primary' => $isPrimary,
-        ]);
-
-        AuditLog::create([
-            'user_id' => $request->user()?->id,
-            'action' => 'upload_photo',
-            'auditable_type' => Weapon::class,
-            'auditable_id' => $weapon->id,
-            'before' => null,
-            'after' => [
-                'photo_id' => $photo->id,
-                'file_id' => $storedFile->id,
-            ],
-        ]);
 
         return redirect()->route('weapons.show', $weapon)->with('status', 'Foto cargada.');
     }

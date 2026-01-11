@@ -38,7 +38,7 @@ class ReportController extends Controller
             });
         }
 
-        $weapons = $query->orderBy('internal_code')->get();
+        $weapons = $query->orderBy('internal_code')->paginate(50)->withQueryString();
 
         return view('reports.weapons_by_custodian', compact('weapons', 'responsibles', 'custodianId'));
     }
@@ -61,7 +61,7 @@ class ReportController extends Controller
             });
         }
 
-        $weapons = $query->orderBy('internal_code')->get();
+        $weapons = $query->orderBy('internal_code')->paginate(50)->withQueryString();
 
         return view('reports.weapons_by_client', compact('weapons', 'clients', 'clientId'));
     }
@@ -72,7 +72,7 @@ class ReportController extends Controller
 
         $weapons = Weapon::whereDoesntHave('clientAssignments', function ($assignmentQuery) {
             $assignmentQuery->where('is_active', true);
-        })->orderBy('internal_code')->get();
+        })->orderBy('internal_code')->paginate(50)->withQueryString();
 
         return view('reports.weapons_without_destination', compact('weapons'));
     }
@@ -120,7 +120,11 @@ class ReportController extends Controller
         }
 
         $since = now()->subDays($days);
-        $logs = AuditLog::with('user')->where('created_at', '>=', $since)->orderByDesc('created_at')->get();
+        $logs = AuditLog::with('user')
+            ->where('created_at', '>=', $since)
+            ->orderByDesc('created_at')
+            ->paginate(50)
+            ->withQueryString();
 
         return view('reports.audit', compact('logs', 'days'));
     }

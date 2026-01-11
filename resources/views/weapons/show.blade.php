@@ -64,6 +64,22 @@
                             <div class="text-xs text-gray-500">{{ __('Entidad de propiedad') }}</div>
                             <div class="font-medium">{{ $weapon->ownership_entity ?: '-' }}</div>
                         </div>
+                        <div>
+                            <div class="text-xs text-gray-500">{{ __('Tipo de permiso') }}</div>
+                            <div class="font-medium">{{ $weapon->permit_type ?: '-' }}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-500">{{ __('Numero de permiso') }}</div>
+                            <div class="font-medium">{{ $weapon->permit_number ?: '-' }}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-500">{{ __('Fecha de vencimiento') }}</div>
+                            <div class="font-medium">{{ $weapon->permit_expires_at?->format('Y-m-d') ?: '-' }}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-500">{{ __('Foto del permiso') }}</div>
+                            <div class="font-medium">{{ $weapon->permitFile?->original_name ?? '-' }}</div>
+                        </div>
                         <div class="md:col-span-2">
                             <div class="text-xs text-gray-500">{{ __('Notas') }}</div>
                             <div class="font-medium whitespace-pre-line">{{ $weapon->notes ?: '-' }}</div>

@@ -12,40 +12,54 @@
                     <form method="POST" action="{{ route('clients.store') }}" class="space-y-4">
                         @csrf
 
-                        <div>
-                            <x-input-label for="name" :value="__('Nombre')" />
-                            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" value="{{ old('name') }}" required />
-                            <x-input-error :messages="$errors->get('name')" class="mt-2" />
-                        </div>
+                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div>
+                                <x-input-label for="name" :value="__('Razon social')" />
+                                <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" value="{{ old('name') }}" required />
+                                <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                            </div>
 
-                        <div>
-                            <x-input-label for="contact_name" :value="__('Contacto')" />
-                            <x-text-input id="contact_name" name="contact_name" type="text" class="mt-1 block w-full" value="{{ old('contact_name') }}" />
-                            <x-input-error :messages="$errors->get('contact_name')" class="mt-2" />
-                        </div>
+                            <div>
+                                <x-input-label for="nit" :value="__('NIT')" />
+                                <x-text-input id="nit" name="nit" type="text" class="mt-1 block w-full" value="{{ old('nit') }}" required />
+                                <x-input-error :messages="$errors->get('nit')" class="mt-2" />
+                            </div>
 
-                        <div>
-                            <x-input-label for="phone" :value="__('Teléfono')" />
-                            <x-text-input id="phone" name="phone" type="text" class="mt-1 block w-full" value="{{ old('phone') }}" />
-                            <x-input-error :messages="$errors->get('phone')" class="mt-2" />
-                        </div>
+                            <div>
+                                <x-input-label for="email" :value="__('Correo electronico')" />
+                                <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" value="{{ old('email') }}" />
+                                <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                            </div>
 
-                        <div>
-                            <x-input-label for="email" :value="__('Email')" />
-                            <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" value="{{ old('email') }}" />
-                            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-                        </div>
+                            <div>
+                                <x-input-label for="address" :value="__('Direccion')" />
+                                <x-text-input id="address" name="address" type="text" class="mt-1 block w-full" value="{{ old('address') }}" />
+                                <x-input-error :messages="$errors->get('address')" class="mt-2" />
+                            </div>
 
-                        <div>
-                            <x-input-label for="address" :value="__('Dirección')" />
-                            <x-text-input id="address" name="address" type="text" class="mt-1 block w-full" value="{{ old('address') }}" />
-                            <x-input-error :messages="$errors->get('address')" class="mt-2" />
-                        </div>
+                            <div>
+                                <x-input-label for="neighborhood" :value="__('Barrio')" />
+                                <x-text-input id="neighborhood" name="neighborhood" type="text" class="mt-1 block w-full" value="{{ old('neighborhood') }}" />
+                                <x-input-error :messages="$errors->get('neighborhood')" class="mt-2" />
+                            </div>
 
-                        <div>
-                            <x-input-label for="notes" :value="__('Notas')" />
-                            <textarea id="notes" name="notes" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ old('notes') }}</textarea>
-                            <x-input-error :messages="$errors->get('notes')" class="mt-2" />
+                            <div>
+                                <x-input-label for="city" :value="__('Ciudad')" />
+                                <x-text-input id="city" name="city" type="text" class="mt-1 block w-full" value="{{ old('city') }}" />
+                                <x-input-error :messages="$errors->get('city')" class="mt-2" />
+                            </div>
+
+                            <div>
+                                <x-input-label for="legal_representative" :value="__('Representante legal')" />
+                                <x-text-input id="legal_representative" name="legal_representative" type="text" class="mt-1 block w-full" value="{{ old('legal_representative') }}" />
+                                <x-input-error :messages="$errors->get('legal_representative')" class="mt-2" />
+                            </div>
+
+                            <div>
+                                <x-input-label for="contact_name" :value="__('Contacto')" />
+                                <x-text-input id="contact_name" name="contact_name" type="text" class="mt-1 block w-full" value="{{ old('contact_name') }}" />
+                                <x-input-error :messages="$errors->get('contact_name')" class="mt-2" />
+                            </div>
                         </div>
 
                         <div class="flex justify-end gap-2">

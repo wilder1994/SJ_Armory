@@ -7,7 +7,9 @@ use App\Models\File;
 use App\Models\Weapon;
 use App\Models\WeaponDocument;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class WeaponDocumentController extends Controller
 {
@@ -27,37 +29,44 @@ class WeaponDocumentController extends Controller
         $file = $data['document'];
         $path = $file->store('weapons/' . $weapon->id . '/documents', 'local');
 
-        $storedFile = File::create([
-            'disk' => 'local',
-            'path' => $path,
-            'original_name' => $file->getClientOriginalName(),
-            'mime_type' => $file->getClientMimeType(),
-            'size' => $file->getSize(),
-            'checksum' => hash_file('sha256', $file->getRealPath()),
-            'uploaded_by' => $request->user()?->id,
-        ]);
+        try {
+            DB::transaction(function () use ($data, $file, $path, $request, $weapon) {
+                $storedFile = File::create([
+                    'disk' => 'local',
+                    'path' => $path,
+                    'original_name' => $file->getClientOriginalName(),
+                    'mime_type' => $file->getClientMimeType(),
+                    'size' => $file->getSize(),
+                    'checksum' => hash_file('sha256', $file->getRealPath()),
+                    'uploaded_by' => $request->user()?->id,
+                ]);
 
-        $document = $weapon->documents()->create([
-            'file_id' => $storedFile->id,
-            'doc_type' => $data['doc_type'],
-            'valid_until' => $data['valid_until'] ?? null,
-            'revalidation_due_at' => $data['revalidation_due_at'] ?? null,
-            'restrictions' => $data['restrictions'] ?? null,
-            'status' => $data['status'] ?? null,
-        ]);
+                $document = $weapon->documents()->create([
+                    'file_id' => $storedFile->id,
+                    'doc_type' => $data['doc_type'],
+                    'valid_until' => $data['valid_until'] ?? null,
+                    'revalidation_due_at' => $data['revalidation_due_at'] ?? null,
+                    'restrictions' => $data['restrictions'] ?? null,
+                    'status' => $data['status'] ?? null,
+                ]);
 
-        AuditLog::create([
-            'user_id' => $request->user()?->id,
-            'action' => 'upload_document',
-            'auditable_type' => Weapon::class,
-            'auditable_id' => $weapon->id,
-            'before' => null,
-            'after' => [
-                'document_id' => $document->id,
-                'file_id' => $storedFile->id,
-                'doc_type' => $document->doc_type,
-            ],
-        ]);
+                AuditLog::create([
+                    'user_id' => $request->user()?->id,
+                    'action' => 'upload_document',
+                    'auditable_type' => Weapon::class,
+                    'auditable_id' => $weapon->id,
+                    'before' => null,
+                    'after' => [
+                        'document_id' => $document->id,
+                        'file_id' => $storedFile->id,
+                        'doc_type' => $document->doc_type,
+                    ],
+                ]);
+            });
+        } catch (Throwable $e) {
+            Storage::disk('local')->delete($path);
+            throw $e;
+        }
 
         return redirect()->route('weapons.show', $weapon)->with('status', 'Documento cargado.');
     }

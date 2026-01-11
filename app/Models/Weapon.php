@@ -21,7 +21,15 @@ class Weapon extends Model
         'operational_status',
         'ownership_type',
         'ownership_entity',
+        'permit_type',
+        'permit_number',
+        'permit_expires_at',
+        'permit_file_id',
         'notes',
+    ];
+
+    protected $casts = [
+        'permit_expires_at' => 'date',
     ];
 
     public function photos()
@@ -52,5 +60,10 @@ class Weapon extends Model
     public function activeClientAssignment()
     {
         return $this->hasOne(WeaponClientAssignment::class)->where('is_active', true);
+    }
+
+    public function permitFile()
+    {
+        return $this->belongsTo(File::class, 'permit_file_id');
     }
 }

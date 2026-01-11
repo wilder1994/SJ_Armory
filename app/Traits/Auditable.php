@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Auth;
 
 trait Auditable
 {
+    protected $auditOriginal = null;
+
     protected static function bootAuditable(): void
     {
         static::created(function ($model) {
@@ -14,11 +16,15 @@ trait Auditable
         });
 
         static::updating(function ($model) {
-            $model->audit_original = $model->getOriginal();
+            $model->auditOriginal = $model->getOriginal();
         });
 
         static::updated(function ($model) {
-            $model->writeAudit('updated', $model->audit_original ?? null, $model->getAttributes());
+            $model->writeAudit('updated', $model->auditOriginal, $model->getAttributes());
+        });
+
+        static::deleted(function ($model) {
+            $model->writeAudit('deleted', $model->getOriginal(), null);
         });
     }
 

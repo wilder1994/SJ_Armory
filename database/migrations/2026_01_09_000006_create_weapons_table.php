@@ -30,6 +30,10 @@ return new class extends Migration
                 'third_party',
             ])->default('company_owned');
             $table->string('ownership_entity')->nullable();
+            $table->string('permit_type')->nullable();
+            $table->string('permit_number')->nullable();
+            $table->date('permit_expires_at')->nullable();
+            $table->unsignedBigInteger('permit_file_id')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
         });

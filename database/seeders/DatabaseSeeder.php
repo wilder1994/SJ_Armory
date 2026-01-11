@@ -12,6 +12,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(ResponsibilityLevelSeeder::class);
+        $this->call([
+            PositionSeeder::class,
+            ResponsibilityLevelSeeder::class,
+            AdminUserSeeder::class,
+        ]);
     }
 }

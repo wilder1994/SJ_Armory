@@ -11,11 +11,13 @@ class Client extends Model
 
     protected $fillable = [
         'name',
+        'nit',
+        'legal_representative',
         'contact_name',
-        'phone',
         'email',
         'address',
-        'notes',
+        'neighborhood',
+        'city',
     ];
 
     public function users()

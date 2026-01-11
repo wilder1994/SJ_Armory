@@ -25,10 +25,11 @@
                     <table class="min-w-full divide-y divide-gray-200 text-sm">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Nombre') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Razon social') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('NIT') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Contacto') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Teléfono') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Email') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Ciudad') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Correo') }}</th>
                                 <th class="px-3 py-2 text-right font-medium text-gray-600">{{ __('Acciones') }}</th>
                             </tr>
                         </thead>
@@ -36,8 +37,9 @@
                             @forelse ($clients as $client)
                                 <tr>
                                     <td class="px-3 py-2">{{ $client->name }}</td>
+                                    <td class="px-3 py-2">{{ $client->nit }}</td>
                                     <td class="px-3 py-2">{{ $client->contact_name }}</td>
-                                    <td class="px-3 py-2">{{ $client->phone }}</td>
+                                    <td class="px-3 py-2">{{ $client->city }}</td>
                                     <td class="px-3 py-2">{{ $client->email }}</td>
                                     <td class="px-3 py-2 text-right space-x-2">
                                         @can('update', $client)
@@ -49,7 +51,7 @@
                                             <form action="{{ route('clients.destroy', $client) }}" method="POST" class="inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('¿Eliminar cliente?')">
+                                                <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Eliminar cliente?')">
                                                     {{ __('Eliminar') }}
                                                 </button>
                                             </form>
@@ -58,7 +60,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-3 py-6 text-center text-gray-500">
+                                    <td colspan="6" class="px-3 py-6 text-center text-gray-500">
                                         {{ __('No hay clientes registrados.') }}
                                     </td>
                                 </tr>

@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Auditoría reciente') }}
+                {{ __('Auditoria reciente') }}
             </h2>
             <a href="{{ route('reports.index') }}" class="text-sm text-gray-600 hover:text-gray-900">
                 {{ __('Volver') }}
@@ -15,8 +15,8 @@
             <form method="GET" class="mb-4 flex items-center gap-2">
                 <label class="text-sm text-gray-600">{{ __('Rango') }}</label>
                 <select name="days" class="rounded-md border-gray-300 text-sm">
-                    <option value="30" @selected($days === 30)>{{ __('Últimos 30 días') }}</option>
-                    <option value="90" @selected($days === 90)>{{ __('Últimos 90 días') }}</option>
+                    <option value="30" @selected($days === 30)>{{ __('Ultimos 30 dias') }}</option>
+                    <option value="90" @selected($days === 90)>{{ __('Ultimos 90 dias') }}</option>
                 </select>
                 <button class="text-xs text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1 rounded">
                     {{ __('Filtrar') }}
@@ -30,7 +30,7 @@
                             <tr>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Fecha') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Usuario') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Acción') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Accion') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Entidad') }}</th>
                             </tr>
                         </thead>
@@ -45,12 +45,15 @@
                             @empty
                                 <tr>
                                     <td colspan="4" class="px-3 py-6 text-center text-gray-500">
-                                        {{ __('Sin auditoría en el rango.') }}
+                                        {{ __('Sin auditoria en el rango.') }}
                                     </td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
+                    <div class="mt-4">
+                        {{ $logs->links() }}
+                    </div>
                 </div>
             </div>
         </div>
