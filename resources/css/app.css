@@ -14,8 +14,8 @@
 
     body.sj-app {
         background:
-            radial-gradient(1200px 600px at 15% -10%, rgba(11, 111, 182, 0.2), transparent 60%),
-            linear-gradient(180deg, #0b123c 0, #0b123c 140px, #f4f7fb 140px, #f4f7fb 100%);
+            radial-gradient(1200px 600px at 15% -10%, rgba(11, 111, 182, 0.18), transparent 60%),
+            linear-gradient(180deg, #f4f7fb 0, #f4f7fb 100%);
         color: var(--sj-ink);
     }
 }
@@ -26,7 +26,7 @@
     }
 
     .sj-nav {
-        background: var(--sj-navy);
+        background: linear-gradient(90deg, #ffffff 0 10%, #ffffff 10%, #cfd9ea 13%, #2a3a74 16%, var(--sj-navy) 20%, var(--sj-navy) 100%);
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         color: #e2e8f0;
     }
