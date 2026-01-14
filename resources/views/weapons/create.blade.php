@@ -13,7 +13,7 @@
                         @csrf
 
                         <div>
-                            <x-input-label for="serial_number" :value="__('Numero de serie')" />
+                            <x-input-label for="serial_number" :value="__('Número de serie')" />
                             <x-text-input id="serial_number" name="serial_number" type="text" class="mt-1 block w-full" value="{{ old('serial_number') }}" required />
                             <x-input-error :messages="$errors->get('serial_number')" class="mt-2" />
                         </div>
@@ -98,7 +98,7 @@
                             </div>
 
                             <div>
-                                <x-input-label for="permit_number" :value="__('Numero de permiso')" />
+                                <x-input-label for="permit_number" :value="__('Número de permiso')" />
                                 <x-text-input id="permit_number" name="permit_number" type="text" class="mt-1 block w-full" value="{{ old('permit_number') }}" />
                                 <x-input-error :messages="$errors->get('permit_number')" class="mt-2" />
                             </div>
@@ -126,7 +126,7 @@
 
                         <div class="md:col-span-2">
                             <x-input-label for="notes" :value="__('Notas')" />
-                            <textarea id="notes" name="notes" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ old('notes') }}</textarea>
+                            <textarea id="notes" name="notes" spellcheck="true" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ old('notes') }}</textarea>
                             <x-input-error :messages="$errors->get('notes')" class="mt-2" />
                         </div>
 
@@ -143,125 +143,170 @@
             </div>
         </div>
     </div>
-</x-app-layout>
 
-<div id="image_editor_modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
-    <div class="w-full max-w-3xl rounded bg-white shadow-lg">
-        <div class="flex items-center justify-between border-b px-4 py-3">
-            <h3 class="text-sm font-semibold text-gray-800">{{ __('Editar imagen') }}</h3>
-            <button id="image_editor_close" type="button" class="text-sm text-gray-500 hover:text-gray-700">
-                {{ __('Cerrar') }}
-            </button>
-        </div>
-        <div class="p-4">
-            <div class="max-h-[70vh] w-full overflow-hidden">
-                <img id="image_editor_image" alt="Editor" class="max-h-[70vh] w-full object-contain" />
-            </div>
-        </div>
-        <div class="flex items-center justify-between gap-2 border-t px-4 py-3">
-            <div class="flex items-center gap-2">
-                <button id="image_editor_rotate_left" type="button" class="rounded border border-gray-300 px-3 py-1 text-xs text-gray-700 hover:bg-gray-100">
-                    {{ __('Girar izquierda') }}
-                </button>
-                <button id="image_editor_rotate_right" type="button" class="rounded border border-gray-300 px-3 py-1 text-xs text-gray-700 hover:bg-gray-100">
-                    {{ __('Girar derecha') }}
+    <div id="image_editor_modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+        <div class="w-full max-w-3xl rounded bg-white shadow-lg">
+            <div class="flex items-center justify-between border-b px-4 py-3">
+                <h3 class="text-sm font-semibold text-gray-800">{{ __('Editar imagen') }}</h3>
+                <button id="image_editor_close" type="button" class="text-sm text-gray-500 hover:text-gray-700">
+                    {{ __('Cerrar') }}
                 </button>
             </div>
-            <button id="image_editor_cancel" type="button" class="text-sm text-gray-600 hover:text-gray-900">
-                {{ __('Cancelar') }}
-            </button>
-            <button id="image_editor_crop" type="button" class="rounded bg-indigo-600 px-3 py-1 text-xs text-white hover:bg-indigo-700">
-                {{ __('Guardar') }}
-            </button>
+            <div class="p-4">
+                <div class="max-h-[70vh] w-full overflow-hidden">
+                    <img id="image_editor_image" alt="Editor" class="max-h-[70vh] w-full object-contain" />
+                </div>
+            </div>
+            <div class="flex items-center justify-between gap-2 border-t px-4 py-3">
+                <div class="flex items-center gap-2">
+                    <button id="image_editor_rotate_left" type="button" class="rounded border border-gray-300 px-3 py-1 text-xs text-gray-700 hover:bg-gray-100">
+                        {{ __('Girar izquierda') }}
+                    </button>
+                    <button id="image_editor_rotate_right" type="button" class="rounded border border-gray-300 px-3 py-1 text-xs text-gray-700 hover:bg-gray-100">
+                        {{ __('Girar derecha') }}
+                    </button>
+                </div>
+                <button id="image_editor_cancel" type="button" class="text-sm text-gray-600 hover:text-gray-900">
+                    {{ __('Cancelar') }}
+                </button>
+                <button id="image_editor_crop" type="button" class="rounded bg-indigo-600 px-3 py-1 text-xs text-white hover:bg-indigo-700">
+                    {{ __('Guardar') }}
+                </button>
+            </div>
         </div>
     </div>
-</div>
 
-<link rel="stylesheet" href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css">
-<script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
-<script>
-    let activeInput = null;
-    let cropper = null;
+    <link rel="stylesheet" href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css">
+    <script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
+    <script>
+        let activeInput = null;
+        let cropper = null;
 
-    const modal = document.getElementById('image_editor_modal');
-    const modalImage = document.getElementById('image_editor_image');
-    const closeButton = document.getElementById('image_editor_close');
-    const cancelButton = document.getElementById('image_editor_cancel');
-    const cropButton = document.getElementById('image_editor_crop');
-    const rotateLeftButton = document.getElementById('image_editor_rotate_left');
-    const rotateRightButton = document.getElementById('image_editor_rotate_right');
+        const modal = document.getElementById('image_editor_modal');
+        const modalImage = document.getElementById('image_editor_image');
+        const closeButton = document.getElementById('image_editor_close');
+        const cancelButton = document.getElementById('image_editor_cancel');
+        const cropButton = document.getElementById('image_editor_crop');
+        const rotateLeftButton = document.getElementById('image_editor_rotate_left');
+        const rotateRightButton = document.getElementById('image_editor_rotate_right');
 
-    const openEditor = (input) => {
-        const file = input.files && input.files[0];
-        if (!file) {
-            return;
-        }
+        const setPreview = (preview, placeholder, file) => {
+            if (!preview || !placeholder || !file) {
+                return;
+            }
 
-        activeInput = input;
-        modalImage.src = URL.createObjectURL(file);
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
+            if (preview.dataset.objectUrl) {
+                URL.revokeObjectURL(preview.dataset.objectUrl);
+            }
 
-        if (cropper) {
-            cropper.destroy();
-        }
+            const url = URL.createObjectURL(file);
+            preview.dataset.objectUrl = url;
+            preview.src = url;
+            preview.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+        };
 
-        cropper = new Cropper(modalImage, {
-            viewMode: 1,
-            autoCropArea: 1,
-        });
-    };
+        const clearPreview = (preview, placeholder) => {
+            if (!preview || !placeholder) {
+                return;
+            }
 
-    const closeEditor = () => {
-        if (cropper) {
-            cropper.destroy();
-            cropper = null;
-        }
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        modalImage.removeAttribute('src');
-        activeInput = null;
-    };
+            if (preview.dataset.objectUrl) {
+                URL.revokeObjectURL(preview.dataset.objectUrl);
+                delete preview.dataset.objectUrl;
+            }
 
-    const applyCrop = () => {
-        if (!cropper || !activeInput) {
-            closeEditor();
-            return;
-        }
+            preview.removeAttribute('src');
+            preview.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+        };
 
-        cropper.getCroppedCanvas().toBlob((blob) => {
-            if (!blob) {
+        const openEditor = (input) => {
+            const file = input.files && input.files[0];
+            if (!file) {
+                return;
+            }
+
+            activeInput = input;
+            if (modalImage.dataset.objectUrl) {
+                URL.revokeObjectURL(modalImage.dataset.objectUrl);
+            }
+            modalImage.dataset.objectUrl = URL.createObjectURL(file);
+            modalImage.src = modalImage.dataset.objectUrl;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            if (cropper) {
+                cropper.destroy();
+            }
+
+            cropper = new Cropper(modalImage, {
+                viewMode: 1,
+                autoCropArea: 1,
+            });
+        };
+
+        const closeEditor = (discardSelection = false) => {
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            if (modalImage.dataset.objectUrl) {
+                URL.revokeObjectURL(modalImage.dataset.objectUrl);
+                delete modalImage.dataset.objectUrl;
+            }
+            modalImage.removeAttribute('src');
+
+            if (discardSelection && activeInput) {
+                const previewId = activeInput.dataset.previewTarget;
+                const placeholderId = activeInput.dataset.placeholderTarget;
+                const preview = previewId ? document.getElementById(previewId) : null;
+                const placeholder = placeholderId ? document.getElementById(placeholderId) : null;
+                clearPreview(preview, placeholder);
+                activeInput.value = '';
+            }
+
+            activeInput = null;
+        };
+
+        const applyCrop = () => {
+            if (!cropper || !activeInput) {
                 closeEditor();
                 return;
             }
 
-            const fileName = activeInput.files[0]?.name || 'photo.jpg';
-            const file = new File([blob], fileName, { type: blob.type });
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(file);
-            activeInput.files = dataTransfer.files;
+            cropper.getCroppedCanvas().toBlob((blob) => {
+                if (!blob) {
+                    closeEditor();
+                    return;
+                }
 
-            const previewId = activeInput.dataset.previewTarget;
-            const placeholderId = activeInput.dataset.placeholderTarget;
-            const preview = previewId ? document.getElementById(previewId) : null;
-            const placeholder = placeholderId ? document.getElementById(placeholderId) : null;
-            if (preview && placeholder) {
-                preview.src = URL.createObjectURL(file);
-                preview.classList.remove('hidden');
-                placeholder.classList.add('hidden');
-            }
+                const fileName = activeInput.files[0]?.name || 'photo.jpg';
+                const file = new File([blob], fileName, { type: blob.type });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                activeInput.files = dataTransfer.files;
 
-            closeEditor();
-        }, 'image/jpeg', 0.92);
-    };
+                const previewId = activeInput.dataset.previewTarget;
+                const placeholderId = activeInput.dataset.placeholderTarget;
+                const preview = previewId ? document.getElementById(previewId) : null;
+                const placeholder = placeholderId ? document.getElementById(placeholderId) : null;
+                setPreview(preview, placeholder, file);
 
-    closeButton.addEventListener('click', closeEditor);
-    cancelButton.addEventListener('click', closeEditor);
-    cropButton.addEventListener('click', applyCrop);
-    rotateLeftButton.addEventListener('click', () => cropper && cropper.rotate(-90));
-    rotateRightButton.addEventListener('click', () => cropper && cropper.rotate(90));
+                closeEditor();
+            }, 'image/jpeg', 0.92);
+        };
 
-    document.querySelectorAll('input[data-preview-target]').forEach((input) => {
-        input.addEventListener('change', () => openEditor(input));
-    });
-</script>
+        closeButton.addEventListener('click', () => closeEditor(true));
+        cancelButton.addEventListener('click', () => closeEditor(true));
+        cropButton.addEventListener('click', applyCrop);
+        rotateLeftButton.addEventListener('click', () => cropper && cropper.rotate(-90));
+        rotateRightButton.addEventListener('click', () => cropper && cropper.rotate(90));
+
+        document.querySelectorAll('input[data-preview-target]').forEach((input) => {
+            input.addEventListener('change', () => openEditor(input));
+        });
+    </script>
+</x-app-layout>

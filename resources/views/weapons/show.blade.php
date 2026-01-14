@@ -69,7 +69,7 @@
                             <div class="font-medium">{{ $weapon->permit_type ?: '-' }}</div>
                         </div>
                         <div>
-                            <div class="text-xs text-gray-500">{{ __('Numero de permiso') }}</div>
+                            <div class="text-xs text-gray-500">{{ __('Número de permiso') }}</div>
                             <div class="font-medium">{{ $weapon->permit_number ?: '-' }}</div>
                         </div>
                         <div>
@@ -156,7 +156,7 @@
                             </div>
                             <div class="md:col-span-1">
                                 <label class="text-sm text-gray-600">{{ __('Motivo') }}</label>
-                                <input type="text" name="reason" class="mt-1 block w-full rounded-md border-gray-300 text-sm">
+                                <input type="text" name="reason" spellcheck="true" class="mt-1 block w-full rounded-md border-gray-300 text-sm">
                             </div>
                             <div class="md:col-span-3 flex items-center justify-between">
                                 <div class="text-xs text-gray-500">
@@ -221,7 +221,7 @@
                             </div>
                             <div class="md:col-span-1">
                                 <label class="text-sm text-gray-600">{{ __('Motivo') }}</label>
-                                <input type="text" name="reason" class="mt-1 block w-full rounded-md border-gray-300 text-sm">
+                                <input type="text" name="reason" spellcheck="true" class="mt-1 block w-full rounded-md border-gray-300 text-sm">
                             </div>
                             <div class="md:col-span-3 flex justify-end">
                                 <x-primary-button class="text-xs">
@@ -310,8 +310,8 @@
                                 </select>
                                 <input type="date" name="valid_until" class="rounded-md border-gray-300 text-sm" placeholder="{{ __('Vence') }}">
                                 <input type="date" name="revalidation_due_at" class="rounded-md border-gray-300 text-sm" placeholder="{{ __('Revalidación') }}">
-                                <input type="text" name="restrictions" class="rounded-md border-gray-300 text-sm" placeholder="{{ __('Restricciones') }}">
-                                <input type="text" name="status" class="rounded-md border-gray-300 text-sm" placeholder="{{ __('Estado') }}">
+                                <input type="text" name="restrictions" spellcheck="true" class="rounded-md border-gray-300 text-sm" placeholder="{{ __('Restricciones') }}">
+                                <input type="text" name="status" spellcheck="true" class="rounded-md border-gray-300 text-sm" placeholder="{{ __('Estado') }}">
                                 <x-primary-button class="text-xs">
                                     {{ __('Subir') }}
                                 </x-primary-button>

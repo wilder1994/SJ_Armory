@@ -45,7 +45,7 @@
                             @empty
                                 <tr>
                                     <td colspan="4" class="px-3 py-6 text-center text-gray-500">
-                                        {{ __('Sin auditoria en el rango.') }}
+                                        {{ __('Sin auditoría en el rango.') }}
                                     </td>
                                 </tr>
                             @endforelse

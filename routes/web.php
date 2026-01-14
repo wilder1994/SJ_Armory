@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AlertsController;
 use App\Http\Controllers\ResponsiblePortfolioController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\WeaponController;
 use App\Http\Controllers\WeaponClientAssignmentController;
 use App\Http\Controllers\WeaponDocumentController;
@@ -38,6 +39,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::resource('clients', ClientController::class)->except(['show']);
+    Route::resource('users', UserController::class)->except(['show']);
+    Route::patch('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.status');
     Route::resource('weapons', WeaponController::class);
 
     Route::post('/weapons/{weapon}/photos', [WeaponPhotoController::class, 'store'])

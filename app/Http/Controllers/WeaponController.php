@@ -208,14 +208,22 @@ class WeaponController extends Controller
             'permit_number' => ['nullable', 'string', 'max:100'],
             'permit_expires_at' => ['nullable', 'date'],
             'notes' => ['nullable', 'string'],
+            'photos' => ['nullable', 'array', 'max:5'],
+            'photos.*' => ['nullable', 'file', 'image', 'max:5120'],
             'permit_photo' => ['nullable', 'file', 'image', 'max:5120'],
         ]);
 
+        $photos = collect($request->file('photos', []))->filter()->values();
         $permitPhoto = $request->file('permit_photo');
+        $storedPaths = [];
         $storedPermitPath = null;
 
         try {
-            DB::transaction(function () use ($data, $permitPhoto, $request, $weapon, &$storedPermitPath) {
+            DB::transaction(function () use ($data, $photos, $permitPhoto, $request, $weapon, &$storedPaths, &$storedPermitPath) {
+                $existingPhotos = $photos->isNotEmpty()
+                    ? $weapon->photos()->with('file')->get()
+                    : collect();
+
                 if ($permitPhoto) {
                     $storedPermitPath = $permitPhoto->store('weapons/' . $weapon->id . '/permits', 'local');
                     $storedFile = File::create([
@@ -238,8 +246,62 @@ class WeaponController extends Controller
                     Storage::disk($oldPermitFile->disk)->delete($oldPermitFile->path);
                     $oldPermitFile->delete();
                 }
+
+                if ($photos->isEmpty()) {
+                    return;
+                }
+
+                $isPrimary = true;
+                foreach ($photos as $photoFile) {
+                    if (!$photoFile) {
+                        continue;
+                    }
+
+                    $path = $photoFile->store('weapons/' . $weapon->id . '/photos', 'public');
+                    $storedPaths[] = $path;
+
+                    $storedFile = File::create([
+                        'disk' => 'public',
+                        'path' => $path,
+                        'original_name' => $photoFile->getClientOriginalName(),
+                        'mime_type' => $photoFile->getClientMimeType(),
+                        'size' => $photoFile->getSize(),
+                        'checksum' => hash_file('sha256', $photoFile->getRealPath()),
+                        'uploaded_by' => $request->user()?->id,
+                    ]);
+
+                    $photo = $weapon->photos()->create([
+                        'file_id' => $storedFile->id,
+                        'is_primary' => $isPrimary,
+                    ]);
+
+                    AuditLog::create([
+                        'user_id' => $request->user()?->id,
+                        'action' => 'upload_photo',
+                        'auditable_type' => Weapon::class,
+                        'auditable_id' => $weapon->id,
+                        'before' => null,
+                        'after' => [
+                            'photo_id' => $photo->id,
+                            'file_id' => $storedFile->id,
+                        ],
+                    ]);
+
+                    $isPrimary = false;
+                }
+
+                foreach ($existingPhotos as $existingPhoto) {
+                    if ($existingPhoto->file) {
+                        Storage::disk($existingPhoto->file->disk)->delete($existingPhoto->file->path);
+                        $existingPhoto->file->delete();
+                    }
+                    $existingPhoto->delete();
+                }
             });
         } catch (Throwable $e) {
+            foreach ($storedPaths as $path) {
+                Storage::disk('public')->delete($path);
+            }
             if ($storedPermitPath) {
                 Storage::disk('local')->delete($storedPermitPath);
             }
@@ -281,8 +343,8 @@ class WeaponController extends Controller
     {
         return [
             'ownership_support' => 'Soporte de propiedad',
-            'permit_or_authorization' => 'Permiso o autorizacion',
-            'revalidation' => 'Revalidacion',
+            'permit_or_authorization' => 'Permiso o autorización',
+            'revalidation' => 'Revalidación',
             'maintenance_record' => 'Registro de mantenimiento',
             'seizure_or_withdrawal' => 'Acta de decomiso o retiro',
             'decommission_record' => 'Acta de baja',

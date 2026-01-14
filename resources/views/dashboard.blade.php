@@ -3,7 +3,7 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="mb-6">
                 <h1 class="text-2xl font-semibold text-gray-800">{{ __('Inicio') }}</h1>
-                <p class="text-sm text-gray-500">{{ __('Accesos rapidos a los modulos principales.') }}</p>
+                <p class="text-sm text-gray-500">{{ __('Accesos rápidos a los módulos principales.') }}</p>
             </div>
 
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -17,8 +17,8 @@
                                 </svg>
                             </div>
                             <div>
-                                <div class="text-base font-semibold text-gray-800">{{ __('Armamentos') }}</div>
-                                <div class="text-xs text-gray-500">{{ __('Gestion de armas') }}</div>
+                                <div class="text-base font-semibold text-gray-800">{{ __('Armamento') }}</div>
+                                <div class="text-xs text-gray-500">{{ __('Gestión de armas') }}</div>
                             </div>
                         </div>
                     </a>
@@ -54,7 +54,7 @@
                             </div>
                             <div>
                                 <div class="text-base font-semibold text-gray-800">{{ __('Carteras') }}</div>
-                                <div class="text-xs text-gray-500">{{ __('Asignacion de clientes') }}</div>
+                                <div class="text-xs text-gray-500">{{ __('Asignación de clientes') }}</div>
                             </div>
                         </div>
                     </a>
@@ -73,7 +73,7 @@
                             </div>
                             <div>
                                 <div class="text-base font-semibold text-gray-800">{{ __('Reportes') }}</div>
-                                <div class="text-xs text-gray-500">{{ __('Consultas y auditoria') }}</div>
+                                <div class="text-xs text-gray-500">{{ __('Consultas y auditoría') }}</div>
                             </div>
                         </div>
                     </a>
@@ -108,7 +108,7 @@
                             </div>
                             <div>
                                 <div class="text-base font-semibold text-gray-800">{{ __('Panel de usuarios') }}</div>
-                                <div class="text-xs text-gray-500">{{ __('Administracion basica') }}</div>
+                                <div class="text-xs text-gray-500">{{ __('Administración básica') }}</div>
                             </div>
                         </div>
                     </a>
