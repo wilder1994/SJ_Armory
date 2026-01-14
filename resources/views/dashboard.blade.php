@@ -98,7 +98,7 @@
                 @endif
 
                 @if (Auth::user()?->isAdmin())
-                    <a href="{{ route('profile.edit') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
+                    <a href="{{ route('users.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
                         <div class="flex items-center gap-4">
                             <div class="flex h-14 w-14 items-center justify-center rounded-full bg-purple-50 text-purple-600">
                                 <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">

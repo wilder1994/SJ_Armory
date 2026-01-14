@@ -28,6 +28,9 @@
                         <x-nav-link :href="route('portfolios.index')" :active="request()->routeIs('portfolios.*')">
                             {{ __('Carteras') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                            {{ __('Usuarios') }}
+                        </x-nav-link>
                         <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
                             {{ __('Reportes') }}
                         </x-nav-link>
@@ -103,6 +106,9 @@
             @if (Auth::user()?->isAdmin())
                 <x-responsive-nav-link :href="route('portfolios.index')" :active="request()->routeIs('portfolios.*')">
                     {{ __('Carteras') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                    {{ __('Usuarios') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
                     {{ __('Reportes') }}
