@@ -15,6 +15,7 @@ class StoreWeaponAssignmentRequest extends FormRequest
     {
         return [
             'client_id' => ['required', 'exists:clients,id'],
+            'responsible_user_id' => ['required', 'exists:users,id'],
             'start_at' => ['nullable', 'date'],
             'reason' => ['nullable', 'string'],
         ];

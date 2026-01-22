@@ -50,16 +50,6 @@
                         </div>
 
                         <div>
-                            <x-input-label for="operational_status" :value="__('Estado operativo')" />
-                            <select id="operational_status" name="operational_status" class="mt-1 block w-full rounded-md border-gray-300">
-                                @foreach ($statuses as $value => $label)
-                                    <option value="{{ $value }}" @selected(old('operational_status', $weapon->operational_status) === $value)>{{ $label }}</option>
-                                @endforeach
-                            </select>
-                            <x-input-error :messages="$errors->get('operational_status')" class="mt-2" />
-                        </div>
-
-                        <div>
                             <x-input-label for="ownership_type" :value="__('Tipo de propiedad')" />
                             <select id="ownership_type" name="ownership_type" class="mt-1 block w-full rounded-md border-gray-300">
                                 @foreach ($ownershipTypes as $value => $label)

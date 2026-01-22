@@ -10,14 +10,14 @@ use Illuminate\Support\Facades\DB;
 
 class WeaponAssignmentService
 {
-    public function assignClient(Weapon $weapon, int $clientId, User $actor, string $startAt, ?string $reason = null): void
+    public function assignClient(Weapon $weapon, int $clientId, User $responsible, User $actor, string $startAt, ?string $reason = null): void
     {
-        DB::transaction(function () use ($weapon, $clientId, $actor, $startAt, $reason) {
+        DB::transaction(function () use ($weapon, $clientId, $responsible, $actor, $startAt, $reason) {
             $active = $weapon->clientAssignments()->where('is_active', true)->first();
 
             if ($active) {
                 $active->update([
-                    'end_at' => now(),
+                    'end_at' => now()->toDateString(),
                     'is_active' => null,
                 ]);
 
@@ -28,14 +28,14 @@ class WeaponAssignmentService
                     'auditable_id' => $active->id,
                     'before' => [
                         'client_id' => $active->client_id,
-                        'start_at' => $active->start_at?->toDateTimeString(),
+                        'start_at' => $active->start_at?->toDateString(),
                         'end_at' => null,
                         'is_active' => true,
                     ],
                     'after' => [
                         'client_id' => $active->client_id,
-                        'start_at' => $active->start_at?->toDateTimeString(),
-                        'end_at' => $active->end_at?->toDateTimeString(),
+                        'start_at' => $active->start_at?->toDateString(),
+                        'end_at' => $active->end_at?->toDateString(),
                         'is_active' => null,
                     ],
                 ]);
@@ -43,6 +43,7 @@ class WeaponAssignmentService
 
             $assignment = $weapon->clientAssignments()->create([
                 'client_id' => $clientId,
+                'responsible_user_id' => $responsible->id,
                 'start_at' => $startAt,
                 'is_active' => true,
                 'assigned_by' => $actor->id,
@@ -58,6 +59,7 @@ class WeaponAssignmentService
                 'after' => [
                     'weapon_id' => $weapon->id,
                     'client_id' => $clientId,
+                    'responsible_user_id' => $responsible->id,
                     'start_at' => $startAt,
                 ],
             ]);
@@ -72,7 +74,7 @@ class WeaponAssignmentService
         }
 
         $active->update([
-            'end_at' => now(),
+            'end_at' => now()->toDateString(),
             'is_active' => null,
         ]);
 
@@ -83,14 +85,14 @@ class WeaponAssignmentService
             'auditable_id' => $active->id,
             'before' => [
                 'client_id' => $active->client_id,
-                'start_at' => $active->start_at?->toDateTimeString(),
+                'start_at' => $active->start_at?->toDateString(),
                 'end_at' => null,
                 'is_active' => true,
             ],
             'after' => [
                 'client_id' => $active->client_id,
-                'start_at' => $active->start_at?->toDateTimeString(),
-                'end_at' => $active->end_at?->toDateTimeString(),
+                'start_at' => $active->start_at?->toDateString(),
+                'end_at' => $active->end_at?->toDateString(),
                 'is_active' => null,
             ],
         ]);

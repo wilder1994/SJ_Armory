@@ -10,8 +10,6 @@ use App\Http\Controllers\WeaponController;
 use App\Http\Controllers\WeaponClientAssignmentController;
 use App\Http\Controllers\WeaponDocumentController;
 use App\Http\Controllers\WeaponPhotoController;
-use App\Http\Controllers\WeaponCustodyController;
-use App\Http\Controllers\WeaponStatusController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -42,6 +40,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('users', UserController::class)->except(['show']);
     Route::patch('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.status');
     Route::resource('weapons', WeaponController::class);
+    Route::get('/weapons/{weapon}/permit', [WeaponController::class, 'permitPhoto'])
+        ->name('weapons.permit');
 
     Route::post('/weapons/{weapon}/photos', [WeaponPhotoController::class, 'store'])
         ->name('weapons.photos.store');
@@ -57,23 +57,16 @@ Route::middleware('auth')->group(function () {
     Route::delete('/weapons/{weapon}/documents/{document}', [WeaponDocumentController::class, 'destroy'])
         ->name('weapons.documents.destroy');
 
-    Route::post('/weapons/{weapon}/custodies', [WeaponCustodyController::class, 'store'])
-        ->name('weapons.custodies.store');
-
     Route::post('/weapons/{weapon}/assignments', [WeaponClientAssignmentController::class, 'store'])
         ->name('weapons.assignments.store');
     Route::patch('/weapons/{weapon}/assignments/retire', [WeaponClientAssignmentController::class, 'retire'])
         ->name('weapons.assignments.retire');
-
-    Route::patch('/weapons/{weapon}/status', [WeaponStatusController::class, 'update'])
-        ->name('weapons.status.update');
 
     Route::get('/portfolios', [ResponsiblePortfolioController::class, 'index'])->name('portfolios.index');
     Route::get('/portfolios/{user}/edit', [ResponsiblePortfolioController::class, 'edit'])->name('portfolios.edit');
     Route::put('/portfolios/{user}', [ResponsiblePortfolioController::class, 'update'])->name('portfolios.update');
 
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::get('/reports/custodies', [ReportController::class, 'weaponsByCustodian'])->name('reports.custodies');
     Route::get('/reports/assignments', [ReportController::class, 'weaponsByClient'])->name('reports.assignments');
     Route::get('/reports/no-destination', [ReportController::class, 'weaponsWithoutDestination'])->name('reports.no_destination');
     Route::get('/reports/history', [ReportController::class, 'history'])->name('reports.history');

@@ -19,7 +19,6 @@
                             <tr>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Codigo') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Serie') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Estado') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
@@ -27,11 +26,10 @@
                                 <tr>
                                     <td class="px-3 py-2">{{ $weapon->internal_code }}</td>
                                     <td class="px-3 py-2">{{ $weapon->serial_number }}</td>
-                                    <td class="px-3 py-2">{{ $weapon->operational_status }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="px-3 py-6 text-center text-gray-500">
+                                    <td colspan="2" class="px-3 py-6 text-center text-gray-500">
                                         {{ __('Sin resultados.') }}
                                     </td>
                                 </tr>

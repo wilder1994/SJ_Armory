@@ -34,6 +34,7 @@
                             <tr>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Codigo') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Serie') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Responsable') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Cliente') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Desde') }}</th>
                             </tr>
@@ -43,12 +44,13 @@
                                 <tr>
                                     <td class="px-3 py-2">{{ $weapon->internal_code }}</td>
                                     <td class="px-3 py-2">{{ $weapon->serial_number }}</td>
+                                    <td class="px-3 py-2">{{ $weapon->activeClientAssignment?->responsible?->name ?? '-' }}</td>
                                     <td class="px-3 py-2">{{ $weapon->activeClientAssignment?->client?->name ?? '-' }}</td>
-                                    <td class="px-3 py-2">{{ $weapon->activeClientAssignment?->start_at?->format('Y-m-d H:i') }}</td>
+                                    <td class="px-3 py-2">{{ $weapon->activeClientAssignment?->start_at?->format('Y-m-d') }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-3 py-6 text-center text-gray-500">
+                                    <td colspan="5" class="px-3 py-6 text-center text-gray-500">
                                         {{ __('Sin resultados.') }}
                                     </td>
                                 </tr>

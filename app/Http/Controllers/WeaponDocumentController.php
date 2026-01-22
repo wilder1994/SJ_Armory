@@ -19,11 +19,8 @@ class WeaponDocumentController extends Controller
 
         $data = $request->validate([
             'document' => ['required', 'file', 'max:10240'],
-            'doc_type' => ['required', 'in:ownership_support,permit_or_authorization,revalidation,maintenance_record,seizure_or_withdrawal,decommission_record,other'],
             'valid_until' => ['nullable', 'date'],
-            'revalidation_due_at' => ['nullable', 'date'],
-            'restrictions' => ['nullable', 'string'],
-            'status' => ['nullable', 'string', 'max:50'],
+            'observations' => ['nullable', 'string'],
         ]);
 
         $file = $data['document'];
@@ -43,11 +40,8 @@ class WeaponDocumentController extends Controller
 
                 $document = $weapon->documents()->create([
                     'file_id' => $storedFile->id,
-                    'doc_type' => $data['doc_type'],
                     'valid_until' => $data['valid_until'] ?? null,
-                    'revalidation_due_at' => $data['revalidation_due_at'] ?? null,
-                    'restrictions' => $data['restrictions'] ?? null,
-                    'status' => $data['status'] ?? null,
+                    'observations' => $data['observations'] ?? null,
                 ]);
 
                 AuditLog::create([
@@ -59,7 +53,6 @@ class WeaponDocumentController extends Controller
                     'after' => [
                         'document_id' => $document->id,
                         'file_id' => $storedFile->id,
-                        'doc_type' => $document->doc_type,
                     ],
                 ]);
             });

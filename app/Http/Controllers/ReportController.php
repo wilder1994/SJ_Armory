@@ -7,7 +7,6 @@ use App\Models\Client;
 use App\Models\User;
 use App\Models\Weapon;
 use App\Models\WeaponClientAssignment;
-use App\Models\WeaponCustody;
 use App\Models\WeaponDocument;
 use Illuminate\Http\Request;
 
@@ -20,29 +19,6 @@ class ReportController extends Controller
         return view('reports.index');
     }
 
-    public function weaponsByCustodian(Request $request)
-    {
-        $this->authorizeAdmin();
-
-        $responsibles = User::where('role', 'RESPONSABLE')->orderBy('name')->get();
-        $custodianId = $request->integer('custodian_user_id');
-
-        $query = Weapon::query()->with(['activeCustody.custodian']);
-        if ($custodianId) {
-            $query->whereHas('custodies', function ($custodyQuery) use ($custodianId) {
-                $custodyQuery->where('is_active', true)->where('custodian_user_id', $custodianId);
-            });
-        } else {
-            $query->whereHas('custodies', function ($custodyQuery) {
-                $custodyQuery->where('is_active', true);
-            });
-        }
-
-        $weapons = $query->orderBy('internal_code')->paginate(50)->withQueryString();
-
-        return view('reports.weapons_by_custodian', compact('weapons', 'responsibles', 'custodianId'));
-    }
-
     public function weaponsByClient(Request $request)
     {
         $this->authorizeAdmin();
@@ -50,7 +26,7 @@ class ReportController extends Controller
         $clients = Client::orderBy('name')->get();
         $clientId = $request->integer('client_id');
 
-        $query = Weapon::query()->with(['activeClientAssignment.client']);
+        $query = Weapon::query()->with(['activeClientAssignment.client', 'activeClientAssignment.responsible']);
         if ($clientId) {
             $query->whereHas('clientAssignments', function ($assignmentQuery) use ($clientId) {
                 $assignmentQuery->where('is_active', true)->where('client_id', $clientId);
@@ -85,18 +61,13 @@ class ReportController extends Controller
         $weapons = Weapon::orderBy('internal_code')->get();
 
         $weapon = null;
-        $custodies = collect();
         $assignments = collect();
         $documents = collect();
 
         if ($weaponId) {
             $weapon = Weapon::find($weaponId);
             if ($weapon) {
-                $custodies = WeaponCustody::with(['custodian', 'assignedBy'])
-                    ->where('weapon_id', $weaponId)
-                    ->orderByDesc('start_at')
-                    ->get();
-                $assignments = WeaponClientAssignment::with(['client', 'assignedBy'])
+                $assignments = WeaponClientAssignment::with(['client', 'assignedBy', 'responsible'])
                     ->where('weapon_id', $weaponId)
                     ->orderByDesc('start_at')
                     ->get();
@@ -107,7 +78,7 @@ class ReportController extends Controller
             }
         }
 
-        return view('reports.weapon_history', compact('weapons', 'weapon', 'custodies', 'assignments', 'documents'));
+        return view('reports.weapon_history', compact('weapons', 'weapon', 'assignments', 'documents'));
     }
 
     public function audit(Request $request)

@@ -12,8 +12,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('weapon_id')->constrained()->cascadeOnDelete();
             $table->foreignId('client_id')->constrained()->cascadeOnDelete();
-            $table->dateTime('start_at');
-            $table->dateTime('end_at')->nullable();
+            $table->foreignId('responsible_user_id')->constrained('users');
+            $table->date('start_at');
+            $table->date('end_at')->nullable();
             $table->boolean('is_active')->nullable();
             $table->foreignId('assigned_by')->nullable()->constrained('users')->nullOnDelete();
             $table->text('reason')->nullable();

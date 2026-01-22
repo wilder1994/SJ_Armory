@@ -12,16 +12,12 @@ class WeaponDocument extends Model
     protected $fillable = [
         'weapon_id',
         'file_id',
-        'doc_type',
         'valid_until',
-        'revalidation_due_at',
-        'restrictions',
-        'status',
+        'observations',
     ];
 
     protected $casts = [
         'valid_until' => 'date',
-        'revalidation_due_at' => 'date',
     ];
 
     public function weapon()

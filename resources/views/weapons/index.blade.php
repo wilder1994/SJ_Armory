@@ -20,23 +20,6 @@
                 </div>
             @endif
 
-            <div class="mb-4 flex items-center gap-3">
-                <form method="GET" class="flex items-center gap-2">
-                    <label for="operational_status" class="text-sm text-gray-600">{{ __('Estado') }}</label>
-                    <select id="operational_status" name="operational_status" class="rounded-md border-gray-300 text-sm">
-                        <option value="">{{ __('Todos') }}</option>
-                        @foreach ($statuses as $value => $label)
-                            <option value="{{ $value }}" @selected(request('operational_status') === $value)>
-                                {{ $label }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <x-primary-button class="text-xs">
-                        {{ __('Filtrar') }}
-                    </x-primary-button>
-                </form>
-            </div>
-
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <table class="min-w-full divide-y divide-gray-200 text-sm">
@@ -48,7 +31,6 @@
                                 @if (Auth::user()->isResponsible() && !Auth::user()->isAdmin())
                                     <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Cliente') }}</th>
                                 @endif
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Estado') }}</th>
                                 <th class="px-3 py-2 text-right font-medium text-gray-600">{{ __('Acciones') }}</th>
                             </tr>
                         </thead>
@@ -61,7 +43,6 @@
                                     @if (Auth::user()->isResponsible() && !Auth::user()->isAdmin())
                                         <td class="px-3 py-2">{{ $weapon->activeClientAssignment?->client?->name ?? __('Sin destino') }}</td>
                                     @endif
-                                    <td class="px-3 py-2">{{ $statuses[$weapon->operational_status] ?? $weapon->operational_status }}</td>
                                     <td class="px-3 py-2 text-right space-x-2">
                                         <a href="{{ route('weapons.show', $weapon) }}" class="text-indigo-600 hover:text-indigo-900">
                                             {{ __('Ver') }}
@@ -84,7 +65,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-3 py-6 text-center text-gray-500">
+                                    <td colspan="{{ Auth::user()->isResponsible() && !Auth::user()->isAdmin() ? 5 : 4 }}" class="px-3 py-6 text-center text-gray-500">
                                         {{ __('No hay armas registradas.') }}
                                     </td>
                                 </tr>

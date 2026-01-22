@@ -37,40 +37,11 @@
 
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
-                        <h3 class="text-lg font-semibold mb-3">{{ __('Custodias') }}</h3>
-                        <table class="min-w-full divide-y divide-gray-200 text-sm">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Responsable') }}</th>
-                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Inicio') }}</th>
-                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Fin') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                @forelse ($custodies as $custody)
-                                    <tr>
-                                        <td class="px-3 py-2">{{ $custody->custodian?->name }}</td>
-                                        <td class="px-3 py-2">{{ $custody->start_at?->format('Y-m-d H:i') }}</td>
-                                        <td class="px-3 py-2">{{ $custody->end_at?->format('Y-m-d H:i') ?? '-' }}</td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="3" class="px-3 py-6 text-center text-gray-500">
-                                            {{ __('Sin custodias registradas.') }}
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900">
                         <h3 class="text-lg font-semibold mb-3">{{ __('Asignaciones a cliente') }}</h3>
                         <table class="min-w-full divide-y divide-gray-200 text-sm">
                             <thead class="bg-gray-50">
                                 <tr>
+                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Responsable') }}</th>
                                     <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Cliente') }}</th>
                                     <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Inicio') }}</th>
                                     <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Fin') }}</th>
@@ -79,13 +50,14 @@
                             <tbody class="divide-y divide-gray-200">
                                 @forelse ($assignments as $assignment)
                                     <tr>
+                                        <td class="px-3 py-2">{{ $assignment->responsible?->name ?? '-' }}</td>
                                         <td class="px-3 py-2">{{ $assignment->client?->name }}</td>
-                                        <td class="px-3 py-2">{{ $assignment->start_at?->format('Y-m-d H:i') }}</td>
-                                        <td class="px-3 py-2">{{ $assignment->end_at?->format('Y-m-d H:i') ?? '-' }}</td>
+                                        <td class="px-3 py-2">{{ $assignment->start_at?->format('Y-m-d') }}</td>
+                                        <td class="px-3 py-2">{{ $assignment->end_at?->format('Y-m-d') ?? '-' }}</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="3" class="px-3 py-6 text-center text-gray-500">
+                                        <td colspan="4" class="px-3 py-6 text-center text-gray-500">
                                             {{ __('Sin asignaciones registradas.') }}
                                         </td>
                                     </tr>
@@ -101,17 +73,18 @@
                         <table class="min-w-full divide-y divide-gray-200 text-sm">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Tipo') }}</th>
-                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Vence') }}</th>
-                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Revalidación') }}</th>
+                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Documento') }}</th>
+                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Fecha') }}</th>
+                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Observaciones') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200">
                                 @forelse ($documents as $document)
                                     <tr>
-                                        <td class="px-3 py-2">{{ $document->doc_type }}</td>
+                                        <td class="px-3 py-2">{{ $document->file?->original_name ?? __('Documento') }}
+                                        <div class="text-xs text-gray-500">{{ $document->file?->mime_type ?? '-' }}</div></td>
                                         <td class="px-3 py-2">{{ $document->valid_until?->format('Y-m-d') ?? '-' }}</td>
-                                        <td class="px-3 py-2">{{ $document->revalidation_due_at?->format('Y-m-d') ?? '-' }}</td>
+                                        <td class="px-3 py-2">{{ $document->observations ?? '-' }}</td>
                                     </tr>
                                 @empty
                                     <tr>

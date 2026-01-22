@@ -11,7 +11,7 @@ class PositionSeeder extends Seeder
     {
         $positions = [
             ['name' => 'Administrador', 'description' => 'Gestion general del sistema'],
-            ['name' => 'Responsable', 'description' => 'Gestion de custodia y asignaciones'],
+            ['name' => 'Responsable', 'description' => 'Gestion de asignaciones'],
             ['name' => 'Auditor', 'description' => 'Lectura y revision'],
         ];
 

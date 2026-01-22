@@ -64,11 +64,6 @@ class User extends Authenticatable
         return $this->belongsToMany(Client::class, 'user_clients')->withTimestamps();
     }
 
-    public function custodies()
-    {
-        return $this->hasMany(WeaponCustody::class, 'custodian_user_id');
-    }
-
     public function isAdmin(): bool
     {
         return $this->role === 'ADMIN';

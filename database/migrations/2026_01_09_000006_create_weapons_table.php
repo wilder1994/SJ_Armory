@@ -16,14 +16,6 @@ return new class extends Migration
             $table->string('caliber');
             $table->string('brand');
             $table->string('model');
-            $table->enum('operational_status', [
-                'in_armory',
-                'assigned',
-                'in_transit',
-                'in_maintenance',
-                'seized_or_withdrawn',
-                'decommissioned',
-            ])->default('in_armory');
             $table->enum('ownership_type', [
                 'company_owned',
                 'leased',
@@ -44,3 +36,4 @@ return new class extends Migration
         Schema::dropIfExists('weapons');
     }
 };
+

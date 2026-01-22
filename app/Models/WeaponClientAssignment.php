@@ -12,6 +12,7 @@ class WeaponClientAssignment extends Model
     protected $fillable = [
         'weapon_id',
         'client_id',
+        'responsible_user_id',
         'start_at',
         'end_at',
         'is_active',
@@ -21,8 +22,8 @@ class WeaponClientAssignment extends Model
     ];
 
     protected $casts = [
-        'start_at' => 'datetime',
-        'end_at' => 'datetime',
+        'start_at' => 'date',
+        'end_at' => 'date',
         'is_active' => 'boolean',
     ];
 
@@ -34,6 +35,11 @@ class WeaponClientAssignment extends Model
     public function client()
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function responsible()
+    {
+        return $this->belongsTo(User::class, 'responsible_user_id');
     }
 
     public function assignedBy()

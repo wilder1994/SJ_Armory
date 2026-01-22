@@ -19,7 +19,7 @@ class WeaponPolicy
         }
 
         if ($user->isResponsible()) {
-            return $weapon->activeCustody?->custodian_user_id === $user->id;
+            return $weapon->activeClientAssignment?->responsible_user_id === $user->id;
         }
 
         return $user->isAuditor();
@@ -35,7 +35,7 @@ class WeaponPolicy
             return false;
         }
 
-        return $weapon->activeCustody?->custodian_user_id === $user->id;
+        return $weapon->activeClientAssignment?->responsible_user_id === $user->id;
     }
 
     public function create(User $user): bool

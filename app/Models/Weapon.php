@@ -18,7 +18,6 @@ class Weapon extends Model
         'caliber',
         'brand',
         'model',
-        'operational_status',
         'ownership_type',
         'ownership_entity',
         'permit_type',
@@ -40,16 +39,6 @@ class Weapon extends Model
     public function documents()
     {
         return $this->hasMany(WeaponDocument::class);
-    }
-
-    public function custodies()
-    {
-        return $this->hasMany(WeaponCustody::class);
-    }
-
-    public function activeCustody()
-    {
-        return $this->hasOne(WeaponCustody::class)->where('is_active', true);
     }
 
     public function clientAssignments()

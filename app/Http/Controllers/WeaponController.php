@@ -24,27 +24,21 @@ class WeaponController extends Controller
         $user = $request->user();
 
         if ($user->isResponsible() && !$user->isAdmin()) {
-            $query->whereHas('custodies', function ($custodyQuery) use ($user) {
-                $custodyQuery->where('custodian_user_id', $user->id)->where('is_active', true);
+            $query->whereHas('clientAssignments', function ($assignmentQuery) use ($user) {
+                $assignmentQuery->where('responsible_user_id', $user->id)->where('is_active', true);
             });
         }
 
-        if ($request->filled('operational_status')) {
-            $query->where('operational_status', $request->string('operational_status')->toString());
-        }
-
         $weapons = $query->with(['activeClientAssignment.client'])->orderByDesc('id')->paginate(15)->withQueryString();
-        $statuses = $this->statusOptions();
 
-        return view('weapons.index', compact('weapons', 'statuses'));
+        return view('weapons.index', compact('weapons'));
     }
 
     public function create()
     {
-        $statuses = $this->statusOptions();
         $ownershipTypes = $this->ownershipOptions();
 
-        return view('weapons.create', compact('statuses', 'ownershipTypes'));
+        return view('weapons.create', compact('ownershipTypes'));
     }
 
     public function store(Request $request)
@@ -56,7 +50,6 @@ class WeaponController extends Controller
             'caliber' => ['required', 'string', 'max:100'],
             'brand' => ['required', 'string', 'max:100'],
             'model' => ['required', 'string', 'max:100'],
-            'operational_status' => ['required', 'in:' . implode(',', array_keys($this->statusOptions()))],
             'ownership_type' => ['required', 'in:' . implode(',', array_keys($this->ownershipOptions()))],
             'ownership_entity' => ['nullable', 'string', 'max:255'],
             'permit_type' => ['nullable', 'string', 'max:100'],
@@ -164,32 +157,44 @@ class WeaponController extends Controller
                 $query->orderByDesc('id');
             },
             'documents.file',
-            'activeCustody.custodian',
             'activeClientAssignment.client',
+            'activeClientAssignment.responsible',
         ]);
-        $statuses = $this->statusOptions();
         $ownershipTypes = $this->ownershipOptions();
-        $docTypes = $this->documentTypeOptions();
-        $responsibles = [];
-        $portfolioClients = [];
+        $responsibles = collect();
+        $portfolioClients = collect();
 
         if (request()->user()?->isAdmin()) {
             $responsibles = \App\Models\User::where('role', 'RESPONSABLE')->orderBy('name')->get();
-        }
-
-        if (request()->user()?->isResponsible()) {
+            $portfolioClients = \App\Models\Client::orderBy('name')->get();
+        } elseif (request()->user()?->isResponsible()) {
+            $responsibles = collect([request()->user()]);
             $portfolioClients = request()->user()?->clients()->orderBy('name')->get() ?? collect();
         }
 
-        return view('weapons.show', compact('weapon', 'statuses', 'ownershipTypes', 'docTypes', 'responsibles', 'portfolioClients'));
+        return view('weapons.show', compact('weapon', 'ownershipTypes', 'responsibles', 'portfolioClients'));
+    }
+
+    public function permitPhoto(Weapon $weapon)
+    {
+        $this->authorize('view', $weapon);
+
+        $permitFile = $weapon->permitFile;
+        if (!$permitFile) {
+            abort(404);
+        }
+
+        return Storage::disk($permitFile->disk)->response(
+            $permitFile->path,
+            $permitFile->original_name ?? 'permiso'
+        );
     }
 
     public function edit(Weapon $weapon)
     {
-        $statuses = $this->statusOptions();
         $ownershipTypes = $this->ownershipOptions();
 
-        return view('weapons.edit', compact('weapon', 'statuses', 'ownershipTypes'));
+        return view('weapons.edit', compact('weapon', 'ownershipTypes'));
     }
 
     public function update(Request $request, Weapon $weapon)
@@ -201,7 +206,6 @@ class WeaponController extends Controller
             'caliber' => ['required', 'string', 'max:100'],
             'brand' => ['required', 'string', 'max:100'],
             'model' => ['required', 'string', 'max:100'],
-            'operational_status' => ['required', 'in:' . implode(',', array_keys($this->statusOptions()))],
             'ownership_type' => ['required', 'in:' . implode(',', array_keys($this->ownershipOptions()))],
             'ownership_entity' => ['nullable', 'string', 'max:255'],
             'permit_type' => ['nullable', 'string', 'max:100'],
@@ -318,37 +322,12 @@ class WeaponController extends Controller
         return redirect()->route('weapons.index')->with('status', 'Arma eliminada.');
     }
 
-    private function statusOptions(): array
-    {
-        return [
-            'in_armory' => 'En armería',
-            'assigned' => 'Asignada',
-            'in_transit' => 'En tránsito',
-            'in_maintenance' => 'En mantenimiento',
-            'seized_or_withdrawn' => 'Decomisada o retirada',
-            'decommissioned' => 'Baja definitiva',
-        ];
-    }
-
     private function ownershipOptions(): array
     {
         return [
             'company_owned' => 'Propiedad de la empresa',
             'leased' => 'Arrendada',
             'third_party' => 'Terceros',
-        ];
-    }
-
-    private function documentTypeOptions(): array
-    {
-        return [
-            'ownership_support' => 'Soporte de propiedad',
-            'permit_or_authorization' => 'Permiso o autorización',
-            'revalidation' => 'Revalidación',
-            'maintenance_record' => 'Registro de mantenimiento',
-            'seizure_or_withdrawal' => 'Acta de decomiso o retiro',
-            'decommission_record' => 'Acta de baja',
-            'other' => 'Otro',
         ];
     }
 
@@ -361,3 +340,4 @@ class WeaponController extends Controller
         return $code;
     }
 }
+

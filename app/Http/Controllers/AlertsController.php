@@ -19,25 +19,19 @@ class AlertsController extends Controller
         $today = now()->startOfDay();
         $until = now()->addDays($days)->endOfDay();
 
-        $expired = WeaponDocument::with('weapon')
+        $expired = WeaponDocument::with(['weapon', 'file'])
             ->whereNotNull('valid_until')
             ->whereDate('valid_until', '<', $today)
             ->orderBy('valid_until')
             ->get();
 
-        $expiring = WeaponDocument::with('weapon')
+        $expiring = WeaponDocument::with(['weapon', 'file'])
             ->whereNotNull('valid_until')
             ->whereBetween('valid_until', [$today, $until])
             ->orderBy('valid_until')
             ->get();
 
-        $revalidations = WeaponDocument::with('weapon')
-            ->whereNotNull('revalidation_due_at')
-            ->whereBetween('revalidation_due_at', [$today, $until])
-            ->orderBy('revalidation_due_at')
-            ->get();
-
-        return view('alerts.documents', compact('expired', 'expiring', 'revalidations', 'days'));
+        return view('alerts.documents', compact('expired', 'expiring', 'days'));
     }
 
     private function authorizeAdmin(): void
