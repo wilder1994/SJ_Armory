@@ -12,12 +12,19 @@ class WeaponDocument extends Model
     protected $fillable = [
         'weapon_id',
         'file_id',
+        'document_name',
+        'document_number',
+        'permit_kind',
         'valid_until',
         'observations',
+        'is_permit',
+        'is_renewal',
     ];
 
     protected $casts = [
         'valid_until' => 'date',
+        'is_permit' => 'boolean',
+        'is_renewal' => 'boolean',
     ];
 
     public function weapon()

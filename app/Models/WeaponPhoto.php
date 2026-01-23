@@ -9,14 +9,18 @@ class WeaponPhoto extends Model
 {
     use HasFactory;
 
+    public const DESCRIPTIONS = [
+        'lado_derecho' => 'Lado derecho',
+        'lado_izquierdo' => 'Lado izquierdo',
+        'canon_disparador_marca' => 'Cañon, disparador, marca',
+        'serie' => 'Serie',
+        'aseo' => 'Aseo',
+    ];
+
     protected $fillable = [
         'weapon_id',
         'file_id',
-        'is_primary',
-    ];
-
-    protected $casts = [
-        'is_primary' => 'boolean',
+        'description',
     ];
 
     public function weapon()

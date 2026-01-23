@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\AuditLog;
 use App\Models\File;
 use App\Models\Weapon;
+use App\Models\WeaponPhoto;
+use App\Services\WeaponDocumentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -41,7 +43,7 @@ class WeaponController extends Controller
         return view('weapons.create', compact('ownershipTypes'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, WeaponDocumentService $documentService)
     {
         $data = $request->validate([
             'internal_code' => ['nullable', 'string', 'max:100', 'unique:weapons,internal_code'],
@@ -52,13 +54,13 @@ class WeaponController extends Controller
             'model' => ['required', 'string', 'max:100'],
             'ownership_type' => ['required', 'in:' . implode(',', array_keys($this->ownershipOptions()))],
             'ownership_entity' => ['nullable', 'string', 'max:255'],
-            'permit_type' => ['nullable', 'string', 'max:100'],
+            'permit_type' => ['required', 'in:porte,tenencia'],
             'permit_number' => ['nullable', 'string', 'max:100'],
             'permit_expires_at' => ['nullable', 'date'],
             'notes' => ['nullable', 'string'],
             'photos' => ['nullable', 'array', 'max:5'],
             'photos.*' => ['nullable', 'file', 'image', 'max:5120'],
-            'permit_photo' => ['nullable', 'file', 'image', 'max:5120'],
+            'permit_photo' => ['required', 'file', 'image', 'max:5120'],
         ]);
 
         if (empty($data['internal_code'])) {
@@ -66,13 +68,14 @@ class WeaponController extends Controller
         }
 
         $photos = $request->file('photos', []);
+        $photoOrder = array_keys(WeaponPhoto::DESCRIPTIONS);
         $permitPhoto = $request->file('permit_photo');
         $storedPaths = [];
         $storedPermitPath = null;
         $weapon = null;
 
         try {
-            DB::transaction(function () use (&$weapon, $data, $photos, $permitPhoto, $request, &$storedPaths, &$storedPermitPath) {
+            DB::transaction(function () use (&$weapon, $data, $photos, $photoOrder, $permitPhoto, $request, $documentService, &$storedPaths, &$storedPermitPath) {
                 $weapon = Weapon::create($data);
 
                 if ($permitPhoto) {
@@ -90,14 +93,28 @@ class WeaponController extends Controller
                     $weapon->update(['permit_file_id' => $storedFile->id]);
                 }
 
+                $documentService->syncPermitDocument($weapon);
+                $documentService->syncRenewalDocument($weapon);
+
                 if (!$photos) {
                     return;
                 }
 
-                $isPrimary = true;
-                foreach ($photos as $photoFile) {
+                foreach ($photoOrder as $index => $description) {
+                    $photoFile = $photos[$index] ?? null;
                     if (!$photoFile) {
                         continue;
+                    }
+
+                    $existingPhoto = $weapon->photos()->with('file')
+                        ->where('description', $description)
+                        ->first();
+                    if ($existingPhoto) {
+                        if ($existingPhoto->file) {
+                            Storage::disk($existingPhoto->file->disk)->delete($existingPhoto->file->path);
+                            $existingPhoto->file->delete();
+                        }
+                        $existingPhoto->delete();
                     }
 
                     $path = $photoFile->store('weapons/' . $weapon->id . '/photos', 'public');
@@ -115,7 +132,7 @@ class WeaponController extends Controller
 
                     $photo = $weapon->photos()->create([
                         'file_id' => $storedFile->id,
-                        'is_primary' => $isPrimary,
+                        'description' => $description,
                     ]);
 
                     AuditLog::create([
@@ -127,10 +144,9 @@ class WeaponController extends Controller
                         'after' => [
                             'photo_id' => $photo->id,
                             'file_id' => $storedFile->id,
+                            'description' => $photo->description,
                         ],
                     ]);
-
-                    $isPrimary = false;
                 }
             });
         } catch (Throwable $e) {
@@ -150,11 +166,13 @@ class WeaponController extends Controller
     {
         $weapon->load([
             'photos' => function ($query) {
-                $query->orderByDesc('is_primary')->orderBy('id');
+                $query->orderBy('id');
             },
             'photos.file',
             'documents' => function ($query) {
-                $query->orderByDesc('id');
+                $query->orderByDesc('is_permit')
+                    ->orderByDesc('is_renewal')
+                    ->orderByDesc('id');
             },
             'documents.file',
             'activeClientAssignment.client',
@@ -171,6 +189,14 @@ class WeaponController extends Controller
             $responsibles = collect([request()->user()]);
             $portfolioClients = request()->user()?->clients()->orderBy('name')->get() ?? collect();
         }
+
+        $photoOrder = array_keys(WeaponPhoto::DESCRIPTIONS);
+        $weapon->setRelation(
+            'photos',
+            $weapon->photos
+                ->sortBy(fn ($photo) => array_search($photo->description, $photoOrder, true) ?? PHP_INT_MAX)
+                ->values()
+        );
 
         return view('weapons.show', compact('weapon', 'ownershipTypes', 'responsibles', 'portfolioClients'));
     }
@@ -190,6 +216,48 @@ class WeaponController extends Controller
         );
     }
 
+    public function updatePermitPhoto(Request $request, Weapon $weapon, WeaponDocumentService $documentService)
+    {
+        $this->authorize('update', $weapon);
+
+        $data = $request->validate([
+            'photo' => ['required', 'image', 'max:5120'],
+        ]);
+
+        $permitPhoto = $data['photo'];
+        $storedPermitPath = $permitPhoto->store('weapons/' . $weapon->id . '/permits', 'local');
+
+        try {
+            DB::transaction(function () use ($request, $weapon, $permitPhoto, $storedPermitPath) {
+                $storedFile = File::create([
+                    'disk' => 'local',
+                    'path' => $storedPermitPath,
+                    'original_name' => $permitPhoto->getClientOriginalName(),
+                    'mime_type' => $permitPhoto->getClientMimeType(),
+                    'size' => $permitPhoto->getSize(),
+                    'checksum' => hash_file('sha256', $permitPhoto->getRealPath()),
+                    'uploaded_by' => $request->user()?->id,
+                ]);
+
+                $oldPermitFile = $weapon->permitFile;
+                $weapon->update(['permit_file_id' => $storedFile->id]);
+
+                if ($oldPermitFile) {
+                    Storage::disk($oldPermitFile->disk)->delete($oldPermitFile->path);
+                    $oldPermitFile->delete();
+                }
+            });
+        } catch (Throwable $e) {
+            Storage::disk('local')->delete($storedPermitPath);
+            throw $e;
+        }
+
+        $documentService->syncPermitDocument($weapon);
+        $documentService->syncRenewalDocument($weapon);
+
+        return response()->json(['ok' => true]);
+    }
+
     public function edit(Weapon $weapon)
     {
         $ownershipTypes = $this->ownershipOptions();
@@ -197,7 +265,7 @@ class WeaponController extends Controller
         return view('weapons.edit', compact('weapon', 'ownershipTypes'));
     }
 
-    public function update(Request $request, Weapon $weapon)
+    public function update(Request $request, Weapon $weapon, WeaponDocumentService $documentService)
     {
         $data = $request->validate([
             'internal_code' => ['required', 'string', 'max:100', 'unique:weapons,internal_code,' . $weapon->id],
@@ -208,7 +276,7 @@ class WeaponController extends Controller
             'model' => ['required', 'string', 'max:100'],
             'ownership_type' => ['required', 'in:' . implode(',', array_keys($this->ownershipOptions()))],
             'ownership_entity' => ['nullable', 'string', 'max:255'],
-            'permit_type' => ['nullable', 'string', 'max:100'],
+            'permit_type' => ['required', 'in:porte,tenencia'],
             'permit_number' => ['nullable', 'string', 'max:100'],
             'permit_expires_at' => ['nullable', 'date'],
             'notes' => ['nullable', 'string'],
@@ -217,17 +285,14 @@ class WeaponController extends Controller
             'permit_photo' => ['nullable', 'file', 'image', 'max:5120'],
         ]);
 
-        $photos = collect($request->file('photos', []))->filter()->values();
+        $photos = $request->file('photos', []);
+        $photoOrder = array_keys(WeaponPhoto::DESCRIPTIONS);
         $permitPhoto = $request->file('permit_photo');
         $storedPaths = [];
         $storedPermitPath = null;
 
         try {
-            DB::transaction(function () use ($data, $photos, $permitPhoto, $request, $weapon, &$storedPaths, &$storedPermitPath) {
-                $existingPhotos = $photos->isNotEmpty()
-                    ? $weapon->photos()->with('file')->get()
-                    : collect();
-
+            DB::transaction(function () use ($data, $photos, $photoOrder, $permitPhoto, $request, $weapon, $documentService, &$storedPaths, &$storedPermitPath) {
                 if ($permitPhoto) {
                     $storedPermitPath = $permitPhoto->store('weapons/' . $weapon->id . '/permits', 'local');
                     $storedFile = File::create([
@@ -251,14 +316,24 @@ class WeaponController extends Controller
                     $oldPermitFile->delete();
                 }
 
-                if ($photos->isEmpty()) {
-                    return;
-                }
+                $documentService->syncPermitDocument($weapon);
+                $documentService->syncRenewalDocument($weapon);
 
-                $isPrimary = true;
-                foreach ($photos as $photoFile) {
+                foreach ($photoOrder as $index => $description) {
+                    $photoFile = $photos[$index] ?? null;
                     if (!$photoFile) {
                         continue;
+                    }
+
+                    $existingPhoto = $weapon->photos()->with('file')
+                        ->where('description', $description)
+                        ->first();
+                    if ($existingPhoto) {
+                        if ($existingPhoto->file) {
+                            Storage::disk($existingPhoto->file->disk)->delete($existingPhoto->file->path);
+                            $existingPhoto->file->delete();
+                        }
+                        $existingPhoto->delete();
                     }
 
                     $path = $photoFile->store('weapons/' . $weapon->id . '/photos', 'public');
@@ -276,7 +351,7 @@ class WeaponController extends Controller
 
                     $photo = $weapon->photos()->create([
                         'file_id' => $storedFile->id,
-                        'is_primary' => $isPrimary,
+                        'description' => $description,
                     ]);
 
                     AuditLog::create([
@@ -288,18 +363,9 @@ class WeaponController extends Controller
                         'after' => [
                             'photo_id' => $photo->id,
                             'file_id' => $storedFile->id,
+                            'description' => $photo->description,
                         ],
                     ]);
-
-                    $isPrimary = false;
-                }
-
-                foreach ($existingPhotos as $existingPhoto) {
-                    if ($existingPhoto->file) {
-                        Storage::disk($existingPhoto->file->disk)->delete($existingPhoto->file->path);
-                        $existingPhoto->file->delete();
-                    }
-                    $existingPhoto->delete();
                 }
             });
         } catch (Throwable $e) {

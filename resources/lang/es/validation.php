@@ -165,6 +165,7 @@ return [
         'notes' => 'notas',
         'photos' => 'fotos',
         'photo' => 'foto',
+        'description' => 'descripcion',
         'document' => 'documento',
         'valid_until' => 'fecha de vencimiento',
         'observations' => 'observaciones',

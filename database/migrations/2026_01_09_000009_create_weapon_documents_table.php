@@ -12,8 +12,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('weapon_id')->constrained()->cascadeOnDelete();
             $table->foreignId('file_id')->constrained('files')->cascadeOnDelete();
+            $table->string('document_name')->nullable();
+            $table->string('document_number')->nullable();
+            $table->string('permit_kind')->nullable();
             $table->date('valid_until')->nullable();
             $table->text('observations')->nullable();
+            $table->boolean('is_permit')->default(false);
+            $table->boolean('is_renewal')->default(false);
             $table->timestamps();
         });
     }

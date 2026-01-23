@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\File;
 use App\Models\Weapon;
 use App\Models\WeaponDocument;
+use App\Services\WeaponDocumentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -40,8 +41,13 @@ class WeaponDocumentController extends Controller
 
                 $document = $weapon->documents()->create([
                     'file_id' => $storedFile->id,
+                    'document_name' => $storedFile->original_name,
+                    'document_number' => null,
+                    'permit_kind' => null,
                     'valid_until' => $data['valid_until'] ?? null,
                     'observations' => $data['observations'] ?? null,
+                    'is_permit' => false,
+                    'is_renewal' => false,
                 ]);
 
                 AuditLog::create([
@@ -64,7 +70,7 @@ class WeaponDocumentController extends Controller
         return redirect()->route('weapons.show', $weapon)->with('status', 'Documento cargado.');
     }
 
-    public function download(Weapon $weapon, WeaponDocument $document)
+    public function download(Weapon $weapon, WeaponDocument $document, WeaponDocumentService $documentService)
     {
         $this->authorize('view', $weapon);
 
@@ -74,6 +80,16 @@ class WeaponDocumentController extends Controller
 
         $file = $document->file;
         if (!$file) {
+            abort(404);
+        }
+
+        if ($document->is_renewal) {
+            $documentService->syncRenewalDocument($weapon);
+            $document->refresh();
+            $file = $document->file;
+        }
+
+        if (!$file || !Storage::disk($file->disk)->exists($file->path)) {
             abort(404);
         }
 

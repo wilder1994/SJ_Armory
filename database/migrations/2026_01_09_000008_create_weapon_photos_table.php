@@ -12,8 +12,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('weapon_id')->constrained()->cascadeOnDelete();
             $table->foreignId('file_id')->constrained('files')->cascadeOnDelete();
-            $table->boolean('is_primary')->default(false);
+            $table->string('description', 100);
             $table->timestamps();
+
+            $table->unique(['weapon_id', 'description']);
         });
     }
 

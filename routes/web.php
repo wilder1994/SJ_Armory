@@ -42,11 +42,13 @@ Route::middleware('auth')->group(function () {
     Route::resource('weapons', WeaponController::class);
     Route::get('/weapons/{weapon}/permit', [WeaponController::class, 'permitPhoto'])
         ->name('weapons.permit');
+    Route::patch('/weapons/{weapon}/permit', [WeaponController::class, 'updatePermitPhoto'])
+        ->name('weapons.permit.update');
 
     Route::post('/weapons/{weapon}/photos', [WeaponPhotoController::class, 'store'])
         ->name('weapons.photos.store');
-    Route::patch('/weapons/{weapon}/photos/{photo}/primary', [WeaponPhotoController::class, 'setPrimary'])
-        ->name('weapons.photos.primary');
+    Route::patch('/weapons/{weapon}/photos/{photo}', [WeaponPhotoController::class, 'update'])
+        ->name('weapons.photos.update');
     Route::delete('/weapons/{weapon}/photos/{photo}', [WeaponPhotoController::class, 'destroy'])
         ->name('weapons.photos.destroy');
 
