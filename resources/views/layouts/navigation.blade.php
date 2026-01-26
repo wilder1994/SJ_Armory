@@ -4,51 +4,54 @@
         <div class="flex justify-between h-16">
             <div class="flex items-center">
                 <!-- Logo -->
-                <div class="-ml-36 shrink-0 flex items-center">
+                <div class="-ml-12 shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}">
                         <x-application-logo class="block" />
                     </a>
                 </div>
                 <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-36 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Inicio') }}
+                <div class="hidden sm:-my-px sm:flex sm:items-center">
+                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="me-4">
+                        <span class="text-gray-900">{{ __('Inicio') }}</span>
                     </x-nav-link>
-                    @can('viewAny', App\Models\Weapon::class)
-                        <x-nav-link :href="route('weapons.index')" :active="request()->routeIs('weapons.*')">
-                            {{ __('Armamento') }}
-                        </x-nav-link>
-                    @endcan
-                    @can('viewAny', App\Models\Client::class)
-                        <x-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.*')">
-                            {{ __('Clientes') }}
-                        </x-nav-link>
-                    @endcan
-                    @if (Auth::user()?->isAdmin())
-                        <x-nav-link :href="route('portfolios.index')" :active="request()->routeIs('portfolios.*')">
-                            {{ __('Carteras') }}
-                        </x-nav-link>
-                        <x-nav-link :href="route('posts.index')" :active="request()->routeIs('posts.*')">
-                            {{ __('Puestos') }}
-                        </x-nav-link>
-                        <x-nav-link :href="route('workers.index')" :active="request()->routeIs('workers.*')">
-                            {{ __('Trabajadores') }}
-                        </x-nav-link>
-                        <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
-                            {{ __('Usuarios') }}
-                        </x-nav-link>
-                        <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
-                            {{ __('Reportes') }}
-                        </x-nav-link>
-                        <x-nav-link :href="route('alerts.documents')" :active="request()->routeIs('alerts.*')">
-                            {{ __('Alertas') }}
-                        </x-nav-link>
-                    @endif
-                    @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsible())
-                        <x-nav-link :href="route('transfers.index')" :active="request()->routeIs('transfers.*')">
-                            {{ __('Transferencias') }}
-                        </x-nav-link>
-                    @endif
+                    
+                    <div class="hidden space-x-8 sm:ms-10 sm:flex">
+                        @can('viewAny', App\Models\Weapon::class)
+                            <x-nav-link :href="route('weapons.index')" :active="request()->routeIs('weapons.*')">
+                                {{ __('Armamento') }}
+                            </x-nav-link>
+                        @endcan
+                        @can('viewAny', App\Models\Client::class)
+                            <x-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.*')">
+                                {{ __('Clientes') }}
+                            </x-nav-link>
+                        @endcan
+                        @if (Auth::user()?->isAdmin())
+                            <x-nav-link :href="route('portfolios.index')" :active="request()->routeIs('portfolios.*')">
+                                {{ __('Carteras') }}
+                            </x-nav-link>
+                            <x-nav-link :href="route('posts.index')" :active="request()->routeIs('posts.*')">
+                                {{ __('Puestos') }}
+                            </x-nav-link>
+                            <x-nav-link :href="route('workers.index')" :active="request()->routeIs('workers.*')">
+                                {{ __('Trabajadores') }}
+                            </x-nav-link>
+                            <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                                {{ __('Usuarios') }}
+                            </x-nav-link>
+                            <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
+                                {{ __('Reportes') }}
+                            </x-nav-link>
+                            <x-nav-link :href="route('alerts.documents')" :active="request()->routeIs('alerts.*')">
+                                {{ __('Alertas') }}
+                            </x-nav-link>
+                        @endif
+                        @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsible())
+                            <x-nav-link :href="route('transfers.index')" :active="request()->routeIs('transfers.*')">
+                                {{ __('Transferencias') }}
+                            </x-nav-link>
+                        @endif
+                    </div>
                 </div>
             </div>
 
