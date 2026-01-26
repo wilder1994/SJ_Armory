@@ -24,10 +24,37 @@ class WeaponController extends Controller
     {
         $query = Weapon::query();
         $user = $request->user();
+        $search = trim((string) $request->input('q', ''));
 
         if ($user->isResponsible() && !$user->isAdmin()) {
             $query->whereHas('clientAssignments', function ($assignmentQuery) use ($user) {
                 $assignmentQuery->where('responsible_user_id', $user->id)->where('is_active', true);
+            });
+        }
+
+        if ($search !== '') {
+            $query->where(function ($builder) use ($search) {
+                $builder->where('internal_code', 'like', '%' . $search . '%')
+                    ->orWhere('serial_number', 'like', '%' . $search . '%')
+                    ->orWhere('weapon_type', 'like', '%' . $search . '%')
+                    ->orWhere('permit_type', 'like', '%' . $search . '%')
+                    ->orWhere('permit_number', 'like', '%' . $search . '%')
+                    ->orWhere('caliber', 'like', '%' . $search . '%')
+                    ->orWhere('brand', 'like', '%' . $search . '%')
+                    ->orWhere('model', 'like', '%' . $search . '%')
+                    ->orWhereHas('activeClientAssignment.client', function ($clientQuery) use ($search) {
+                        $clientQuery->where('name', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('activeClientAssignment.responsible', function ($userQuery) use ($search) {
+                        $userQuery->where('name', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('activePostAssignment.post', function ($postQuery) use ($search) {
+                        $postQuery->where('name', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('activeWorkerAssignment.worker', function ($workerQuery) use ($search) {
+                        $workerQuery->where('name', 'like', '%' . $search . '%')
+                            ->orWhere('document', 'like', '%' . $search . '%');
+                    });
             });
         }
 
@@ -36,9 +63,16 @@ class WeaponController extends Controller
             'activeClientAssignment.responsible',
             'activePostAssignment.post',
             'activeWorkerAssignment.worker',
-        ])->orderByDesc('id')->paginate(15)->withQueryString();
+        ])->orderByDesc('id')->paginate(50)->withQueryString();
 
-        return view('weapons.index', compact('weapons'));
+        if ($request->expectsJson()) {
+            return response()->json([
+                'tbody' => view('weapons.partials.index_rows', compact('weapons'))->render(),
+                'pagination' => view('weapons.partials.index_pagination', compact('weapons'))->render(),
+            ]);
+        }
+
+        return view('weapons.index', compact('weapons', 'search'));
     }
 
     public function create()

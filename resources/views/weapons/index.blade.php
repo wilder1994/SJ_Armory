@@ -1,9 +1,16 @@
 ﻿<x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-4">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ Auth::user()->isResponsible() && !Auth::user()->isAdmin() ? __('Mis armas') : __('Armamento') }}
             </h2>
+            <div class="flex-1 flex justify-center">
+                <div class="w-full max-w-md">
+                    <input id="weapons-search" type="search" name="q" value="{{ $search ?? '' }}"
+                        class="w-full rounded-md border-gray-300 text-sm"
+                        placeholder="{{ __('Buscar en todas las columnas...') }}">
+                </div>
+            </div>
             @can('create', App\Models\Weapon::class)
                 <a href="{{ route('weapons.create') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-900">
                     {{ __('Nueva arma') }}
@@ -22,87 +29,32 @@
 
             <div class="bg-white shadow-sm sm:rounded-lg w-full">
                 <div class="p-6 text-gray-900">
-                    <div id="weapons-table-scroll" class="overflow-x-auto w-full weapons-table-scroll">
-                        <table class="min-w-full divide-y divide-gray-200 text-sm min-w-[2200px]">
-                        <thead class="bg-gray-50">
+                    <div id="weapons-table-scroll" class="w-full overflow-auto weapons-table-scroll relative" style="max-height: calc(100vh - 320px);">
+                            <table class="min-w-full divide-y divide-gray-200 text-sm min-w-[2200px]">
+                        <thead class="bg-gray-50 sticky top-0 z-20">
                             <tr>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap">{{ __('Código interno') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 min-w-[200px] whitespace-nowrap">{{ __('Cliente') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 min-w-[200px] whitespace-nowrap">{{ __('Responsable') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap">{{ __('Serie') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap">{{ __('Tipo de arma') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap">{{ __('Tipo de permiso') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap">{{ __('Número de permiso') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap">{{ __('Vence') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap">{{ __('Estado') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 min-w-[220px] whitespace-nowrap">{{ __('Puesto o trabajador') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap">{{ __('Cédula') }}</th>
-                                <th class="px-3 py-2 text-right font-medium text-gray-600 whitespace-nowrap">{{ __('Acciones') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Código interno') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600 min-w-[200px] whitespace-nowrap bg-gray-50">{{ __('Cliente') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600 min-w-[200px] whitespace-nowrap bg-gray-50">{{ __('Responsable') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Serie') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Tipo de arma') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Tipo de permiso') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Número de permiso') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Vence') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Estado') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600 min-w-[220px] whitespace-nowrap bg-gray-50">{{ __('Puesto o trabajador') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Cédula') }}</th>
+                                <th class="px-3 py-2 text-right font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Acciones') }}</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200">
-                            @forelse ($weapons as $weapon)
-                                <tr>
-                                    <td class="px-3 py-2 whitespace-nowrap">
-                                        <span title="{{ $weapon->internal_code }}">
-                                            {{ \Illuminate\Support\Str::limit($weapon->internal_code, 8) }}
-                                        </span>
-                                    </td>
-                                    <td class="px-3 py-2 min-w-[200px] whitespace-nowrap">{{ $weapon->activeClientAssignment?->client?->name ?? __('Sin destino') }}</td>
-                                    <td class="px-3 py-2 min-w-[200px] whitespace-nowrap">{{ $weapon->activeClientAssignment?->responsible?->name ?? '-' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap">{{ $weapon->serial_number }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap">{{ $weapon->weapon_type }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap">{{ $weapon->permit_type ?? '-' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap">{{ $weapon->permit_number ?? '-' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap">{{ $weapon->permit_expires_at?->format('Y-m-d') ?? '-' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap">
-                                        {{ $weapon->activeClientAssignment ? __('Asignada') : __('Sin destino') }}
-                                    </td>
-                                    <td class="px-3 py-2 min-w-[220px] whitespace-nowrap">
-                                        @if ($weapon->activePostAssignment)
-                                            {{ $weapon->activePostAssignment->post?->name }}
-                                        @elseif ($weapon->activeWorkerAssignment)
-                                            {{ $weapon->activeWorkerAssignment->worker?->name }}
-                                        @else
-                                            -
-                                        @endif
-                                    </td>
-                                    <td class="px-3 py-2 whitespace-nowrap">
-                                        {{ $weapon->activeWorkerAssignment?->worker?->document ?? '-' }}
-                                    </td>
-                                    <td class="px-3 py-2 text-right space-x-2 whitespace-nowrap">
-                                        <a href="{{ route('weapons.show', $weapon) }}" class="text-indigo-600 hover:text-indigo-900">
-                                            {{ __('Ver') }}
-                                        </a>
-                                        @can('update', $weapon)
-                                            <a href="{{ route('weapons.edit', $weapon) }}" class="text-indigo-600 hover:text-indigo-900">
-                                                {{ __('Editar') }}
-                                            </a>
-                                        @endcan
-                                        @can('delete', $weapon)
-                                            <form action="{{ route('weapons.destroy', $weapon) }}" method="POST" class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('¿Eliminar arma?')">
-                                                    {{ __('Eliminar') }}
-                                                </button>
-                                            </form>
-                                        @endcan
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="12" class="px-3 py-6 text-center text-gray-500">
-                                        {{ __('No hay armas registradas.') }}
-                                    </td>
-                                </tr>
-                            @endforelse
+                        <tbody id="weapons-tbody" class="divide-y divide-gray-200">
+                            @include('weapons.partials.index_rows', ['weapons' => $weapons])
                         </tbody>
                         </table>
                     </div>
 
-                    <div class="mt-4">
-                        {{ $weapons->links() }}
+                    <div id="weapons-pagination">
+                        @include('weapons.partials.index_pagination', ['weapons' => $weapons])
                     </div>
                 </div>
             </div>
@@ -152,23 +104,81 @@
 
 <script>
     (() => {
-        const tableScroll = document.getElementById('weapons-table-scroll');
-        const barScroll = document.getElementById('weapons-scrollbar');
-        if (!tableScroll || !barScroll) {
+        const input = document.getElementById('weapons-search');
+        const tbody = document.getElementById('weapons-tbody');
+        const pagination = document.getElementById('weapons-pagination');
+        if (!input || !tbody || !pagination) {
             return;
         }
 
-        let syncing = false;
+        const highlight = (term) => {
+            if (!term) {
+                tbody.querySelectorAll('td').forEach((cell) => {
+                    if (cell.dataset.original !== undefined) {
+                        cell.innerHTML = cell.dataset.original;
+                    }
+                });
+                return;
+            }
 
-        const sync = (from, to) => {
-            if (syncing) return;
-            syncing = true;
-            to.scrollLeft = from.scrollLeft;
-            syncing = false;
+            const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(escaped, 'gi');
+
+            tbody.querySelectorAll('td').forEach((cell) => {
+                if (cell.dataset.original === undefined) {
+                    cell.dataset.original = cell.innerHTML;
+                }
+                const text = cell.dataset.original;
+                cell.innerHTML = text.replace(regex, (match) => `<mark class="bg-yellow-200">${match}</mark>`);
+            });
         };
 
-        barScroll.addEventListener('scroll', () => sync(barScroll, tableScroll));
-        tableScroll.addEventListener('scroll', () => sync(tableScroll, barScroll));
+        const updateList = async (url) => {
+            const response = await fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            if (!response.ok) {
+                return;
+            }
+            const data = await response.json();
+            tbody.innerHTML = data.tbody;
+            pagination.innerHTML = data.pagination;
+            highlight(input.value.trim());
+        };
+
+        let timer = null;
+        input.addEventListener('input', () => {
+            const query = input.value.trim();
+            const url = new URL(window.location.href);
+            url.searchParams.set('q', query);
+            url.searchParams.set('page', '1');
+            window.history.replaceState({}, '', url.toString());
+
+            if (timer) {
+                clearTimeout(timer);
+            }
+
+            timer = setTimeout(() => {
+                updateList(url.toString());
+            }, 300);
+        });
+
+        pagination.addEventListener('click', (event) => {
+            const link = event.target.closest('a');
+            if (!link) return;
+            event.preventDefault();
+            const url = new URL(link.href);
+            const query = input.value.trim();
+            if (query) {
+                url.searchParams.set('q', query);
+            }
+            window.history.replaceState({}, '', url.toString());
+            updateList(url.toString());
+        });
+
+        if (input.value.trim() !== '') {
+            highlight(input.value.trim());
+        }
     })();
 </script>
 
