@@ -107,6 +107,7 @@ class WeaponDocumentService
         $left = $this->imagePath($photos->get('lado_izquierdo'));
         $mark = $this->imagePath($photos->get('canon_disparador_marca'));
         $serial = $this->imagePath($photos->get('serie'));
+        $imprint = $this->imagePath($photos->get('aseo'));
 
         $title = trim('PISTOLA ' . ($weapon->brand ?? '') . ' ' . ($weapon->serial_number ?? ''));
         $title = strtoupper(trim(preg_replace('/\s+/', ' ', $title)));
@@ -116,7 +117,7 @@ class WeaponDocumentService
         $processor->setImageValue('foto_izquierda', $this->imageSpec($left));
         $processor->setImageValue('foto_marca', $this->imageSpec($mark));
         $processor->setImageValue('foto_serie', $this->imageSpec($serial));
-        $processor->setValue('impronta', '');
+        $processor->setImageValue('impronta', $this->imprintSpec($imprint));
 
         $processor->saveAs($outputPath);
     }
@@ -140,6 +141,28 @@ class WeaponDocumentService
     {
         $widthPx = $this->cmToPx(7.2);
         $heightPx = $this->cmToPx(5.9);
+        $blank = storage_path('app/tmp/blank.png');
+        if (!file_exists($blank)) {
+            @mkdir(dirname($blank), 0777, true);
+            file_put_contents($blank, base64_decode(
+                'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/xcAAn8B9x2XWAAAAABJRU5ErkJggg=='
+            ));
+        }
+
+        $safePath = $path && file_exists($path) ? $path : $blank;
+
+        return [
+            'path' => $safePath,
+            'width' => $widthPx,
+            'height' => $heightPx,
+            'ratio' => false,
+        ];
+    }
+
+    private function imprintSpec(?string $path): array
+    {
+        $widthPx = $this->cmToPx(5.9);
+        $heightPx = $this->cmToPx(1.4);
         $blank = storage_path('app/tmp/blank.png');
         if (!file_exists($blank)) {
             @mkdir(dirname($blank), 0777, true);
