@@ -1,0 +1,42 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class WeaponWorkerAssignment extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'weapon_id',
+        'worker_id',
+        'assigned_by',
+        'start_at',
+        'end_at',
+        'is_active',
+        'reason',
+    ];
+
+    protected $casts = [
+        'start_at' => 'date',
+        'end_at' => 'date',
+        'is_active' => 'boolean',
+    ];
+
+    public function weapon()
+    {
+        return $this->belongsTo(Weapon::class);
+    }
+
+    public function worker()
+    {
+        return $this->belongsTo(Worker::class);
+    }
+
+    public function assignedBy()
+    {
+        return $this->belongsTo(User::class, 'assigned_by');
+    }
+}

@@ -7,14 +7,14 @@
 
 @if (!empty($showInternalCode))
     <div>
-        <x-input-label for="internal_code" :value="__('Codigo interno')" />
+        <x-input-label for="internal_code" :value="__('Código interno')" />
         <x-text-input id="internal_code" name="internal_code" type="text" class="mt-1 block w-full" value="{{ old('internal_code', $weapon?->internal_code) }}" required />
         <x-input-error :messages="$errors->get('internal_code')" class="mt-2" />
     </div>
 @endif
 
 <div>
-    <x-input-label for="serial_number" :value="__('Numero de serie')" />
+    <x-input-label for="serial_number" :value="__('Número de serie')" />
     <x-text-input id="serial_number" name="serial_number" type="text" class="mt-1 block w-full" value="{{ old('serial_number', $weapon?->serial_number) }}" required />
     <x-input-error :messages="$errors->get('serial_number')" class="mt-2" />
 </div>
@@ -107,7 +107,7 @@
 </div>
 
     <div>
-        <x-input-label for="permit_number" :value="__('Numero de permiso')" />
+        <x-input-label for="permit_number" :value="__('Número de permiso')" />
         <x-text-input id="permit_number" name="permit_number" type="text" class="mt-1 block w-full" value="{{ old('permit_number', $weapon?->permit_number) }}" />
         <x-input-error :messages="$errors->get('permit_number')" class="mt-2" />
     </div>

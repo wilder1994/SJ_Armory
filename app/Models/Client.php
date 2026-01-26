@@ -24,4 +24,14 @@ class Client extends Model
     {
         return $this->belongsToMany(User::class, 'user_clients')->withTimestamps();
     }
+
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
+
+    public function workers()
+    {
+        return $this->hasMany(Worker::class);
+    }
 }

@@ -20,7 +20,7 @@
                         </div>
 
                         <div>
-                            <x-input-label for="email" :value="__('Correo electr?nico')" />
+                            <x-input-label for="email" :value="__('Correo electrónico')" />
                             <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" value="{{ old('email', $user->email) }}" required />
                             <x-input-error :messages="$errors->get('email')" class="mt-2" />
                         </div>

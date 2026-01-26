@@ -31,7 +31,12 @@ class WeaponController extends Controller
             });
         }
 
-        $weapons = $query->with(['activeClientAssignment.client'])->orderByDesc('id')->paginate(15)->withQueryString();
+        $weapons = $query->with([
+            'activeClientAssignment.client',
+            'activeClientAssignment.responsible',
+            'activePostAssignment.post',
+            'activeWorkerAssignment.worker',
+        ])->orderByDesc('id')->paginate(15)->withQueryString();
 
         return view('weapons.index', compact('weapons'));
     }
@@ -177,17 +182,41 @@ class WeaponController extends Controller
             'documents.file',
             'activeClientAssignment.client',
             'activeClientAssignment.responsible',
+            'activePostAssignment.post',
+            'activeWorkerAssignment.worker',
         ]);
         $ownershipTypes = $this->ownershipOptions();
         $responsibles = collect();
         $portfolioClients = collect();
+        $posts = collect();
+        $workers = collect();
+        $transferRecipients = collect();
 
         if (request()->user()?->isAdmin()) {
             $responsibles = \App\Models\User::where('role', 'RESPONSABLE')->orderBy('name')->get();
             $portfolioClients = \App\Models\Client::orderBy('name')->get();
+            $transferRecipients = $responsibles;
         } elseif (request()->user()?->isResponsible()) {
             $responsibles = collect([request()->user()]);
             $portfolioClients = request()->user()?->clients()->orderBy('name')->get() ?? collect();
+            $transferRecipients = \App\Models\User::where('role', 'RESPONSABLE')->orderBy('name')->get();
+        }
+
+        $activeClientId = $weapon->activeClientAssignment?->client_id;
+        if ($activeClientId) {
+            if (request()->user()?->isAdmin()) {
+                $posts = \App\Models\Post::where('client_id', $activeClientId)->orderBy('name')->get();
+                $workers = \App\Models\Worker::where('client_id', $activeClientId)->orderBy('name')->get();
+            } elseif (request()->user()?->isResponsible()) {
+                $inPortfolio = request()->user()?->clients()->whereKey($activeClientId)->exists() ?? false;
+                if ($inPortfolio) {
+                    $posts = \App\Models\Post::where('client_id', $activeClientId)->orderBy('name')->get();
+                    $workers = \App\Models\Worker::where('client_id', $activeClientId)
+                        ->where('responsible_user_id', request()->user()?->id)
+                        ->orderBy('name')
+                        ->get();
+                }
+            }
         }
 
         $photoOrder = array_keys(WeaponPhoto::DESCRIPTIONS);
@@ -198,7 +227,7 @@ class WeaponController extends Controller
                 ->values()
         );
 
-        return view('weapons.show', compact('weapon', 'ownershipTypes', 'responsibles', 'portfolioClients'));
+        return view('weapons.show', compact('weapon', 'ownershipTypes', 'responsibles', 'portfolioClients', 'posts', 'workers', 'transferRecipients'));
     }
 
     public function permitPhoto(Weapon $weapon)

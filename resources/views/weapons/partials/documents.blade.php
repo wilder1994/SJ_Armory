@@ -63,7 +63,7 @@
                                 <div class="font-medium">{{ $document->document_name ?? __('Documento') }}</div>
                                 <div class="text-xs text-gray-500">
                                     @if ($document->document_number)
-                                        {{ __('Numero:') }} {{ $document->document_number }} |
+                                        {{ __('Número:') }} {{ $document->document_number }} |
                                     @endif
                                     {{ __('Tipo:') }} {{ $fileType ?: '-' }}
                                 </div>

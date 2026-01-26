@@ -25,7 +25,7 @@
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Nombre') }}</th>
-                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Correo electr?nico') }}</th>
+                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Correo electrónico') }}</th>
                                     <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Responsable') }}</th>
                                     <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Cargo') }}</th>
                                     <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Nivel de responsabilidad') }}</th>

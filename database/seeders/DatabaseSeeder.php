@@ -17,6 +17,9 @@ class DatabaseSeeder extends Seeder
             ResponsibilityLevelSeeder::class,
             AdminUserSeeder::class,
             ClientSeeder::class,
+            WeaponSeeder::class,
+            WorkerSeeder::class,
+            PostSeeder::class,
         ]);
     }
 }

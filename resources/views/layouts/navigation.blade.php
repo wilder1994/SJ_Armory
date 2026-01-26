@@ -28,6 +28,12 @@
                         <x-nav-link :href="route('portfolios.index')" :active="request()->routeIs('portfolios.*')">
                             {{ __('Carteras') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('posts.index')" :active="request()->routeIs('posts.*')">
+                            {{ __('Puestos') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('workers.index')" :active="request()->routeIs('workers.*')">
+                            {{ __('Trabajadores') }}
+                        </x-nav-link>
                         <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
                             {{ __('Usuarios') }}
                         </x-nav-link>
@@ -36,6 +42,11 @@
                         </x-nav-link>
                         <x-nav-link :href="route('alerts.documents')" :active="request()->routeIs('alerts.*')">
                             {{ __('Alertas') }}
+                        </x-nav-link>
+                    @endif
+                    @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsible())
+                        <x-nav-link :href="route('transfers.index')" :active="request()->routeIs('transfers.*')">
+                            {{ __('Transferencias') }}
                         </x-nav-link>
                     @endif
                 </div>
@@ -107,6 +118,12 @@
                 <x-responsive-nav-link :href="route('portfolios.index')" :active="request()->routeIs('portfolios.*')">
                     {{ __('Carteras') }}
                 </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('posts.index')" :active="request()->routeIs('posts.*')">
+                    {{ __('Puestos') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('workers.index')" :active="request()->routeIs('workers.*')">
+                    {{ __('Trabajadores') }}
+                </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
                     {{ __('Usuarios') }}
                 </x-responsive-nav-link>
@@ -115,6 +132,11 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('alerts.documents')" :active="request()->routeIs('alerts.*')">
                     {{ __('Alertas') }}
+                </x-responsive-nav-link>
+            @endif
+            @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsible())
+                <x-responsive-nav-link :href="route('transfers.index')" :active="request()->routeIs('transfers.*')">
+                    {{ __('Transferencias') }}
                 </x-responsive-nav-link>
             @endif
         </div>

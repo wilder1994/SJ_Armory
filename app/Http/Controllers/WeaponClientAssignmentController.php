@@ -16,6 +16,9 @@ class WeaponClientAssignmentController extends Controller
         if (!$user) {
             abort(403);
         }
+        if (!$user->isAdmin()) {
+            abort(403);
+        }
 
         $data = $request->validated();
         $responsibleUserId = (int)($data['responsible_user_id'] ?? 0);
@@ -65,6 +68,9 @@ class WeaponClientAssignmentController extends Controller
         if (!$user) {
             abort(403);
         }
+        if (!$user->isAdmin()) {
+            abort(403);
+        }
 
         $level = $user->responsibilityLevel?->level;
         if (!$user->isAdmin() && $level < 3) {
@@ -83,21 +89,8 @@ class WeaponClientAssignmentController extends Controller
 
     private function authorizeAssignment(Weapon $weapon, $user, int $clientId, int $responsibleUserId): void
     {
-        if ($user->isAdmin()) {
-            return;
-        }
-
-        if (!$user->isResponsible()) {
+        if (!$user->isAdmin()) {
             abort(403);
-        }
-
-        if ($responsibleUserId !== $user->id) {
-            abort(403, 'Solo puede asignar destino a su nombre.');
-        }
-
-        $inPortfolio = $user->clients()->whereKey($clientId)->exists();
-        if (!$inPortfolio) {
-            abort(403, 'El cliente no pertenece a su cartera.');
         }
     }
 }

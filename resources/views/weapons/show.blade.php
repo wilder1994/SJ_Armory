@@ -31,6 +31,14 @@
                 @include('weapons.partials.assignment')
             @endcan
 
+            @if (Auth::user()->isAdmin() || Auth::user()->isResponsible())
+                @include('weapons.partials.assignment_internal')
+            @endif
+
+            @if (Auth::user()->isAdmin() || Auth::user()->isResponsible())
+                @include('weapons.partials.transfer')
+            @endif
+
             @include('weapons.partials.photos')
 
             @include('weapons.partials.documents')

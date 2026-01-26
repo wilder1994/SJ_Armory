@@ -25,7 +25,7 @@
                     <table class="min-w-full divide-y divide-gray-200 text-sm">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Razon social') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Razón social') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('NIT') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Contacto') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Ciudad') }}</th>

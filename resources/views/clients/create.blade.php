@@ -14,7 +14,7 @@
 
                         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div>
-                                <x-input-label for="name" :value="__('Razon social')" />
+                                <x-input-label for="name" :value="__('Razón social')" />
                                 <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" value="{{ old('name') }}" required />
                                 <x-input-error :messages="$errors->get('name')" class="mt-2" />
                             </div>
@@ -32,7 +32,7 @@
                             </div>
 
                             <div>
-                                <x-input-label for="address" :value="__('Direccion')" />
+                                <x-input-label for="address" :value="__('Dirección')" />
                                 <x-text-input id="address" name="address" type="text" class="mt-1 block w-full" value="{{ old('address') }}" />
                                 <x-input-error :messages="$errors->get('address')" class="mt-2" />
                             </div>

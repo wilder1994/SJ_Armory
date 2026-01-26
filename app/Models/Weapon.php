@@ -51,6 +51,31 @@ class Weapon extends Model
         return $this->hasOne(WeaponClientAssignment::class)->where('is_active', true);
     }
 
+    public function postAssignments()
+    {
+        return $this->hasMany(WeaponPostAssignment::class);
+    }
+
+    public function activePostAssignment()
+    {
+        return $this->hasOne(WeaponPostAssignment::class)->where('is_active', true);
+    }
+
+    public function workerAssignments()
+    {
+        return $this->hasMany(WeaponWorkerAssignment::class);
+    }
+
+    public function activeWorkerAssignment()
+    {
+        return $this->hasOne(WeaponWorkerAssignment::class)->where('is_active', true);
+    }
+
+    public function transfers()
+    {
+        return $this->hasMany(WeaponTransfer::class);
+    }
+
     public function permitFile()
     {
         return $this->belongsTo(File::class, 'permit_file_id');

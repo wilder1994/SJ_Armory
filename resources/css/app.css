@@ -23,6 +23,20 @@
 @layer components {
     .sj-shell {
         min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sj-shell .sj-fixed-header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+    }
+
+    .sj-shell .sj-content {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        min-height: 0;
     }
 
     .sj-nav {

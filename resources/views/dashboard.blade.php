@@ -61,6 +61,60 @@
                 @endif
 
                 @if (Auth::user()?->isAdmin())
+                    <a href="{{ route('posts.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
+                        <div class="flex items-center gap-4">
+                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-teal-50 text-teal-600">
+                                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                                    <path d="M3 10h18" />
+                                    <path d="M5 10V6h14v4" />
+                                    <path d="M6 10v8M18 10v8M10 18h4" />
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="text-base font-semibold text-gray-800">{{ __('Puestos') }}</div>
+                                <div class="text-xs text-gray-500">{{ __('Instalaciones fijas') }}</div>
+                            </div>
+                        </div>
+                    </a>
+                @endif
+
+                @if (Auth::user()?->isAdmin())
+                    <a href="{{ route('workers.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
+                        <div class="flex items-center gap-4">
+                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-fuchsia-50 text-fuchsia-600">
+                                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                                    <circle cx="9" cy="8" r="3" />
+                                    <path d="M3 20a6 6 0 0112 0" />
+                                    <path d="M17 7a3 3 0 013 3" />
+                                    <path d="M17 10a5 5 0 014 4" />
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="text-base font-semibold text-gray-800">{{ __('Trabajadores') }}</div>
+                                <div class="text-xs text-gray-500">{{ __('Escoltas y supervisores') }}</div>
+                            </div>
+                        </div>
+                    </a>
+                @endif
+
+                @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsible())
+                    <a href="{{ route('transfers.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
+                        <div class="flex items-center gap-4">
+                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-slate-50 text-slate-600">
+                                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                                    <path d="M7 7h10l-2-2" />
+                                    <path d="M17 17H7l2 2" />
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="text-base font-semibold text-gray-800">{{ __('Transferencias') }}</div>
+                                <div class="text-xs text-gray-500">{{ __('Envios pendientes') }}</div>
+                            </div>
+                        </div>
+                    </a>
+                @endif
+
+                @if (Auth::user()?->isAdmin())
                     <a href="{{ route('reports.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
                         <div class="flex items-center gap-4">
                             <div class="flex h-14 w-14 items-center justify-center rounded-full bg-sky-50 text-sky-600">

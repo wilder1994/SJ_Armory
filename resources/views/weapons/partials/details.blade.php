@@ -2,11 +2,11 @@
     <div class="p-6 text-gray-900">
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-                <div class="text-xs text-gray-500">{{ __('Codigo interno') }}</div>
+                <div class="text-xs text-gray-500">{{ __('Código interno') }}</div>
                 <div class="font-medium">{{ $weapon->internal_code }}</div>
             </div>
             <div>
-                <div class="text-xs text-gray-500">{{ __('Numero de serie') }}</div>
+                <div class="text-xs text-gray-500">{{ __('Número de serie') }}</div>
                 <div class="font-medium">{{ $weapon->serial_number }}</div>
             </div>
             <div>
@@ -50,7 +50,7 @@
                 </div>
             </div>
             <div>
-                <div class="text-xs text-gray-500">{{ __('Numero de permiso') }}</div>
+                <div class="text-xs text-gray-500">{{ __('Número de permiso') }}</div>
                 <div class="font-medium">{{ $weapon->permit_number ?: '-' }}</div>
             </div>
             <div>

@@ -1,0 +1,122 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Client;
+use App\Models\User;
+use App\Models\Worker;
+use Illuminate\Http\Request;
+
+class WorkerController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            if (!$request->user()?->isAdmin()) {
+                abort(403);
+            }
+
+            return $next($request);
+        });
+    }
+
+    public function index(Request $request)
+    {
+        $query = Worker::with(['client', 'responsible']);
+        $search = trim((string) $request->input('q', ''));
+        $clientId = $request->integer('client_id');
+        $role = $request->input('role');
+        $responsibleId = $request->integer('responsible_user_id');
+
+        if ($search !== '') {
+            $query->where('name', 'like', '%' . $search . '%');
+        }
+
+        if ($clientId) {
+            $query->where('client_id', $clientId);
+        }
+
+        if ($role) {
+            $query->where('role', $role);
+        }
+
+        if ($responsibleId) {
+            $query->where('responsible_user_id', $responsibleId);
+        }
+
+        $workers = $query->orderBy('name')
+            ->paginate(15)
+            ->withQueryString();
+
+        $clients = Client::orderBy('name')->get();
+        $responsibles = User::where('role', 'RESPONSABLE')->orderBy('name')->get();
+        $roles = $this->roleOptions();
+
+        return view('workers.index', compact('workers', 'clients', 'responsibles', 'roles', 'search', 'clientId', 'role', 'responsibleId'));
+    }
+
+    public function create()
+    {
+        $clients = Client::orderBy('name')->get();
+        $responsibles = User::where('role', 'RESPONSABLE')->orderBy('name')->get();
+        $roles = $this->roleOptions();
+
+        return view('workers.create', compact('clients', 'responsibles', 'roles'));
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'client_id' => ['required', 'exists:clients,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'document' => ['nullable', 'string', 'max:50'],
+            'role' => ['required', 'in:' . implode(',', array_keys($this->roleOptions()))],
+            'responsible_user_id' => ['nullable', 'exists:users,id'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        Worker::create($data);
+
+        return redirect()->route('workers.index')->with('status', 'Trabajador creado.');
+    }
+
+    public function edit(Worker $worker)
+    {
+        $clients = Client::orderBy('name')->get();
+        $responsibles = User::where('role', 'RESPONSABLE')->orderBy('name')->get();
+        $roles = $this->roleOptions();
+
+        return view('workers.edit', compact('worker', 'clients', 'responsibles', 'roles'));
+    }
+
+    public function update(Request $request, Worker $worker)
+    {
+        $data = $request->validate([
+            'client_id' => ['required', 'exists:clients,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'document' => ['nullable', 'string', 'max:50'],
+            'role' => ['required', 'in:' . implode(',', array_keys($this->roleOptions()))],
+            'responsible_user_id' => ['nullable', 'exists:users,id'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $worker->update($data);
+
+        return redirect()->route('workers.index')->with('status', 'Trabajador actualizado.');
+    }
+
+    public function destroy(Worker $worker)
+    {
+        $worker->delete();
+
+        return redirect()->route('workers.index')->with('status', 'Trabajador eliminado.');
+    }
+
+    private function roleOptions(): array
+    {
+        return [
+            Worker::ROLE_ESCOLTA => 'Escolta',
+            Worker::ROLE_SUPERVISOR => 'Supervisor',
+        ];
+    }
+}

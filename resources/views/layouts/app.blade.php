@@ -17,19 +17,21 @@
     </head>
     <body class="sj-app font-sans antialiased">
         <div class="sj-shell">
-            @include('layouts.navigation')
+            <div class="sj-fixed-header">
+                @include('layouts.navigation')
 
-            <!-- Page Heading -->
-            @if (isset($header))
-                <header class="sj-page-header">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endif
+                <!-- Page Heading -->
+                @if (isset($header))
+                    <header class="sj-page-header">
+                        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                            {{ $header }}
+                        </div>
+                    </header>
+                @endif
+            </div>
 
             <!-- Page Content -->
-            <main>
+            <main class="sj-content">
                 {{ $slot }}
             </main>
         </div>
