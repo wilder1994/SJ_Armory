@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
+use App\Models\Client;
+use App\Models\Post;
 use App\Models\User;
 use App\Models\Weapon;
 use App\Models\WeaponTransfer;
+use App\Models\Worker;
 use App\Services\WeaponAssignmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -30,7 +33,7 @@ class WeaponTransferController extends Controller
             $status = WeaponTransfer::STATUS_PENDING;
         }
 
-        $incomingQuery = WeaponTransfer::with(['weapon.activeClientAssignment.client', 'fromUser', 'newClient'])
+        $incomingQuery = WeaponTransfer::with(['weapon', 'fromUser', 'fromClient', 'newClient'])
             ->where('status', $status);
 
         if (!$user->isAdmin()) {
@@ -42,7 +45,9 @@ class WeaponTransferController extends Controller
                 $builder->whereHas('weapon', function ($weaponQuery) use ($search) {
                     $weaponQuery->where('internal_code', 'like', '%' . $search . '%')
                         ->orWhere('serial_number', 'like', '%' . $search . '%');
-                })->orWhereHas('weapon.activeClientAssignment.client', function ($clientQuery) use ($search) {
+                })->orWhereHas('fromClient', function ($clientQuery) use ($search) {
+                    $clientQuery->where('name', 'like', '%' . $search . '%');
+                })->orWhereHas('newClient', function ($clientQuery) use ($search) {
                     $clientQuery->where('name', 'like', '%' . $search . '%');
                 });
             });
@@ -50,7 +55,7 @@ class WeaponTransferController extends Controller
 
         $incoming = $incomingQuery->orderByDesc('requested_at')->get();
 
-        $outgoingQuery = WeaponTransfer::with(['weapon.activeClientAssignment.client', 'toUser', 'newClient'])
+        $outgoingQuery = WeaponTransfer::with(['weapon', 'toUser', 'fromClient', 'newClient'])
             ->where('requested_by', $user->id)
             ->where('status', $status);
 
@@ -59,7 +64,9 @@ class WeaponTransferController extends Controller
                 $builder->whereHas('weapon', function ($weaponQuery) use ($search) {
                     $weaponQuery->where('internal_code', 'like', '%' . $search . '%')
                         ->orWhere('serial_number', 'like', '%' . $search . '%');
-                })->orWhereHas('weapon.activeClientAssignment.client', function ($clientQuery) use ($search) {
+                })->orWhereHas('fromClient', function ($clientQuery) use ($search) {
+                    $clientQuery->where('name', 'like', '%' . $search . '%');
+                })->orWhereHas('newClient', function ($clientQuery) use ($search) {
                     $clientQuery->where('name', 'like', '%' . $search . '%');
                 });
             });
@@ -67,78 +74,139 @@ class WeaponTransferController extends Controller
 
         $outgoing = $outgoingQuery->orderByDesc('requested_at')->get();
 
-        return view('transfers.index', compact('incoming', 'outgoing', 'search', 'status'));
+        $weaponsQuery = Weapon::query()->with([
+            'activeClientAssignment.client',
+            'activeClientAssignment.responsible',
+        ])->orderByDesc('id');
+
+        if ($user->isResponsible() && !$user->isAdmin()) {
+            $weaponsQuery->whereHas('clientAssignments', function ($assignmentQuery) use ($user) {
+                $assignmentQuery->where('responsible_user_id', $user->id)->where('is_active', true);
+            });
+        }
+
+        $weapons = $weaponsQuery->get();
+        $transferRecipients = User::where('role', 'RESPONSABLE')->orderBy('name')->get();
+        $acceptClients = $user->isAdmin()
+            ? Client::orderBy('name')->get()
+            : $user->clients()->orderBy('name')->get();
+
+        $acceptPosts = Post::whereIn('client_id', $acceptClients->pluck('id'))->orderBy('name')->get();
+
+        $acceptWorkersQuery = Worker::whereIn('client_id', $acceptClients->pluck('id'))->orderBy('name');
+        if (!$user->isAdmin()) {
+            $acceptWorkersQuery->where('responsible_user_id', $user->id);
+        }
+        $acceptWorkers = $acceptWorkersQuery->get();
+
+        return view('transfers.index', compact(
+            'incoming',
+            'outgoing',
+            'search',
+            'status',
+            'weapons',
+            'transferRecipients',
+            'acceptClients',
+            'acceptPosts',
+            'acceptWorkers'
+        ));
     }
 
-    public function store(Request $request, Weapon $weapon)
+    public function bulkStore(Request $request)
     {
         $user = $request->user();
         if (!$user) {
             abort(403);
         }
 
-        $activeAssignment = $weapon->activeClientAssignment()->first();
-        if (!$activeAssignment) {
-            abort(422, 'El arma no tiene destino operativo activo.');
-        }
-
         $data = $request->validate([
+            'weapon_ids' => ['required', 'array', 'min:1'],
+            'weapon_ids.*' => ['integer', 'exists:weapons,id'],
             'to_user_id' => ['required', 'exists:users,id'],
-            'new_client_id' => ['nullable', 'exists:clients,id'],
             'note' => ['nullable', 'string'],
         ]);
 
-        $fromUserId = $activeAssignment->responsible_user_id;
-        if (!$user->isAdmin() && $fromUserId !== $user->id) {
-            abort(403);
-        }
-
         $toUser = User::where('role', 'RESPONSABLE')->find($data['to_user_id']);
         if (!$toUser) {
-            abort(422, 'El destinatario no es valido.');
+            abort(422, 'El destinatario no es válido.');
         }
 
-        if ($toUser->id === $fromUserId) {
-            abort(422, 'El destinatario debe ser diferente.');
+        $weaponsQuery = Weapon::query()
+            ->with('activeClientAssignment')
+            ->whereIn('id', $data['weapon_ids']);
+
+        if ($user->isResponsible() && !$user->isAdmin()) {
+            $weaponsQuery->whereHas('clientAssignments', function ($assignmentQuery) use ($user) {
+                $assignmentQuery->where('responsible_user_id', $user->id)->where('is_active', true);
+            });
         }
 
-        $newClientId = $data['new_client_id'] ?? null;
-        if (!$user->isAdmin()) {
-            $newClientId = null;
+        $weapons = $weaponsQuery->get();
+
+        if ($weapons->count() !== count($data['weapon_ids'])) {
+            abort(422, 'Algunas armas seleccionadas no son válidas para transferir.');
         }
 
-        $requestedClientId = $newClientId ?: $activeAssignment->client_id;
-        $inPortfolio = $toUser->clients()->whereKey($requestedClientId)->exists();
-        if (!$inPortfolio) {
-            abort(422, 'El cliente no pertenece a la cartera del destinatario.');
+        foreach ($weapons as $weapon) {
+            $activeAssignment = $weapon->activeClientAssignment;
+
+            if ($activeAssignment) {
+                $fromUserId = $activeAssignment->responsible_user_id;
+                if (!$user->isAdmin() && $fromUserId !== $user->id) {
+                    abort(403);
+                }
+
+                if ($toUser->id === $fromUserId) {
+                    abort(422, 'El destinatario debe ser diferente al responsable actual.');
+                }
+
+                $inPortfolio = $toUser->clients()->whereKey($activeAssignment->client_id)->exists();
+                if (!$inPortfolio) {
+                    abort(422, 'El cliente no pertenece a la cartera del destinatario.');
+                }
+
+                continue;
+            }
+
+            if (!$user->isAdmin()) {
+                abort(403, 'Solo el administrador puede transferir armas sin destino operativo.');
+            }
         }
 
-        $transfer = WeaponTransfer::create([
-            'weapon_id' => $weapon->id,
-            'from_user_id' => $fromUserId,
-            'to_user_id' => $toUser->id,
-            'requested_by' => $user->id,
-            'new_client_id' => $newClientId,
-            'status' => WeaponTransfer::STATUS_PENDING,
-            'requested_at' => now(),
-            'note' => $data['note'] ?? null,
-        ]);
+        DB::transaction(function () use ($weapons, $user, $toUser, $data) {
+            foreach ($weapons as $weapon) {
+                $activeAssignment = $weapon->activeClientAssignment;
+                $this->closeInternalAssignments($weapon, $user);
+                $this->retireClientAssignment($weapon, $user);
 
-        AuditLog::create([
-            'user_id' => $user->id,
-            'action' => 'transfer_requested',
-            'auditable_type' => WeaponTransfer::class,
-            'auditable_id' => $transfer->id,
-            'before' => null,
-            'after' => [
-                'weapon_id' => $weapon->id,
-                'from_user_id' => $fromUserId,
-                'to_user_id' => $toUser->id,
-                'new_client_id' => $newClientId,
-            ],
-        ]);
+                $transfer = WeaponTransfer::create([
+                    'weapon_id' => $weapon->id,
+                    'from_user_id' => $activeAssignment?->responsible_user_id ?? $user->id,
+                    'to_user_id' => $toUser->id,
+                    'requested_by' => $user->id,
+                    'from_client_id' => $activeAssignment?->client_id,
+                    'status' => WeaponTransfer::STATUS_PENDING,
+                    'requested_at' => now(),
+                    'note' => $data['note'] ?? null,
+                ]);
 
-        return redirect()->route('weapons.show', $weapon)->with('status', 'Transferencia enviada.');
+                AuditLog::create([
+                    'user_id' => $user->id,
+                    'action' => 'transfer_requested',
+                    'auditable_type' => WeaponTransfer::class,
+                    'auditable_id' => $transfer->id,
+                    'before' => null,
+                    'after' => [
+                        'weapon_id' => $weapon->id,
+                        'from_user_id' => $activeAssignment?->responsible_user_id ?? $user->id,
+                        'to_user_id' => $toUser->id,
+                        'from_client_id' => $activeAssignment?->client_id,
+                    ],
+                ]);
+            }
+        });
+
+        return redirect()->route('transfers.index')->with('status', 'Transferencias enviadas.');
     }
 
     public function accept(Request $request, WeaponTransfer $transfer, WeaponAssignmentService $service)
@@ -156,20 +224,44 @@ class WeaponTransferController extends Controller
             abort(403);
         }
 
-        $transfer->load(['weapon', 'toUser']);
-        $weapon = $transfer->weapon;
-        $activeAssignment = $weapon->activeClientAssignment()->first();
-        if (!$activeAssignment) {
-            abort(422, 'El arma no tiene destino operativo activo.');
+        $data = $request->validate([
+            'client_id' => ['required', 'exists:clients,id'],
+            'post_id' => ['nullable', 'exists:posts,id'],
+            'worker_id' => ['nullable', 'exists:workers,id'],
+        ]);
+
+        $postId = $data['post_id'] ?? null;
+        $workerId = $data['worker_id'] ?? null;
+        if ($postId && $workerId) {
+            abort(422, 'Seleccione solo un puesto o un trabajador.');
         }
 
-        $clientId = $transfer->new_client_id ?? $activeAssignment->client_id;
+        $transfer->load(['weapon', 'toUser']);
+        $weapon = $transfer->weapon;
+        $clientId = (int) $data['client_id'];
         $inPortfolio = $transfer->toUser->clients()->whereKey($clientId)->exists();
         if (!$inPortfolio) {
             abort(422, 'El cliente no pertenece a la cartera del destinatario.');
         }
 
-        DB::transaction(function () use ($transfer, $weapon, $service, $clientId, $user) {
+        if ($postId) {
+            $post = Post::findOrFail($postId);
+            if ($post->client_id !== $clientId) {
+                abort(422, 'El puesto seleccionado no pertenece al cliente.');
+            }
+        }
+
+        if ($workerId) {
+            $worker = Worker::findOrFail($workerId);
+            if ($worker->client_id !== $clientId) {
+                abort(422, 'El trabajador seleccionado no pertenece al cliente.');
+            }
+            if (!$user->isAdmin() && $worker->responsible_user_id !== $user->id) {
+                abort(403, 'Solo puede asignar trabajadores a su cargo.');
+            }
+        }
+
+        DB::transaction(function () use ($transfer, $weapon, $service, $clientId, $user, $postId, $workerId) {
             $service->assignClient(
                 $weapon,
                 $clientId,
@@ -179,10 +271,14 @@ class WeaponTransferController extends Controller
                 $transfer->note
             );
 
+            $this->closeInternalAssignments($weapon, $user);
+            $this->assignInternalDestination($weapon, $user, $clientId, $postId, $workerId);
+
             $transfer->update([
                 'status' => WeaponTransfer::STATUS_ACCEPTED,
                 'accepted_by' => $user->id,
                 'answered_at' => now(),
+                'new_client_id' => $clientId,
             ]);
 
             AuditLog::create([
@@ -229,5 +325,154 @@ class WeaponTransferController extends Controller
         ]);
 
         return redirect()->route('transfers.index')->with('status', 'Transferencia rechazada.');
+    }
+
+    private function retireClientAssignment(Weapon $weapon, User $actor): void
+    {
+        $active = $weapon->activeClientAssignment()->first();
+        if (!$active) {
+            return;
+        }
+
+        $active->update([
+            'end_at' => now()->toDateString(),
+            'is_active' => null,
+        ]);
+
+        AuditLog::create([
+            'user_id' => $actor->id,
+            'action' => 'client_assignment_closed_for_transfer',
+            'auditable_type' => $active::class,
+            'auditable_id' => $active->id,
+            'before' => [
+                'client_id' => $active->client_id,
+                'start_at' => $active->start_at?->toDateString(),
+                'end_at' => null,
+                'is_active' => true,
+            ],
+            'after' => [
+                'client_id' => $active->client_id,
+                'start_at' => $active->start_at?->toDateString(),
+                'end_at' => $active->end_at?->toDateString(),
+                'is_active' => null,
+            ],
+        ]);
+    }
+
+    private function closeInternalAssignments(Weapon $weapon, User $actor): void
+    {
+        $now = now()->toDateString();
+        $activePost = $weapon->activePostAssignment()->first();
+        if ($activePost) {
+            $activePost->update([
+                'end_at' => $now,
+                'is_active' => null,
+            ]);
+
+            AuditLog::create([
+                'user_id' => $actor->id,
+                'action' => 'internal_post_closed_for_transfer',
+                'auditable_type' => $activePost::class,
+                'auditable_id' => $activePost->id,
+                'before' => [
+                    'post_id' => $activePost->post_id,
+                    'start_at' => $activePost->start_at?->toDateString(),
+                    'end_at' => null,
+                    'is_active' => true,
+                ],
+                'after' => [
+                    'post_id' => $activePost->post_id,
+                    'start_at' => $activePost->start_at?->toDateString(),
+                    'end_at' => $activePost->end_at?->toDateString(),
+                    'is_active' => null,
+                ],
+            ]);
+        }
+
+        $activeWorker = $weapon->activeWorkerAssignment()->first();
+        if ($activeWorker) {
+            $activeWorker->update([
+                'end_at' => $now,
+                'is_active' => null,
+            ]);
+
+            AuditLog::create([
+                'user_id' => $actor->id,
+                'action' => 'internal_worker_closed_for_transfer',
+                'auditable_type' => $activeWorker::class,
+                'auditable_id' => $activeWorker->id,
+                'before' => [
+                    'worker_id' => $activeWorker->worker_id,
+                    'start_at' => $activeWorker->start_at?->toDateString(),
+                    'end_at' => null,
+                    'is_active' => true,
+                ],
+                'after' => [
+                    'worker_id' => $activeWorker->worker_id,
+                    'start_at' => $activeWorker->start_at?->toDateString(),
+                    'end_at' => $activeWorker->end_at?->toDateString(),
+                    'is_active' => null,
+                ],
+            ]);
+        }
+    }
+
+    private function assignInternalDestination(Weapon $weapon, User $actor, int $clientId, ?int $postId, ?int $workerId): void
+    {
+        if (!$postId && !$workerId) {
+            return;
+        }
+
+        if ($postId) {
+            $post = Post::findOrFail($postId);
+            if ($post->client_id !== $clientId) {
+                abort(422, 'El puesto seleccionado no pertenece al cliente.');
+            }
+
+            $assignment = $weapon->postAssignments()->create([
+                'post_id' => $post->id,
+                'assigned_by' => $actor->id,
+                'start_at' => now()->toDateString(),
+                'is_active' => true,
+            ]);
+
+            AuditLog::create([
+                'user_id' => $actor->id,
+                'action' => 'internal_assigned_post',
+                'auditable_type' => $assignment::class,
+                'auditable_id' => $assignment->id,
+                'before' => null,
+                'after' => [
+                    'post_id' => $post->id,
+                    'assignment_id' => $assignment->id,
+                ],
+            ]);
+
+            return;
+        }
+
+        $worker = Worker::findOrFail($workerId);
+        if ($worker->client_id !== $clientId) {
+            abort(422, 'El trabajador seleccionado no pertenece al cliente.');
+        }
+
+        $assignment = $weapon->workerAssignments()->create([
+            'worker_id' => $worker->id,
+            'assigned_by' => $actor->id,
+            'start_at' => now()->toDateString(),
+            'is_active' => true,
+        ]);
+
+        AuditLog::create([
+            'user_id' => $actor->id,
+            'action' => 'internal_assigned_worker',
+            'auditable_type' => $assignment::class,
+            'auditable_id' => $assignment->id,
+            'before' => null,
+            'after' => [
+                'worker_id' => $worker->id,
+                'assignment_id' => $assignment->id,
+            ],
+        ]);
     }
 }

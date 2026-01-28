@@ -17,6 +17,7 @@ class WeaponDocument extends Model
         'permit_kind',
         'valid_until',
         'observations',
+        'status',
         'is_permit',
         'is_renewal',
     ];

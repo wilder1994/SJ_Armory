@@ -20,6 +20,7 @@ class WeaponTransfer extends Model
         'to_user_id',
         'requested_by',
         'accepted_by',
+        'from_client_id',
         'new_client_id',
         'status',
         'requested_at',
@@ -60,5 +61,10 @@ class WeaponTransfer extends Model
     public function newClient()
     {
         return $this->belongsTo(Client::class, 'new_client_id');
+    }
+
+    public function fromClient()
+    {
+        return $this->belongsTo(Client::class, 'from_client_id');
     }
 }

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\AuditLog;
+use App\Models\WeaponClientAssignment;
 use Illuminate\Http\Request;
 
 class ClientController extends Controller
@@ -43,7 +45,16 @@ class ClientController extends Controller
             'city' => ['nullable', 'string', 'max:255'],
         ]);
 
-        Client::create($data);
+        $client = Client::create($data);
+
+        AuditLog::create([
+            'user_id' => $request->user()?->id,
+            'action' => 'client_created',
+            'auditable_type' => Client::class,
+            'auditable_id' => $client->id,
+            'before' => null,
+            'after' => $client->only(['name', 'nit', 'city']),
+        ]);
 
         return redirect()->route('clients.index')->with('status', 'Cliente creado.');
     }
@@ -66,13 +77,43 @@ class ClientController extends Controller
             'city' => ['nullable', 'string', 'max:255'],
         ]);
 
+        $before = $client->only(['name', 'nit', 'city', 'email', 'contact_name']);
         $client->update($data);
+
+        AuditLog::create([
+            'user_id' => $request->user()?->id,
+            'action' => 'client_updated',
+            'auditable_type' => Client::class,
+            'auditable_id' => $client->id,
+            'before' => $before,
+            'after' => $client->only(['name', 'nit', 'city', 'email', 'contact_name']),
+        ]);
 
         return redirect()->route('clients.index')->with('status', 'Cliente actualizado.');
     }
 
     public function destroy(Client $client)
     {
+        $hasWeapons = WeaponClientAssignment::query()
+            ->where('client_id', $client->id)
+            ->where('is_active', true)
+            ->exists();
+
+        if ($hasWeapons) {
+            return redirect()->route('clients.index')->withErrors([
+                'client' => 'No se puede eliminar el cliente porque tiene armas asignadas.',
+            ]);
+        }
+
+        AuditLog::create([
+            'user_id' => request()->user()?->id,
+            'action' => 'client_deleted',
+            'auditable_type' => Client::class,
+            'auditable_id' => $client->id,
+            'before' => $client->only(['name', 'nit', 'city']),
+            'after' => null,
+        ]);
+
         $client->delete();
 
         return redirect()->route('clients.index')->with('status', 'Cliente eliminado.');

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('permit_kind')->nullable();
             $table->date('valid_until')->nullable();
             $table->text('observations')->nullable();
+            $table->string('status')->nullable();
             $table->boolean('is_permit')->default(false);
             $table->boolean('is_renewal')->default(false);
             $table->timestamps();

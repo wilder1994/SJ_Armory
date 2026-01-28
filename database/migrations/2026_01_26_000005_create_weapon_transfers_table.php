@@ -15,6 +15,7 @@ return new class extends Migration
             $table->foreignId('to_user_id')->constrained('users');
             $table->foreignId('requested_by')->constrained('users');
             $table->foreignId('accepted_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('from_client_id')->nullable()->constrained('clients')->nullOnDelete();
             $table->foreignId('new_client_id')->nullable()->constrained('clients')->nullOnDelete();
             $table->string('status');
             $table->dateTime('requested_at');

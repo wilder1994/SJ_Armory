@@ -1,5 +1,43 @@
 @forelse ($weapons as $weapon)
-    <tr>
+    @php
+        $expiredDocs = $weapon->documents
+            ->filter(function ($doc) {
+                if (!($doc->is_permit || $doc->is_renewal) || !$doc->valid_until) {
+                    return false;
+                }
+
+                return now()->startOfDay()->diffInDays($doc->valid_until, false) <= 0;
+            })
+            ->map(function ($doc) {
+                $name = $doc->document_name ?: __('Documento');
+                if ($doc->document_number) {
+                    $name .= ' #' . $doc->document_number;
+                }
+                return $name;
+            })
+            ->values();
+        $hasExpiredDocs = $expiredDocs->isNotEmpty();
+        $expiredLabel = $expiredDocs->implode(', ');
+
+        $observationDocs = $weapon->documents
+            ->filter(function ($doc) {
+                return !empty($doc->observations);
+            })
+            ->map(function ($doc) {
+                $name = $doc->document_name ?: __('Documento');
+                if ($doc->document_number) {
+                    $name .= ' #' . $doc->document_number;
+                }
+                return $name . ' (' . $doc->observations . ')';
+            })
+            ->values();
+        $hasObservationDocs = $observationDocs->isNotEmpty();
+        $observationLabel = $observationDocs->implode(', ');
+        $hasInProcess = $weapon->documents->contains(function ($doc) {
+            return ($doc->status ?? '') === 'En proceso';
+        });
+    @endphp
+    <tr @class(['bg-red-50' => $hasExpiredDocs || $hasInProcess])>
         <td class="px-3 py-2 whitespace-nowrap">
             <span title="{{ $weapon->internal_code }}">
                 {{ \Illuminate\Support\Str::limit($weapon->internal_code, 8) }}
@@ -13,7 +51,17 @@
         <td class="px-3 py-2 whitespace-nowrap">{{ $weapon->permit_number ?? '-' }}</td>
         <td class="px-3 py-2 whitespace-nowrap">{{ $weapon->permit_expires_at?->format('Y-m-d') ?? '-' }}</td>
         <td class="px-3 py-2 whitespace-nowrap">
-            {{ $weapon->activeClientAssignment ? __('Asignada') : __('Sin destino') }}
+            @if ($hasExpiredDocs)
+                <span title="Documentos vencidos: {{ $expiredLabel }}@if($hasObservationDocs) | Observaciones: {{ $observationLabel }}@endif" class="text-red-700">
+                    {{ $expiredDocs->first() }}
+                </span>
+            @elseif ($hasObservationDocs)
+                <span title="Observaciones: {{ $observationLabel }}" class="@if($hasInProcess) text-red-700 @endif">
+                    {{ $weapon->documents->firstWhere('observations')?->observations }}
+                </span>
+            @else
+                {{ $weapon->activeClientAssignment ? __('Asignada') : __('Sin destino') }}
+            @endif
         </td>
         <td class="px-3 py-2 min-w-[220px] whitespace-nowrap">
             @if ($weapon->activePostAssignment)

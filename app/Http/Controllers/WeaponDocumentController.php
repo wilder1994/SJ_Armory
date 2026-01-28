@@ -18,10 +18,16 @@ class WeaponDocumentController extends Controller
     {
         $this->authorize('update', $weapon);
 
+        $statusOptions = [
+            'Sin novedad',
+            'En proceso',
+        ];
+
         $data = $request->validate([
             'document' => ['required', 'file', 'max:10240'],
             'valid_until' => ['nullable', 'date'],
-            'observations' => ['nullable', 'string'],
+            'observations' => ['required', 'string', 'in:En Armerillo,En Mantenimiento,Para Mantenimiento,Hurtada,Perdida,Dar de Baja'],
+            'status' => ['required', 'string', 'in:' . implode(',', $statusOptions)],
         ]);
 
         $file = $data['document'];
@@ -46,6 +52,7 @@ class WeaponDocumentController extends Controller
                     'permit_kind' => null,
                     'valid_until' => $data['valid_until'] ?? null,
                     'observations' => $data['observations'] ?? null,
+                    'status' => $data['status'],
                     'is_permit' => false,
                     'is_renewal' => false,
                 ]);

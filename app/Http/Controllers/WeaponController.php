@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
 use App\Models\File;
+use App\Models\Client;
 use App\Models\Weapon;
 use App\Models\WeaponPhoto;
 use App\Services\WeaponDocumentService;
@@ -63,6 +64,7 @@ class WeaponController extends Controller
             'activeClientAssignment.responsible',
             'activePostAssignment.post',
             'activeWorkerAssignment.worker',
+            'documents',
         ])->orderByDesc('id')->paginate(50)->withQueryString();
 
         if ($request->expectsJson()) {
@@ -198,6 +200,15 @@ class WeaponController extends Controller
             throw $e;
         }
 
+        AuditLog::create([
+            'user_id' => $request->user()?->id,
+            'action' => 'weapon_created',
+            'auditable_type' => Weapon::class,
+            'auditable_id' => $weapon->id,
+            'before' => null,
+            'after' => $weapon->only(['internal_code', 'serial_number', 'weapon_type', 'caliber', 'brand', 'model']),
+        ]);
+
         return redirect()->route('weapons.show', $weapon)->with('status', 'Arma creada.');
     }
 
@@ -221,19 +232,16 @@ class WeaponController extends Controller
         ]);
         $ownershipTypes = $this->ownershipOptions();
         $responsibles = collect();
-        $portfolioClients = collect();
         $posts = collect();
         $workers = collect();
-        $transferRecipients = collect();
+        $clientOptions = collect();
 
         if (request()->user()?->isAdmin()) {
             $responsibles = \App\Models\User::where('role', 'RESPONSABLE')->orderBy('name')->get();
-            $portfolioClients = \App\Models\Client::orderBy('name')->get();
-            $transferRecipients = $responsibles;
+            $clientOptions = Client::orderBy('name')->get();
         } elseif (request()->user()?->isResponsible()) {
             $responsibles = collect([request()->user()]);
-            $portfolioClients = request()->user()?->clients()->orderBy('name')->get() ?? collect();
-            $transferRecipients = \App\Models\User::where('role', 'RESPONSABLE')->orderBy('name')->get();
+            $clientOptions = request()->user()?->clients()->orderBy('name')->get() ?? collect();
         }
 
         $activeClientId = $weapon->activeClientAssignment?->client_id;
@@ -261,7 +269,7 @@ class WeaponController extends Controller
                 ->values()
         );
 
-        return view('weapons.show', compact('weapon', 'ownershipTypes', 'responsibles', 'portfolioClients', 'posts', 'workers', 'transferRecipients'));
+        return view('weapons.show', compact('weapon', 'ownershipTypes', 'responsibles', 'posts', 'workers', 'clientOptions'));
     }
 
     public function permitPhoto(Weapon $weapon)
@@ -346,6 +354,18 @@ class WeaponController extends Controller
             'photos' => ['nullable', 'array', 'max:5'],
             'photos.*' => ['nullable', 'file', 'image', 'max:5120'],
             'permit_photo' => ['nullable', 'file', 'image', 'max:5120'],
+        ]);
+
+        $before = $weapon->only([
+            'internal_code',
+            'serial_number',
+            'weapon_type',
+            'caliber',
+            'brand',
+            'model',
+            'permit_type',
+            'permit_number',
+            'permit_expires_at',
         ]);
 
         $photos = $request->file('photos', []);
@@ -441,11 +461,39 @@ class WeaponController extends Controller
             throw $e;
         }
 
+        AuditLog::create([
+            'user_id' => $request->user()?->id,
+            'action' => 'weapon_updated',
+            'auditable_type' => Weapon::class,
+            'auditable_id' => $weapon->id,
+            'before' => $before,
+            'after' => $weapon->only([
+                'internal_code',
+                'serial_number',
+                'weapon_type',
+                'caliber',
+                'brand',
+                'model',
+                'permit_type',
+                'permit_number',
+                'permit_expires_at',
+            ]),
+        ]);
+
         return redirect()->route('weapons.show', $weapon)->with('status', 'Arma actualizada.');
     }
 
     public function destroy(Weapon $weapon)
     {
+        AuditLog::create([
+            'user_id' => request()->user()?->id,
+            'action' => 'weapon_deleted',
+            'auditable_type' => Weapon::class,
+            'auditable_id' => $weapon->id,
+            'before' => $weapon->only(['internal_code', 'serial_number', 'weapon_type', 'caliber', 'brand', 'model']),
+            'after' => null,
+        ]);
+
         $weapon->delete();
 
         return redirect()->route('weapons.index')->with('status', 'Arma eliminada.');

@@ -72,7 +72,7 @@ class WeaponDocumentService
                 'document_number' => null,
                 'permit_kind' => $weapon->permit_type,
                 'valid_until' => $weapon->permit_expires_at,
-                'observations' => null,
+                'observations' => 'Revalidar',
                 'is_permit' => false,
                 'is_renewal' => true,
             ];

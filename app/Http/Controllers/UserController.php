@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\Position;
 use App\Models\ResponsibilityLevel;
 use App\Models\User;
@@ -56,7 +57,16 @@ class UserController extends Controller
 
         $data['password'] = Hash::make($data['password']);
 
-        User::create($data);
+        $user = User::create($data);
+
+        AuditLog::create([
+            'user_id' => $request->user()?->id,
+            'action' => 'user_created',
+            'auditable_type' => User::class,
+            'auditable_id' => $user->id,
+            'before' => null,
+            'after' => $user->only(['name', 'email', 'role', 'position_id', 'responsibility_level_id', 'is_active']),
+        ]);
 
         return redirect()->route('users.index')->with('status', 'Usuario creado.');
     }
@@ -89,7 +99,17 @@ class UserController extends Controller
             $data['password'] = Hash::make($data['password']);
         }
 
+        $before = $user->only(['name', 'email', 'role', 'position_id', 'responsibility_level_id', 'is_active']);
         $user->update($data);
+
+        AuditLog::create([
+            'user_id' => $request->user()?->id,
+            'action' => 'user_updated',
+            'auditable_type' => User::class,
+            'auditable_id' => $user->id,
+            'before' => $before,
+            'after' => $user->only(['name', 'email', 'role', 'position_id', 'responsibility_level_id', 'is_active']),
+        ]);
 
         return redirect()->route('users.index')->with('status', 'Usuario actualizado.');
     }
@@ -104,13 +124,32 @@ class UserController extends Controller
             ? (bool) $data['is_active']
             : !$user->is_active;
 
+        $before = ['is_active' => $user->is_active];
         $user->update(['is_active' => $isActive]);
+
+        AuditLog::create([
+            'user_id' => $request->user()?->id,
+            'action' => 'user_status_updated',
+            'auditable_type' => User::class,
+            'auditable_id' => $user->id,
+            'before' => $before,
+            'after' => ['is_active' => $isActive],
+        ]);
 
         return redirect()->route('users.index')->with('status', 'Estado actualizado.');
     }
 
     public function destroy(User $user)
     {
+        AuditLog::create([
+            'user_id' => request()->user()?->id,
+            'action' => 'user_deleted',
+            'auditable_type' => User::class,
+            'auditable_id' => $user->id,
+            'before' => $user->only(['name', 'email', 'role', 'is_active']),
+            'after' => null,
+        ]);
+
         $user->delete();
 
         return redirect()->route('users.index')->with('status', 'Usuario eliminado.');

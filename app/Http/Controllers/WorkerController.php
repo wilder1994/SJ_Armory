@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\AuditLog;
 use App\Models\User;
 use App\Models\Worker;
 use Illuminate\Http\Request;
@@ -75,7 +76,16 @@ class WorkerController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        Worker::create($data);
+        $worker = Worker::create($data);
+
+        AuditLog::create([
+            'user_id' => $request->user()?->id,
+            'action' => 'worker_created',
+            'auditable_type' => Worker::class,
+            'auditable_id' => $worker->id,
+            'before' => null,
+            'after' => $worker->only(['client_id', 'name', 'document', 'role', 'responsible_user_id']),
+        ]);
 
         return redirect()->route('workers.index')->with('status', 'Trabajador creado.');
     }
@@ -100,13 +110,32 @@ class WorkerController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
+        $before = $worker->only(['client_id', 'name', 'document', 'role', 'responsible_user_id', 'notes']);
         $worker->update($data);
+
+        AuditLog::create([
+            'user_id' => $request->user()?->id,
+            'action' => 'worker_updated',
+            'auditable_type' => Worker::class,
+            'auditable_id' => $worker->id,
+            'before' => $before,
+            'after' => $worker->only(['client_id', 'name', 'document', 'role', 'responsible_user_id', 'notes']),
+        ]);
 
         return redirect()->route('workers.index')->with('status', 'Trabajador actualizado.');
     }
 
     public function destroy(Worker $worker)
     {
+        AuditLog::create([
+            'user_id' => request()->user()?->id,
+            'action' => 'worker_deleted',
+            'auditable_type' => Worker::class,
+            'auditable_id' => $worker->id,
+            'before' => $worker->only(['client_id', 'name', 'document', 'role', 'responsible_user_id']),
+            'after' => null,
+        ]);
+
         $worker->delete();
 
         return redirect()->route('workers.index')->with('status', 'Trabajador eliminado.');

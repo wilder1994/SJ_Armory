@@ -27,7 +27,15 @@ class WeaponPolicy
 
     public function assignToClient(User $user, Weapon $weapon): bool
     {
-        return $user->isAdmin();
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        if ($user->isResponsible()) {
+            return $weapon->activeClientAssignment?->responsible_user_id === $user->id;
+        }
+
+        return false;
     }
 
     public function create(User $user): bool

@@ -3,11 +3,35 @@
         <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold">{{ __('Documentos') }}</h3>
             @can('update', $weapon)
+                @php
+                    $statusOptions = [
+                        'Sin novedad',
+                        'En proceso',
+                    ];
+                @endphp
                 <form method="POST" action="{{ route('weapons.documents.store', $weapon) }}" enctype="multipart/form-data" class="flex flex-wrap items-center gap-2">
                     @csrf
-                    <input type="file" name="document" required class="text-sm">
+                    <label class="inline-flex items-center rounded border border-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
+                        <span class="mr-2">{{ __('Seleccionar archivo') }}</span>
+                        <span class="text-xs text-gray-500" data-document-file-name>{{ __('Ningún archivo') }}</span>
+                        <input type="file" name="document" required class="hidden" data-document-file-input>
+                    </label>
                     <input type="date" name="valid_until" class="rounded-md border-gray-300 text-sm" placeholder="{{ __('Vence') }}">
-                    <input type="text" name="observations" spellcheck="true" class="rounded-md border-gray-300 text-sm" placeholder="{{ __('Observaciones') }}">
+                    <select name="status" class="rounded-md border-gray-300 text-sm" required>
+                        <option value="">{{ __('Estado') }}</option>
+                        @foreach ($statusOptions as $option)
+                            <option value="{{ $option }}" @selected(old('status') === $option)>{{ $option }}</option>
+                        @endforeach
+                    </select>
+                    <select name="observations" class="rounded-md border-gray-300 text-sm" required>
+                        <option value="">{{ __('Observaciones') }}</option>
+                        <option value="En Armerillo" @selected(old('observations') === 'En Armerillo')>{{ __('En Armerillo') }}</option>
+                        <option value="En Mantenimiento" @selected(old('observations') === 'En Mantenimiento')>{{ __('En Mantenimiento') }}</option>
+                        <option value="Para Mantenimiento" @selected(old('observations') === 'Para Mantenimiento')>{{ __('Para Mantenimiento') }}</option>
+                        <option value="Hurtada" @selected(old('observations') === 'Hurtada')>{{ __('Hurtada') }}</option>
+                        <option value="Perdida" @selected(old('observations') === 'Perdida')>{{ __('Perdida') }}</option>
+                        <option value="Dar de Baja" @selected(old('observations') === 'Dar de Baja')>{{ __('Dar de Baja') }}</option>
+                    </select>
                     <x-primary-button class="text-xs">
                         {{ __('Subir') }}
                     </x-primary-button>
@@ -27,6 +51,7 @@
                         <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Fecha de vencimiento') }}</th>
                         <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Tipo de permiso') }}</th>
                         <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Estado') }}</th>
+                        <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Observaciones') }}</th>
                         <th class="px-3 py-2 text-right font-medium text-gray-600">{{ __('Descargar') }}</th>
                     </tr>
                 </thead>
@@ -39,18 +64,25 @@
                             $statusLabel = '-';
                             $rowClass = '';
 
-                            if ($days !== null) {
-                                if ($days <= 0) {
-                                    $statusLabel = __('Vencido');
+                            if ($document->is_permit || $document->is_renewal) {
+                                if ($days !== null) {
+                                    if ($days <= 0) {
+                                        $statusLabel = __('Vencido');
+                                        $rowClass = 'bg-red-50';
+                                    } elseif ($days <= 90) {
+                                        $statusLabel = __('Renovar permiso');
+                                        $rowClass = 'bg-orange-50';
+                                    } elseif ($days <= 120) {
+                                        $statusLabel = __('Proximo a renovar');
+                                        $rowClass = 'bg-yellow-50';
+                                    } else {
+                                        $statusLabel = __('Vigente');
+                                    }
+                                }
+                            } else {
+                                $statusLabel = $document->status ?: '-';
+                                if (($document->status ?? '') === 'En proceso') {
                                     $rowClass = 'bg-red-50';
-                                } elseif ($days <= 90) {
-                                    $statusLabel = __('Renovar permiso');
-                                    $rowClass = 'bg-orange-50';
-                                } elseif ($days <= 120) {
-                                    $statusLabel = __('Proximo a renovar');
-                                    $rowClass = 'bg-yellow-50';
-                                } else {
-                                    $statusLabel = __('Vigente');
                                 }
                             }
 
@@ -75,10 +107,11 @@
                                 @elseif ($document->permit_kind === 'tenencia')
                                     {{ __('Tenencia') }}
                                 @else
-                                    -
+                                    {{ __('No aplica') }}
                                 @endif
                             </td>
                             <td class="px-3 py-2">{{ $statusLabel }}</td>
+                            <td class="px-3 py-2">{{ $document->observations ?? '-' }}</td>
                             <td class="px-3 py-2 text-right space-x-2">
                                 <a href="{{ route('weapons.documents.download', [$weapon, $document]) }}" class="text-indigo-600 hover:text-indigo-900">
                                     {{ __('Descargar') }}
@@ -87,7 +120,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-3 py-6 text-center text-gray-500">
+                            <td colspan="6" class="px-3 py-6 text-center text-gray-500">
                                 {{ __('Sin documentos cargados.') }}
                             </td>
                         </tr>
@@ -97,3 +130,15 @@
         </div>
     </div>
 </div>
+
+<script>
+    (() => {
+        const input = document.querySelector('[data-document-file-input]');
+        const name = document.querySelector('[data-document-file-name]');
+        if (!input || !name) return;
+
+        input.addEventListener('change', () => {
+            name.textContent = input.files?.[0]?.name || 'Ningún archivo';
+        });
+    })();
+</script>

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\AuditLog;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,13 +28,24 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $before = $user->only(['name', 'email']);
+        $user->fill($request->validated());
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        $user->save();
+
+        AuditLog::create([
+            'user_id' => $user->id,
+            'action' => 'profile_updated',
+            'auditable_type' => User::class,
+            'auditable_id' => $user->id,
+            'before' => $before,
+            'after' => $user->only(['name', 'email']),
+        ]);
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
@@ -47,6 +60,15 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+
+        AuditLog::create([
+            'user_id' => $user->id,
+            'action' => 'profile_deleted',
+            'auditable_type' => User::class,
+            'auditable_id' => $user->id,
+            'before' => $user->only(['name', 'email']),
+            'after' => null,
+        ]);
 
         Auth::logout();
 

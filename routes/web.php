@@ -46,6 +46,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('users', UserController::class)->except(['show']);
     Route::patch('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.status');
     Route::resource('weapons', WeaponController::class);
+    Route::post('/weapons/{weapon}/client-assignments', [WeaponClientAssignmentController::class, 'store'])
+        ->name('weapons.client_assignments.store');
     Route::get('/weapons/{weapon}/permit', [WeaponController::class, 'permitPhoto'])
         ->name('weapons.permit');
     Route::patch('/weapons/{weapon}/permit', [WeaponController::class, 'updatePermitPhoto'])
@@ -65,24 +67,19 @@ Route::middleware('auth')->group(function () {
     Route::delete('/weapons/{weapon}/documents/{document}', [WeaponDocumentController::class, 'destroy'])
         ->name('weapons.documents.destroy');
 
-    Route::post('/weapons/{weapon}/assignments', [WeaponClientAssignmentController::class, 'store'])
-        ->name('weapons.assignments.store');
-    Route::patch('/weapons/{weapon}/assignments/retire', [WeaponClientAssignmentController::class, 'retire'])
-        ->name('weapons.assignments.retire');
     Route::post('/weapons/{weapon}/internal-assignments', [WeaponInternalAssignmentController::class, 'store'])
         ->name('weapons.internal_assignments.store');
     Route::patch('/weapons/{weapon}/internal-assignments/retire', [WeaponInternalAssignmentController::class, 'retire'])
         ->name('weapons.internal_assignments.retire');
-    Route::post('/weapons/{weapon}/transfers', [WeaponTransferController::class, 'store'])
-        ->name('weapons.transfers.store');
-
     Route::get('/transfers', [WeaponTransferController::class, 'index'])->name('transfers.index');
+    Route::post('/transfers/bulk', [WeaponTransferController::class, 'bulkStore'])->name('transfers.bulk');
     Route::patch('/transfers/{transfer}/accept', [WeaponTransferController::class, 'accept'])->name('transfers.accept');
     Route::patch('/transfers/{transfer}/reject', [WeaponTransferController::class, 'reject'])->name('transfers.reject');
 
     Route::get('/portfolios', [ResponsiblePortfolioController::class, 'index'])->name('portfolios.index');
     Route::get('/portfolios/{user}/edit', [ResponsiblePortfolioController::class, 'edit'])->name('portfolios.edit');
     Route::put('/portfolios/{user}', [ResponsiblePortfolioController::class, 'update'])->name('portfolios.update');
+    Route::post('/portfolios/{user}/transfer', [ResponsiblePortfolioController::class, 'transfer'])->name('portfolios.transfer');
 
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/assignments', [ReportController::class, 'weaponsByClient'])->name('reports.assignments');

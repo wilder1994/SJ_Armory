@@ -1,9 +1,27 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Auditoria reciente') }}
-            </h2>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-4">
+                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                    {{ __('Auditoria reciente') }}
+                </h2>
+                <form method="GET" class="flex flex-wrap items-center gap-2">
+                    <label class="text-sm text-gray-600">{{ __('Rango') }}</label>
+                    <select name="days" class="rounded-md border-gray-300 text-sm">
+                        <option value="30" @selected($days === 30)>{{ __('Ultimos 30 dias') }}</option>
+                        <option value="90" @selected($days === 90)>{{ __('Ultimos 90 dias') }}</option>
+                    </select>
+                    <label class="text-sm text-gray-600">{{ __('Módulo') }}</label>
+                    <select name="module" class="rounded-md border-gray-300 text-sm">
+                        @foreach ($modules as $value => $label)
+                            <option value="{{ $value }}" @selected($module === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <button class="text-xs text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1 rounded">
+                        {{ __('Filtrar') }}
+                    </button>
+                </form>
+            </div>
             <a href="{{ route('reports.index') }}" class="text-sm text-gray-600 hover:text-gray-900">
                 {{ __('Volver') }}
             </a>
@@ -12,17 +30,6 @@
 
     <div class="py-8">
         <div class="max-w-6xl mx-auto sm:px-6 lg:px-8">
-            <form method="GET" class="mb-4 flex items-center gap-2">
-                <label class="text-sm text-gray-600">{{ __('Rango') }}</label>
-                <select name="days" class="rounded-md border-gray-300 text-sm">
-                    <option value="30" @selected($days === 30)>{{ __('Ultimos 30 dias') }}</option>
-                    <option value="90" @selected($days === 90)>{{ __('Ultimos 90 dias') }}</option>
-                </select>
-                <button class="text-xs text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1 rounded">
-                    {{ __('Filtrar') }}
-                </button>
-            </form>
-
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <table class="min-w-full divide-y divide-gray-200 text-sm">
@@ -39,8 +46,49 @@
                                 <tr>
                                     <td class="px-3 py-2">{{ $log->created_at?->format('Y-m-d H:i') }}</td>
                                     <td class="px-3 py-2">{{ $log->user?->name ?? '-' }}</td>
-                                    <td class="px-3 py-2">{{ $log->action }}</td>
-                                    <td class="px-3 py-2">{{ class_basename($log->auditable_type) }} #{{ $log->auditable_id }}</td>
+                                    <td class="px-3 py-2">
+                                        {{ $actionLabels[$log->action] ?? ucfirst(str_replace('_', ' ', $log->action)) }}
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        @php
+                                            $entityLabel = $entityLabels[$log->auditable_type] ?? class_basename($log->auditable_type);
+                                            $entityName = null;
+                                            if ($log->auditable) {
+                                                if ($log->auditable instanceof \App\Models\User) {
+                                                    $entityName = $log->auditable->name;
+                                                } elseif ($log->auditable instanceof \App\Models\Client) {
+                                                    $entityName = $log->auditable->name;
+                                                } elseif ($log->auditable instanceof \App\Models\Weapon) {
+                                                    $entityName = $log->auditable->internal_code ?? ('#' . $log->auditable->id);
+                                                } elseif ($log->auditable instanceof \App\Models\WeaponClientAssignment) {
+                                                    $entityName = $log->auditable->client?->name;
+                                                } elseif ($log->auditable instanceof \App\Models\WeaponTransfer) {
+                                                    $transferWeapon = $log->auditable->loadMissing('weapon', 'fromUser', 'toUser');
+                                                    $weaponCode = $transferWeapon->weapon?->internal_code ?? ('#' . $transferWeapon->weapon_id);
+                                                    $fromName = $transferWeapon->fromUser?->name;
+                                                    $toName = $transferWeapon->toUser?->name;
+                                                    $transferDate = $log->auditable->requested_at?->format('Y-m-d H:i');
+                                                    $entityName = 'Arma ' . $weaponCode;
+                                                    if ($fromName || $toName) {
+                                                        $entityName .= ' (' . ($fromName ?? '-') . ' → ' . ($toName ?? '-') . ')';
+                                                    }
+                                                    if ($transferDate) {
+                                                        $entityName .= ' - ' . $transferDate;
+                                                    }
+                                                } elseif ($log->auditable instanceof \App\Models\Post) {
+                                                    $entityName = $log->auditable->name;
+                                                } elseif ($log->auditable instanceof \App\Models\Worker) {
+                                                    $entityName = $log->auditable->name;
+                                                }
+                                            }
+                                        @endphp
+                                        {{ $entityLabel }}
+                                        @if ($entityName)
+                                            - {{ $entityName }}
+                                        @else
+                                            #{{ $log->auditable_id }}
+                                        @endif
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>

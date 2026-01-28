@@ -19,6 +19,15 @@
                     {{ session('status') }}
                 </div>
             @endif
+            @if ($errors->any())
+                <div class="mb-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                    <ul class="list-disc space-y-1 pl-4">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
