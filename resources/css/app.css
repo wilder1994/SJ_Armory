@@ -139,4 +139,36 @@
         justify-content: center;
         width: 30px;
     }
+
+    .sj-cluster-wrapper {
+        background: transparent;
+        border: none;
+    }
+
+    .sj-cluster-icon {
+        position: relative;
+        width: 26px;
+        height: 41px;
+    }
+
+    .sj-cluster-icon img {
+        display: block;
+        width: 26px;
+        height: 41px;
+    }
+
+    .sj-cluster-icon span {
+        position: absolute;
+        right: -6px;
+        top: -6px;
+        background: #1f6fb2;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1;
+        padding: 4px 6px;
+        border-radius: 999px;
+        border: 2px solid #ffffff;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.25);
+    }
 }
