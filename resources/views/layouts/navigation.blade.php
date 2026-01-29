@@ -45,12 +45,15 @@
                             <x-nav-link :href="route('alerts.documents')" :active="request()->routeIs('alerts.*')">
                                 {{ __('Alertas') }}
                             </x-nav-link>
-                        @endif
-                        @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsible())
-                            <x-nav-link :href="route('transfers.index')" :active="request()->routeIs('transfers.*')">
-                                {{ __('Transferencias') }}
-                            </x-nav-link>
-                        @endif
+        @endif
+        @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsible())
+            <x-nav-link :href="route('maps.index')" :active="request()->routeIs('maps.*')">
+                {{ __('Mapa') }}
+            </x-nav-link>
+            <x-nav-link :href="route('transfers.index')" :active="request()->routeIs('transfers.*')">
+                {{ __('Transferencias') }}
+            </x-nav-link>
+        @endif
                     </div>
                 </div>
             </div>
@@ -136,12 +139,15 @@
                 <x-responsive-nav-link :href="route('alerts.documents')" :active="request()->routeIs('alerts.*')">
                     {{ __('Alertas') }}
                 </x-responsive-nav-link>
-            @endif
-            @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsible())
-                <x-responsive-nav-link :href="route('transfers.index')" :active="request()->routeIs('transfers.*')">
-                    {{ __('Transferencias') }}
-                </x-responsive-nav-link>
-            @endif
+        @endif
+        @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsible())
+            <x-responsive-nav-link :href="route('maps.index')" :active="request()->routeIs('maps.*')">
+                {{ __('Mapa') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('transfers.index')" :active="request()->routeIs('transfers.*')">
+                {{ __('Transferencias') }}
+            </x-responsive-nav-link>
+        @endif
         </div>
 
         <!-- Responsive Settings Options -->

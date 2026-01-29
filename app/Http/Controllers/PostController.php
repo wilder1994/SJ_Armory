@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\AuditLog;
 use App\Models\Post;
+use App\Services\GeocodingService;
 use Illuminate\Http\Request;
 
 class PostController extends Controller
@@ -53,14 +54,35 @@ class PostController extends Controller
         return view('posts.create', compact('clients'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, GeocodingService $geocodingService)
     {
         $data = $request->validate([
             'client_id' => ['required', 'exists:clients,id'],
             'name' => ['required', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:255'],
+            'city' => ['required', 'string', 'max:255'],
+            'department' => ['required', 'string', 'max:255'],
+            'latitude' => ['nullable', 'numeric'],
+            'longitude' => ['nullable', 'numeric'],
+            'coords_source' => ['nullable', 'string', 'max:20'],
             'notes' => ['nullable', 'string'],
         ]);
+
+        $client = Client::find($data['client_id']);
+        $useMapCoords = ($data['coords_source'] ?? null) === 'map';
+        if ($useMapCoords && !empty($data['latitude']) && !empty($data['longitude'])) {
+            $data['latitude'] = (float) $data['latitude'];
+            $data['longitude'] = (float) $data['longitude'];
+        } else {
+            $location = trim(implode(', ', array_filter([$data['city'] ?? null, $data['department'] ?? null])));
+            $coords = $geocodingService->geocode($data['address'] ?? '', $location ?: ($client?->city));
+            if ($coords) {
+                $data['latitude'] = $coords['lat'];
+                $data['longitude'] = $coords['lng'];
+            }
+        }
+
+        unset($data['coords_source']);
 
         $post = Post::create($data);
 
@@ -70,7 +92,7 @@ class PostController extends Controller
             'auditable_type' => Post::class,
             'auditable_id' => $post->id,
             'before' => null,
-            'after' => $post->only(['client_id', 'name', 'address']),
+            'after' => $post->only(['client_id', 'name', 'address', 'city', 'department']),
         ]);
 
         return redirect()->route('posts.index')->with('status', 'Puesto creado.');
@@ -83,16 +105,41 @@ class PostController extends Controller
         return view('posts.edit', compact('post', 'clients'));
     }
 
-    public function update(Request $request, Post $post)
+    public function update(Request $request, Post $post, GeocodingService $geocodingService)
     {
         $data = $request->validate([
             'client_id' => ['required', 'exists:clients,id'],
             'name' => ['required', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:255'],
+            'city' => ['required', 'string', 'max:255'],
+            'department' => ['required', 'string', 'max:255'],
+            'latitude' => ['nullable', 'numeric'],
+            'longitude' => ['nullable', 'numeric'],
+            'coords_source' => ['nullable', 'string', 'max:20'],
             'notes' => ['nullable', 'string'],
         ]);
 
-        $before = $post->only(['client_id', 'name', 'address', 'notes']);
+        $addressChanged = ($data['address'] ?? null) !== $post->address
+            || ($data['city'] ?? null) !== $post->city
+            || ($data['department'] ?? null) !== $post->department
+            || ($data['client_id'] ?? null) !== $post->client_id;
+        $useMapCoords = ($data['coords_source'] ?? null) === 'map';
+        if ($useMapCoords && !empty($data['latitude']) && !empty($data['longitude'])) {
+            $data['latitude'] = (float) $data['latitude'];
+            $data['longitude'] = (float) $data['longitude'];
+        } elseif ($addressChanged) {
+            $client = Client::find($data['client_id']);
+            $location = trim(implode(', ', array_filter([$data['city'] ?? null, $data['department'] ?? null])));
+            $coords = $geocodingService->geocode($data['address'] ?? '', $location ?: ($client?->city));
+            if ($coords) {
+                $data['latitude'] = $coords['lat'];
+                $data['longitude'] = $coords['lng'];
+            }
+        }
+
+        $before = $post->only(['client_id', 'name', 'address', 'city', 'department', 'notes']);
+        unset($data['coords_source']);
+
         $post->update($data);
 
         AuditLog::create([
@@ -101,7 +148,7 @@ class PostController extends Controller
             'auditable_type' => Post::class,
             'auditable_id' => $post->id,
             'before' => $before,
-            'after' => $post->only(['client_id', 'name', 'address', 'notes']),
+            'after' => $post->only(['client_id', 'name', 'address', 'city', 'department', 'notes']),
         ]);
 
         return redirect()->route('posts.index')->with('status', 'Puesto actualizado.');

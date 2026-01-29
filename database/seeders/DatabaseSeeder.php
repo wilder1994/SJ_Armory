@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             WeaponClientAssignmentSeeder::class,
             WorkerSeeder::class,
             PostSeeder::class,
+            WeaponPostAssignmentSeeder::class,
         ]);
     }
 }

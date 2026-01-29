@@ -18,6 +18,9 @@ class Client extends Model
         'address',
         'neighborhood',
         'city',
+        'department',
+        'latitude',
+        'longitude',
     ];
 
     public function users()

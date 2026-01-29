@@ -119,4 +119,24 @@
     .sj-btn-secondary:hover {
         background: #f4f7fb;
     }
+
+    .sj-map-cluster {
+        background: transparent;
+        border: none;
+    }
+
+    .sj-map-cluster__badge {
+        align-items: center;
+        background: #1f6fb2;
+        border: 2px solid #ffffff;
+        border-radius: 999px;
+        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.25);
+        color: #ffffff;
+        display: flex;
+        font-size: 12px;
+        font-weight: 600;
+        height: 30px;
+        justify-content: center;
+        width: 30px;
+    }
 }

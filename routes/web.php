@@ -13,6 +13,8 @@ use App\Http\Controllers\WeaponDocumentController;
 use App\Http\Controllers\WeaponInternalAssignmentController;
 use App\Http\Controllers\WeaponPhotoController;
 use App\Http\Controllers\WeaponTransferController;
+use App\Http\Controllers\MapController;
+use App\Http\Controllers\GeocodingController;
 use App\Http\Controllers\WorkerController;
 use Illuminate\Support\Facades\Route;
 
@@ -75,6 +77,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/transfers/bulk', [WeaponTransferController::class, 'bulkStore'])->name('transfers.bulk');
     Route::patch('/transfers/{transfer}/accept', [WeaponTransferController::class, 'accept'])->name('transfers.accept');
     Route::patch('/transfers/{transfer}/reject', [WeaponTransferController::class, 'reject'])->name('transfers.reject');
+
+    Route::get('/mapa', [MapController::class, 'index'])->name('maps.index');
+    Route::get('/mapa/armas', [MapController::class, 'weapons'])->name('maps.weapons');
+    Route::get('/geocode/reverse', [GeocodingController::class, 'reverse'])->name('geocode.reverse');
 
     Route::get('/portfolios', [ResponsiblePortfolioController::class, 'index'])->name('portfolios.index');
     Route::get('/portfolios/{user}/edit', [ResponsiblePortfolioController::class, 'edit'])->name('portfolios.edit');

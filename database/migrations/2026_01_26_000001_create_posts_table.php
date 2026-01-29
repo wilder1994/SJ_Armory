@@ -13,6 +13,10 @@ return new class extends Migration
             $table->foreignId('client_id')->constrained()->cascadeOnDelete();
             $table->string('name');
             $table->string('address')->nullable();
+            $table->string('city')->nullable();
+            $table->string('department')->nullable();
+            $table->decimal('latitude', 10, 7)->nullable();
+            $table->decimal('longitude', 10, 7)->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
 

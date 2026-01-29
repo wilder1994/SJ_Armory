@@ -31,12 +31,19 @@ class PostSeeder extends Seeder
         foreach ($posts as $index => $post) {
             $client = $clients[$index % $clients->count()];
 
+            $latOffset = ($index % 5) * 0.002;
+            $lngOffset = ($index % 5) * -0.002;
+
             Post::updateOrCreate(
                 ['client_id' => $client->id, 'name' => $post['name']],
                 [
                     'client_id' => $client->id,
                     'name' => $post['name'],
                     'address' => $post['address'],
+                    'city' => $client->city,
+                    'department' => $client->department,
+                    'latitude' => $client->latitude ? $client->latitude + $latOffset : null,
+                    'longitude' => $client->longitude ? $client->longitude + $lngOffset : null,
                     'notes' => 'Seed de puestos',
                 ]
             );

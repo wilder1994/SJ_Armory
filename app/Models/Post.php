@@ -13,6 +13,10 @@ class Post extends Model
         'client_id',
         'name',
         'address',
+        'city',
+        'department',
+        'latitude',
+        'longitude',
         'notes',
     ];
 
