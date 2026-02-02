@@ -171,4 +171,46 @@
         border: 2px solid #ffffff;
         box-shadow: 0 4px 10px rgba(15, 23, 42, 0.25);
     }
+
+    .sj-dropdown-link {
+        color: #0f172a !important;
+        opacity: 1 !important;
+    }
+
+    .sj-dropdown-link:hover {
+        color: #0f172a !important;
+    }
+
+    .imprint-checkbox {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 9999px;
+        border: 2px solid #0b5fa5;
+        background-color: #ffffff;
+        display: inline-grid;
+        place-content: center;
+        cursor: pointer;
+    }
+
+    .imprint-checkbox:checked {
+        background-color: #0b5fa5;
+        border-color: #0b5fa5;
+    }
+
+    .imprint-checkbox:checked::after {
+        content: '';
+        width: 8px;
+        height: 4px;
+        border: 2px solid #ffffff;
+        border-top: 0;
+        border-right: 0;
+        transform: rotate(-45deg);
+    }
+
+    .imprint-checkbox:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
 }

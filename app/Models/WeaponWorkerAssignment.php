@@ -17,6 +17,8 @@ class WeaponWorkerAssignment extends Model
         'end_at',
         'is_active',
         'reason',
+        'ammo_count',
+        'provider_count',
     ];
 
     protected $casts = [

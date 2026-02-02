@@ -38,6 +38,7 @@ class WeaponPostAssignmentSeeder extends Seeder
             } else {
                 $post = $posts[$postIndex % $posts->count()];
             }
+
             WeaponPostAssignment::create([
                 'weapon_id' => $weapon->id,
                 'post_id' => $post->id,
@@ -45,6 +46,8 @@ class WeaponPostAssignmentSeeder extends Seeder
                 'start_at' => now()->toDateString(),
                 'is_active' => true,
                 'reason' => 'Asignación inicial de prueba',
+                'ammo_count' => 30,
+                'provider_count' => 1,
             ]);
 
             $postIndex++;

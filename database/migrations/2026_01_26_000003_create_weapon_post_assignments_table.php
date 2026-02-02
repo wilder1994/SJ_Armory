@@ -17,6 +17,8 @@ return new class extends Migration
             $table->date('end_at')->nullable();
             $table->boolean('is_active')->nullable();
             $table->text('reason')->nullable();
+            $table->unsignedInteger('ammo_count')->nullable();
+            $table->unsignedInteger('provider_count')->nullable();
             $table->timestamps();
 
             $table->unique(['weapon_id', 'is_active']);

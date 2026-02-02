@@ -58,6 +58,16 @@
                 <label class="text-sm text-gray-600">{{ __('Observaciones') }}</label>
                 <input type="text" name="reason" spellcheck="true" class="mt-1 block w-full rounded-md border-gray-300 text-sm">
             </div>
+            <div class="md:col-span-2">
+                <label class="text-sm text-gray-600">{{ __('Cant. munición') }}</label>
+                <input type="number" name="ammo_count" min="0" class="mt-1 block w-full rounded-md border-gray-300 text-sm">
+                <x-input-error :messages="$errors->get('ammo_count')" class="mt-2" />
+            </div>
+            <div class="md:col-span-2">
+                <label class="text-sm text-gray-600">{{ __('Cnt. proveedor') }}</label>
+                <input type="number" name="provider_count" min="0" class="mt-1 block w-full rounded-md border-gray-300 text-sm">
+                <x-input-error :messages="$errors->get('provider_count')" class="mt-2" />
+            </div>
             <div class="md:col-span-4 flex items-center justify-end gap-2">
                 @if ($weapon->activePostAssignment || $weapon->activeWorkerAssignment)
                     <a href="#" class="text-xs text-red-600 hover:text-red-900" onclick="event.preventDefault(); document.getElementById('retire-internal-form').submit();">

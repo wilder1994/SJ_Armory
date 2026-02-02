@@ -31,7 +31,7 @@
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
                         <div class="font-semibold">{{ $weapon->internal_code }} - {{ $weapon->serial_number }}</div>
-                        <div class="text-sm text-gray-500">{{ $weapon->weapon_type }} / {{ $weapon->brand }} {{ $weapon->model }}</div>
+                        <div class="text-sm text-gray-500">{{ $weapon->weapon_type }} / {{ $weapon->brand }}</div>
                     </div>
                 </div>
 

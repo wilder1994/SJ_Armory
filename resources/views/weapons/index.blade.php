@@ -30,21 +30,33 @@
             <div class="bg-white shadow-sm sm:rounded-lg w-full">
                 <div class="p-6 text-gray-900">
                     <div id="weapons-table-scroll" class="w-full overflow-auto weapons-table-scroll relative" style="max-height: calc(100vh - 320px);">
-                            <table class="min-w-full divide-y divide-gray-200 text-sm min-w-[2200px]">
+                            <table class="min-w-full divide-y divide-gray-200 text-sm min-w-[2600px]">
                         <thead class="bg-gray-50 sticky top-0 z-20">
                             <tr>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Código interno') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 min-w-[200px] whitespace-nowrap bg-gray-50">{{ __('Cliente') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 min-w-[200px] whitespace-nowrap bg-gray-50">{{ __('Responsable') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Serie') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Tipo de arma') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Tipo de permiso') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Número de permiso') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Vence') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Estado') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 min-w-[220px] whitespace-nowrap bg-gray-50">{{ __('Puesto o trabajador') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Cédula') }}</th>
-                                <th class="px-3 py-2 text-right font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Acciones') }}</th>
+                                <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Código interno') }}</th>
+                                <th class="px-3 py-2 text-center font-medium text-gray-600 min-w-[200px] whitespace-nowrap bg-gray-50">{{ __('Cliente') }}</th>
+                                <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Tipo') }}</th>
+                                <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Marca') }}</th>
+                                <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Serie') }}</th>
+                                <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Calibre') }}</th>
+                                <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Capacidad') }}</th>
+                                <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Tipo de permiso') }}</th>
+                                <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('N° de permiso') }}</th>
+                                <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Vence') }}</th>
+                                <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Estado') }}</th>
+                                <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">
+                                    <span class="block leading-tight">{{ __('Cant.') }}</span>
+                                    <span class="block leading-tight">{{ __('munición') }}</span>
+                                </th>
+                                <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">
+                                    <span class="block leading-tight">{{ __('Cant.') }}</span>
+                                    <span class="block leading-tight">{{ __('proveedor') }}</span>
+                                </th>
+                                <th class="px-3 py-2 text-center font-medium text-gray-600 min-w-[200px] whitespace-nowrap bg-gray-50">{{ __('Responsable') }}</th>
+                                <th class="px-3 py-2 text-center font-medium text-gray-600 min-w-[220px] whitespace-nowrap bg-gray-50">{{ __('Puesto o trabajador') }}</th>
+                                <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Cédula') }}</th>
+                                <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Acciones') }}</th>
+                                <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Impronta') }}</th>
                             </tr>
                         </thead>
                         <tbody id="weapons-tbody" class="divide-y divide-gray-200">
@@ -59,9 +71,9 @@
                 </div>
             </div>
 
-            <div id="weapons-scrollbar-shell" class="fixed bottom-0 left-0 right-0 z-50 px-4 pb-0.5 sm:px-6 lg:px-8">
+                    <div id="weapons-scrollbar-shell" class="fixed bottom-0 left-0 right-0 z-50 px-4 pb-0.5 sm:px-6 lg:px-8">
                 <div id="weapons-scrollbar" class="overflow-x-auto w-full">
-                    <div class="min-w-[2200px] h-3"></div>
+                    <div class="min-w-[2600px] h-3"></div>
                 </div>
             </div>
         </div>
@@ -178,6 +190,55 @@
 
         if (input.value.trim() !== '') {
             highlight(input.value.trim());
+        }
+    })();
+</script>
+
+<script>
+    (() => {
+        const tbody = document.getElementById('weapons-tbody');
+        if (!tbody) {
+            return;
+        }
+
+        tbody.addEventListener('change', (event) => {
+            const checkbox = event.target.closest('.imprint-checkbox');
+            if (!checkbox) {
+                return;
+            }
+
+            const form = checkbox.closest('form');
+            if (form) {
+                const tableScroll = document.getElementById('weapons-table-scroll');
+                const barScroll = document.getElementById('weapons-scrollbar');
+                sessionStorage.setItem('weaponsScrollTop', String(window.scrollY || 0));
+                sessionStorage.setItem('weaponsTableScrollLeft', String(tableScroll?.scrollLeft || 0));
+                sessionStorage.setItem('weaponsBarScrollLeft', String(barScroll?.scrollLeft || 0));
+                form.submit();
+            }
+        });
+    })();
+</script>
+
+<script>
+    (() => {
+        const tableScroll = document.getElementById('weapons-table-scroll');
+        const barScroll = document.getElementById('weapons-scrollbar');
+        const scrollTop = sessionStorage.getItem('weaponsScrollTop');
+        const tableLeft = sessionStorage.getItem('weaponsTableScrollLeft');
+        const barLeft = sessionStorage.getItem('weaponsBarScrollLeft');
+
+        if (scrollTop !== null) {
+            window.scrollTo(0, Number(scrollTop));
+            sessionStorage.removeItem('weaponsScrollTop');
+        }
+        if (tableScroll && tableLeft !== null) {
+            tableScroll.scrollLeft = Number(tableLeft);
+            sessionStorage.removeItem('weaponsTableScrollLeft');
+        }
+        if (barScroll && barLeft !== null) {
+            barScroll.scrollLeft = Number(barLeft);
+            sessionStorage.removeItem('weaponsBarScrollLeft');
         }
     })();
 </script>

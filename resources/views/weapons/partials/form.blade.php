@@ -38,9 +38,9 @@
 </div>
 
 <div>
-    <x-input-label for="model" :value="__('Modelo')" />
-    <x-text-input id="model" name="model" type="text" class="mt-1 block w-full" value="{{ old('model', $weapon?->model) }}" required />
-    <x-input-error :messages="$errors->get('model')" class="mt-2" />
+    <x-input-label for="capacity" :value="__('Capacidad')" />
+    <x-text-input id="capacity" name="capacity" type="text" class="mt-1 block w-full" value="{{ old('capacity', $weapon?->capacity) }}" required />
+    <x-input-error :messages="$errors->get('capacity')" class="mt-2" />
 </div>
 
 <div>
@@ -130,6 +130,12 @@
             </div>
         </label>
         <x-input-error :messages="$errors->get('permit_photo')" class="mt-2" />
+        @if ($errors->has('permit_photo'))
+            <div class="mt-1 text-xs text-red-600">{{ __('Debe agregar la foto del permiso.') }}</div>
+        @endif
+        <div id="permit_photo_alert" class="mt-1 text-xs text-red-600 hidden">
+            {{ __('Debe agregar la foto del permiso.') }}
+        </div>
     </div>
 </div>
 
@@ -317,5 +323,26 @@
         document.querySelectorAll('input[data-preview-target]').forEach((input) => {
             input.addEventListener('change', () => openEditor(input));
         });
+
+        const form = document.querySelector('form[enctype="multipart/form-data"]');
+        const permitInput = document.getElementById('permit_photo');
+        const permitAlert = document.getElementById('permit_photo_alert');
+
+        if (form && permitInput && permitAlert) {
+            form.addEventListener('submit', (event) => {
+                const isCreate = @json(!empty($requirePermitPhoto));
+                if (!isCreate) {
+                    return;
+                }
+
+                if (!permitInput.files || permitInput.files.length === 0) {
+                    event.preventDefault();
+                    permitAlert.classList.remove('hidden');
+                    permitInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    permitAlert.classList.add('hidden');
+                }
+            });
+        }
     </script>
 @endpush

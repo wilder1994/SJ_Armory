@@ -22,8 +22,6 @@
                 <div class="font-medium">{{ $weapon->brand }}</div>
             </div>
             <div>
-                <div class="text-xs text-gray-500">{{ __('Modelo') }}</div>
-                <div class="font-medium">{{ $weapon->model }}</div>
             </div>
             <div>
                 <div class="text-xs text-gray-500">{{ __('Responsable') }}</div>

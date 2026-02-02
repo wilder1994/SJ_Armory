@@ -68,7 +68,7 @@
                                 if ($days !== null) {
                                     if ($days <= 0) {
                                         $statusLabel = __('Vencido');
-                                        $rowClass = 'bg-red-50';
+                                        $rowClass = 'bg-red-100';
                                     } elseif ($days <= 90) {
                                         $statusLabel = __('Renovar permiso');
                                         $rowClass = 'bg-orange-50';
@@ -82,7 +82,7 @@
                             } else {
                                 $statusLabel = $document->status ?: '-';
                                 if (($document->status ?? '') === 'En proceso') {
-                                    $rowClass = 'bg-red-50';
+                                    $rowClass = 'bg-red-100';
                                 }
                             }
 

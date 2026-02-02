@@ -73,6 +73,8 @@ Route::middleware('auth')->group(function () {
         ->name('weapons.internal_assignments.store');
     Route::patch('/weapons/{weapon}/internal-assignments/retire', [WeaponInternalAssignmentController::class, 'retire'])
         ->name('weapons.internal_assignments.retire');
+    Route::patch('/weapons/{weapon}/imprints', [WeaponController::class, 'toggleImprint'])
+        ->name('weapons.imprints.toggle');
     Route::get('/transfers', [WeaponTransferController::class, 'index'])->name('transfers.index');
     Route::post('/transfers/bulk', [WeaponTransferController::class, 'bulkStore'])->name('transfers.bulk');
     Route::patch('/transfers/{transfer}/accept', [WeaponTransferController::class, 'accept'])->name('transfers.accept');

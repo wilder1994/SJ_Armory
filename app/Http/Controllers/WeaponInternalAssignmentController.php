@@ -25,6 +25,8 @@ class WeaponInternalAssignmentController extends Controller
             'worker_id' => ['nullable', 'exists:workers,id'],
             'start_at' => ['nullable', 'date'],
             'reason' => ['nullable', 'string'],
+            'ammo_count' => ['nullable', 'integer', 'min:0'],
+            'provider_count' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $postId = $data['post_id'] ?? null;
@@ -56,8 +58,10 @@ class WeaponInternalAssignmentController extends Controller
 
         $startAt = $data['start_at'] ?? now()->toDateString();
         $reason = $data['reason'] ?? null;
+        $ammoCount = $data['ammo_count'] ?? null;
+        $providerCount = $data['provider_count'] ?? null;
 
-        DB::transaction(function () use ($weapon, $user, $postId, $workerId, $startAt, $reason, $activeClientAssignment) {
+        DB::transaction(function () use ($weapon, $user, $postId, $workerId, $startAt, $reason, $ammoCount, $providerCount, $activeClientAssignment) {
             $before = $this->currentInternalState($weapon);
             $this->closeActiveAssignments($weapon);
 
@@ -72,6 +76,8 @@ class WeaponInternalAssignmentController extends Controller
                     'start_at' => $startAt,
                     'is_active' => true,
                     'reason' => $reason,
+                    'ammo_count' => $ammoCount,
+                    'provider_count' => $providerCount,
                 ]);
 
                 $this->logInternalAssignment($user, $weapon, 'internal_assigned_post', $before, [
@@ -97,6 +103,8 @@ class WeaponInternalAssignmentController extends Controller
                 'start_at' => $startAt,
                 'is_active' => true,
                 'reason' => $reason,
+                'ammo_count' => $ammoCount,
+                'provider_count' => $providerCount,
             ]);
 
             $this->logInternalAssignment($user, $weapon, 'internal_assigned_worker', $before, [

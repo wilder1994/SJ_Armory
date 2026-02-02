@@ -36,17 +36,22 @@
         $hasInProcess = $weapon->documents->contains(function ($doc) {
             return ($doc->status ?? '') === 'En proceso';
         });
+        $internalAssignment = $weapon->activePostAssignment ?? $weapon->activeWorkerAssignment;
+        $imprintChecked = $weapon->imprint_month === now()->format('Y-m');
+        $canToggleImprint = auth()->user()?->isAdmin();
     @endphp
-    <tr @class(['bg-red-50' => $hasExpiredDocs || $hasInProcess])>
+    <tr @class(['bg-red-100' => $hasExpiredDocs || $hasInProcess])>
         <td class="px-3 py-2 whitespace-nowrap">
             <span title="{{ $weapon->internal_code }}">
                 {{ \Illuminate\Support\Str::limit($weapon->internal_code, 8) }}
             </span>
         </td>
         <td class="px-3 py-2 min-w-[200px] whitespace-nowrap">{{ $weapon->activeClientAssignment?->client?->name ?? __('Sin destino') }}</td>
-        <td class="px-3 py-2 min-w-[200px] whitespace-nowrap">{{ $weapon->activeClientAssignment?->responsible?->name ?? '-' }}</td>
-        <td class="px-3 py-2 whitespace-nowrap">{{ $weapon->serial_number }}</td>
         <td class="px-3 py-2 whitespace-nowrap">{{ $weapon->weapon_type }}</td>
+        <td class="px-3 py-2 whitespace-nowrap">{{ $weapon->brand }}</td>
+        <td class="px-3 py-2 whitespace-nowrap">{{ $weapon->serial_number }}</td>
+        <td class="px-3 py-2 whitespace-nowrap">{{ $weapon->caliber }}</td>
+        <td class="px-3 py-2 whitespace-nowrap text-center">{{ $weapon->capacity ?? '-' }}</td>
         <td class="px-3 py-2 whitespace-nowrap">{{ $weapon->permit_type ?? '-' }}</td>
         <td class="px-3 py-2 whitespace-nowrap">{{ $weapon->permit_number ?? '-' }}</td>
         <td class="px-3 py-2 whitespace-nowrap">{{ $weapon->permit_expires_at?->format('Y-m-d') ?? '-' }}</td>
@@ -63,6 +68,13 @@
                 {{ $weapon->activeClientAssignment ? __('Asignada') : __('Sin destino') }}
             @endif
         </td>
+        <td class="px-3 py-2 whitespace-nowrap text-center">
+            {{ $internalAssignment?->ammo_count ?? '-' }}
+        </td>
+        <td class="px-3 py-2 whitespace-nowrap text-center">
+            {{ $internalAssignment?->provider_count ?? '-' }}
+        </td>
+        <td class="px-3 py-2 min-w-[200px] whitespace-nowrap">{{ $weapon->activeClientAssignment?->responsible?->name ?? '-' }}</td>
         <td class="px-3 py-2 min-w-[220px] whitespace-nowrap">
             @if ($weapon->activePostAssignment)
                 {{ $weapon->activePostAssignment->post?->name }}
@@ -88,16 +100,25 @@
                 <form action="{{ route('weapons.destroy', $weapon) }}" method="POST" class="inline">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('¿Eliminar arma?')">
+                    <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Â¿Eliminar arma?')">
                         {{ __('Eliminar') }}
                     </button>
                 </form>
             @endcan
         </td>
+        <td class="px-3 py-2 text-center whitespace-nowrap">
+            <form method="POST" action="{{ route('weapons.imprints.toggle', $weapon) }}">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="received" value="0">
+                <input type="checkbox" name="received" value="1" class="imprint-checkbox"
+                    @checked($imprintChecked) @disabled(!$canToggleImprint)>
+            </form>
+        </td>
     </tr>
 @empty
     <tr>
-        <td colspan="12" class="px-3 py-6 text-center text-gray-500">
+        <td colspan="18" class="px-3 py-6 text-center text-gray-500">
             {{ __('No hay armas registradas.') }}
         </td>
     </tr>

@@ -9,12 +9,12 @@ class WorkerPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isAdmin() || $user->isResponsible();
     }
 
     public function view(User $user, Worker $worker): bool
     {
-        return $user->isAdmin();
+        return $user->isAdmin() || $user->isResponsible();
     }
 
     public function create(User $user): bool

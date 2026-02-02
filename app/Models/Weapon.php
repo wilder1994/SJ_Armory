@@ -17,7 +17,7 @@ class Weapon extends Model
         'weapon_type',
         'caliber',
         'brand',
-        'model',
+        'capacity',
         'ownership_type',
         'ownership_entity',
         'permit_type',
@@ -25,6 +25,9 @@ class Weapon extends Model
         'permit_expires_at',
         'permit_file_id',
         'notes',
+        'imprint_month',
+        'imprint_received_by',
+        'imprint_received_at',
     ];
 
     protected $casts = [

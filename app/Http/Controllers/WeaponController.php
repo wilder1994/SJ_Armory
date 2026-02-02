@@ -11,7 +11,6 @@ use App\Services\WeaponDocumentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Throwable;
 
 class WeaponController extends Controller
@@ -42,7 +41,6 @@ class WeaponController extends Controller
                     ->orWhere('permit_number', 'like', '%' . $search . '%')
                     ->orWhere('caliber', 'like', '%' . $search . '%')
                     ->orWhere('brand', 'like', '%' . $search . '%')
-                    ->orWhere('model', 'like', '%' . $search . '%')
                     ->orWhereHas('activeClientAssignment.client', function ($clientQuery) use ($search) {
                         $clientQuery->where('name', 'like', '%' . $search . '%');
                     })
@@ -92,7 +90,7 @@ class WeaponController extends Controller
             'weapon_type' => ['required', 'string', 'max:100'],
             'caliber' => ['required', 'string', 'max:100'],
             'brand' => ['required', 'string', 'max:100'],
-            'model' => ['required', 'string', 'max:100'],
+            'capacity' => ['required', 'string', 'max:50'],
             'ownership_type' => ['required', 'in:' . implode(',', array_keys($this->ownershipOptions()))],
             'ownership_entity' => ['nullable', 'string', 'max:255'],
             'permit_type' => ['required', 'in:porte,tenencia'],
@@ -206,7 +204,7 @@ class WeaponController extends Controller
             'auditable_type' => Weapon::class,
             'auditable_id' => $weapon->id,
             'before' => null,
-            'after' => $weapon->only(['internal_code', 'serial_number', 'weapon_type', 'caliber', 'brand', 'model']),
+            'after' => $weapon->only(['internal_code', 'serial_number', 'weapon_type', 'caliber', 'brand', 'capacity']),
         ]);
 
         return redirect()->route('weapons.show', $weapon)->with('status', 'Arma creada.');
@@ -344,7 +342,7 @@ class WeaponController extends Controller
             'weapon_type' => ['required', 'string', 'max:100'],
             'caliber' => ['required', 'string', 'max:100'],
             'brand' => ['required', 'string', 'max:100'],
-            'model' => ['required', 'string', 'max:100'],
+            'capacity' => ['required', 'string', 'max:50'],
             'ownership_type' => ['required', 'in:' . implode(',', array_keys($this->ownershipOptions()))],
             'ownership_entity' => ['nullable', 'string', 'max:255'],
             'permit_type' => ['required', 'in:porte,tenencia'],
@@ -362,7 +360,7 @@ class WeaponController extends Controller
             'weapon_type',
             'caliber',
             'brand',
-            'model',
+            'capacity',
             'permit_type',
             'permit_number',
             'permit_expires_at',
@@ -473,7 +471,7 @@ class WeaponController extends Controller
                 'weapon_type',
                 'caliber',
                 'brand',
-                'model',
+                'capacity',
                 'permit_type',
                 'permit_number',
                 'permit_expires_at',
@@ -490,7 +488,7 @@ class WeaponController extends Controller
             'action' => 'weapon_deleted',
             'auditable_type' => Weapon::class,
             'auditable_id' => $weapon->id,
-            'before' => $weapon->only(['internal_code', 'serial_number', 'weapon_type', 'caliber', 'brand', 'model']),
+            'before' => $weapon->only(['internal_code', 'serial_number', 'weapon_type', 'caliber', 'brand', 'capacity']),
             'after' => null,
         ]);
 
@@ -510,11 +508,41 @@ class WeaponController extends Controller
 
     private function generateInternalCode(): string
     {
-        do {
-            $code = 'ARM-' . Str::upper(Str::random(8));
-        } while (Weapon::where('internal_code', $code)->exists());
+        $prefix = 'SJ-';
+        $latestCode = Weapon::where('internal_code', 'like', $prefix . '%')
+            ->orderByRaw('CAST(SUBSTRING(internal_code, 4) AS UNSIGNED) DESC')
+            ->value('internal_code');
+        $lastNumber = $latestCode ? (int) preg_replace('/\D/', '', $latestCode) : 0;
+        $code = sprintf('%s%04d', $prefix, $lastNumber + 1);
 
         return $code;
+    }
+
+    public function toggleImprint(Request $request, Weapon $weapon)
+    {
+        $user = $request->user();
+        if (!$user || !$user->isAdmin()) {
+            abort(403);
+        }
+
+        $month = now()->format('Y-m');
+        $received = $request->boolean('received');
+
+        if ($received) {
+            $weapon->update([
+                'imprint_month' => $month,
+                'imprint_received_by' => $user->id,
+                'imprint_received_at' => now(),
+            ]);
+        } else {
+            $weapon->update([
+                'imprint_month' => null,
+                'imprint_received_by' => null,
+                'imprint_received_at' => null,
+            ]);
+        }
+
+        return back();
     }
 }
 

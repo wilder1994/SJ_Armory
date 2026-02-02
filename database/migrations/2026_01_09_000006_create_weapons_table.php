@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('weapon_type');
             $table->string('caliber');
             $table->string('brand');
-            $table->string('model');
+            $table->string('capacity')->nullable();
             $table->enum('ownership_type', [
                 'company_owned',
                 'leased',
@@ -27,6 +27,9 @@ return new class extends Migration
             $table->date('permit_expires_at')->nullable();
             $table->unsignedBigInteger('permit_file_id')->nullable();
             $table->text('notes')->nullable();
+            $table->string('imprint_month', 7)->nullable();
+            $table->foreignId('imprint_received_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('imprint_received_at')->nullable();
             $table->timestamps();
         });
     }

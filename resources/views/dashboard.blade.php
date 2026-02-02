@@ -60,7 +60,7 @@
                     </a>
                 @endif
 
-                @if (Auth::user()?->isAdmin())
+                @can('viewAny', App\Models\Post::class)
                     <a href="{{ route('posts.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
                         <div class="flex items-center gap-4">
                             <div class="flex h-14 w-14 items-center justify-center rounded-full bg-teal-50 text-teal-600">
@@ -76,9 +76,9 @@
                             </div>
                         </div>
                     </a>
-                @endif
+                @endcan
 
-                @if (Auth::user()?->isAdmin())
+                @can('viewAny', App\Models\Worker::class)
                     <a href="{{ route('workers.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
                         <div class="flex items-center gap-4">
                             <div class="flex h-14 w-14 items-center justify-center rounded-full bg-fuchsia-50 text-fuchsia-600">
@@ -95,7 +95,7 @@
                             </div>
                         </div>
                     </a>
-                @endif
+                @endcan
 
                 @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsible())
                     <a href="{{ route('transfers.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
@@ -109,6 +109,23 @@
                             <div>
                                 <div class="text-base font-semibold text-gray-800">{{ __('Transferencias') }}</div>
                                 <div class="text-xs text-gray-500">{{ __('Envios pendientes') }}</div>
+                            </div>
+                        </div>
+                    </a>
+                @endif
+
+                @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsible())
+                    <a href="{{ route('maps.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
+                        <div class="flex items-center gap-4">
+                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-sky-50 text-sky-600">
+                                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                                    <path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z" />
+                                    <path d="M9 4v14M15 6v14" />
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="text-base font-semibold text-gray-800">{{ __('Mapa') }}</div>
+                                <div class="text-xs text-gray-500">{{ __('UbicaciÃ³n de armas') }}</div>
                             </div>
                         </div>
                     </a>

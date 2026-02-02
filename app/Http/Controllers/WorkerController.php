@@ -13,7 +13,18 @@ class WorkerController extends Controller
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
-            if (!$request->user()?->isAdmin()) {
+            $user = $request->user();
+            $action = $request->route()?->getActionMethod();
+
+            if ($action === 'index') {
+                if (!$user?->isAdmin() && !$user?->isResponsible()) {
+                    abort(403);
+                }
+
+                return $next($request);
+            }
+
+            if (!$user?->isAdmin()) {
                 abort(403);
             }
 
@@ -24,10 +35,16 @@ class WorkerController extends Controller
     public function index(Request $request)
     {
         $query = Worker::with(['client', 'responsible']);
+        $user = $request->user();
         $search = trim((string) $request->input('q', ''));
         $clientId = $request->integer('client_id');
         $role = $request->input('role');
         $responsibleId = $request->integer('responsible_user_id');
+
+        if ($user?->isResponsible() && !$user?->isAdmin()) {
+            $clientIds = $user->clients()->pluck('clients.id');
+            $query->whereIn('client_id', $clientIds);
+        }
 
         if ($search !== '') {
             $query->where('name', 'like', '%' . $search . '%');
@@ -49,8 +66,13 @@ class WorkerController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        $clients = Client::orderBy('name')->get();
-        $responsibles = User::where('role', 'RESPONSABLE')->orderBy('name')->get();
+        if ($user?->isResponsible() && !$user?->isAdmin()) {
+            $clients = $user->clients()->orderBy('name')->get();
+            $responsibles = collect([$user]);
+        } else {
+            $clients = Client::orderBy('name')->get();
+            $responsibles = User::where('role', 'RESPONSABLE')->orderBy('name')->get();
+        }
         $roles = $this->roleOptions();
 
         return view('workers.index', compact('workers', 'clients', 'responsibles', 'roles', 'search', 'clientId', 'role', 'responsibleId'));
