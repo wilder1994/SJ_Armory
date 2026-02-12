@@ -4,7 +4,7 @@
         <div class="flex justify-between h-16">
             <div class="flex items-center">
                 <!-- Logo -->
-                <div class="-ml-12 shrink-0 flex items-center">
+                <div class="shrink-0 flex items-center ml-2">
                     <a href="{{ route('dashboard') }}">
                         <x-application-logo class="block" />
                     </a>
@@ -15,7 +15,7 @@
                         <span class="text-gray-900">{{ __('Inicio') }}</span>
                     </x-nav-link>
                     
-                    <div class="hidden space-x-8 sm:ms-10 sm:flex">
+                    <div class="hidden space-x-2 sm:ms-20 sm:flex">
                         @can('viewAny', App\Models\Weapon::class)
                             <x-nav-link :href="route('weapons.index')" :active="request()->routeIs('weapons.*')">
                                 {{ __('Armamento') }}
@@ -184,3 +184,7 @@
         </div>
     </div>
 </nav>
+
+
+
+

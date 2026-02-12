@@ -21,3 +21,4 @@ class UserClientSeeder extends Seeder
         }
     }
 }
+

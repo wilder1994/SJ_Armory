@@ -52,3 +52,4 @@ class WeaponClientAssignment extends Model
         return $this->belongsTo(File::class, 'support_file_id');
     }
 }
+

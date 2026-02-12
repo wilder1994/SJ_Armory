@@ -70,7 +70,7 @@
                                                     $transferDate = $log->auditable->requested_at?->format('Y-m-d H:i');
                                                     $entityName = 'Arma ' . $weaponCode;
                                                     if ($fromName || $toName) {
-                                                        $entityName .= ' (' . ($fromName ?? '-') . ' → ' . ($toName ?? '-') . ')';
+                                                        $entityName .= ' (' . ($fromName ?? '-') . ' â†’ ' . ($toName ?? '-') . ')';
                                                     }
                                                     if ($transferDate) {
                                                         $entityName .= ' - ' . $transferDate;
@@ -107,3 +107,7 @@
         </div>
     </div>
 </x-app-layout>
+
+
+
+

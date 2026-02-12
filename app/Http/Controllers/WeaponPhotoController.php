@@ -160,3 +160,4 @@ class WeaponPhotoController extends Controller
         return response()->json(['ok' => true]);
     }
 }
+

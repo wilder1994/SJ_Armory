@@ -228,3 +228,4 @@ class WeaponInternalAssignmentController extends Controller
         ]);
     }
 }
+

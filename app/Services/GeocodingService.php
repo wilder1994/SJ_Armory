@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Throwable;
 
 class GeocodingService
 {
@@ -13,14 +14,18 @@ class GeocodingService
             return null;
         }
 
-        $response = Http::withHeaders([
-            'User-Agent' => 'SJ_Armory/1.0 (contact@example.com)',
-        ])->timeout(5)->get('https://nominatim.openstreetmap.org/search', [
-            'format' => 'json',
-            'q' => $query,
-            'countrycodes' => 'co',
-            'limit' => 1,
-        ]);
+        try {
+            $response = Http::withHeaders([
+                'User-Agent' => 'SJ_Armory/1.0 (contact@example.com)',
+            ])->timeout(5)->connectTimeout(3)->get('https://nominatim.openstreetmap.org/search', [
+                'format' => 'json',
+                'q' => $query,
+                'countrycodes' => 'co',
+                'limit' => 1,
+            ]);
+        } catch (Throwable $exception) {
+            return null;
+        }
 
         if (!$response->ok()) {
             return null;
@@ -39,14 +44,18 @@ class GeocodingService
 
     public function reverseGeocode(float $lat, float $lng): ?array
     {
-        $response = Http::withHeaders([
-            'User-Agent' => 'SJ_Armory/1.0 (contact@example.com)',
-        ])->timeout(5)->get('https://nominatim.openstreetmap.org/reverse', [
-            'format' => 'jsonv2',
-            'lat' => $lat,
-            'lon' => $lng,
-            'addressdetails' => 1,
-        ]);
+        try {
+            $response = Http::withHeaders([
+                'User-Agent' => 'SJ_Armory/1.0 (contact@example.com)',
+            ])->timeout(5)->connectTimeout(3)->get('https://nominatim.openstreetmap.org/reverse', [
+                'format' => 'jsonv2',
+                'lat' => $lat,
+                'lon' => $lng,
+                'addressdetails' => 1,
+            ]);
+        } catch (Throwable $exception) {
+            return null;
+        }
 
         if (!$response->ok()) {
             return null;
@@ -55,3 +64,4 @@ class GeocodingService
         return $response->json();
     }
 }
+

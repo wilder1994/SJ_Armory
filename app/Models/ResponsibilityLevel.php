@@ -20,3 +20,4 @@ class ResponsibilityLevel extends Model
         return $this->hasMany(User::class);
     }
 }
+

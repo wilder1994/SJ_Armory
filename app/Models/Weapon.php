@@ -84,3 +84,4 @@ class Weapon extends Model
         return $this->belongsTo(File::class, 'permit_file_id');
     }
 }
+

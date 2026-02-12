@@ -32,3 +32,4 @@ class WorkerPolicy
         return $user->isAdmin();
     }
 }
+

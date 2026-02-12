@@ -201,3 +201,4 @@ class ResponsiblePortfolioController extends Controller
         return redirect()->route('portfolios.index')->with('status', 'Cartera transferida.');
     }
 }
+

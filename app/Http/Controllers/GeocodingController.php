@@ -25,3 +25,4 @@ class GeocodingController extends Controller
         return response()->json($result);
     }
 }
+

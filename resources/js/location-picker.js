@@ -364,7 +364,7 @@ const initMapPicker = () => {
                 }
                 if (!addressValue || !department || !municipality) {
                     if (errorMessage) {
-                        errorMessage.textContent = 'No se pudo completar la dirección o el municipio. Ajusta manualmente si es necesario.';
+                        errorMessage.textContent = 'No se pudo completar la direcciÃ³n o el municipio. Ajusta manualmente si es necesario.';
                         errorMessage.classList.remove('hidden');
                     }
                 } else {
@@ -372,7 +372,7 @@ const initMapPicker = () => {
                 }
             } catch (error) {
                 if (errorMessage) {
-                    errorMessage.textContent = 'No se pudo obtener la ubicación. Intenta nuevamente o completa los datos manualmente.';
+                    errorMessage.textContent = 'No se pudo obtener la ubicaciÃ³n. Intenta nuevamente o completa los datos manualmente.';
                     errorMessage.classList.remove('hidden');
                 }
             } finally {
@@ -400,3 +400,4 @@ if (document.readyState === 'loading') {
 } else {
     init();
 }
+

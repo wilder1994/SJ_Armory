@@ -122,3 +122,4 @@ class WeaponDocumentController extends Controller
         return redirect()->route('weapons.show', $weapon)->with('status', 'Documento eliminado.');
     }
 }
+

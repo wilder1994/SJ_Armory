@@ -42,3 +42,4 @@ class WeaponWorkerAssignment extends Model
         return $this->belongsTo(User::class, 'assigned_by');
     }
 }
+

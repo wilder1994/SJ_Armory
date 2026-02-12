@@ -36,3 +36,4 @@ class Worker extends Model
         return $this->hasMany(WeaponWorkerAssignment::class);
     }
 }
+

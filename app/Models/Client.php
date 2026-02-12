@@ -38,3 +38,4 @@ class Client extends Model
         return $this->hasMany(Worker::class);
     }
 }
+

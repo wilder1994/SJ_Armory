@@ -15,7 +15,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @stack('styles')
     </head>
-    <body class="sj-app font-sans antialiased">
+    <body class="sj-app sj-has-nav sj-form-compact font-sans antialiased">
         <div class="sj-shell">
             <div class="sj-fixed-header">
                 @include('layouts.navigation')

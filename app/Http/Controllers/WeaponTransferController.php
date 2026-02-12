@@ -476,3 +476,4 @@ class WeaponTransferController extends Controller
         ]);
     }
 }
+

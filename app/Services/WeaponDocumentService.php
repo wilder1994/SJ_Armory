@@ -186,3 +186,4 @@ class WeaponDocumentService
         return (int)round(($cm / 2.54) * 96);
     }
 }
+

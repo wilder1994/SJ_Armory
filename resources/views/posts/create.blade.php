@@ -1,4 +1,4 @@
-﻿<x-app-layout>
+<x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Nuevo puesto') }}
@@ -9,7 +9,7 @@
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
-                    <form method="POST" action="{{ route('posts.store') }}" class="space-y-4" data-location-form>
+                    <form method="POST" action="{{ route('posts.store') }}" data-location-form>
                         <input type="hidden" name="coords_source" value="geocode" data-coords-source>
                         @csrf
 
@@ -114,6 +114,10 @@
         </div>
     </div>
 </div>
+
+
+
+
 
 
 

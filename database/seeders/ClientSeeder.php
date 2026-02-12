@@ -98,3 +98,4 @@ class ClientSeeder extends Seeder
         }
     }
 }
+

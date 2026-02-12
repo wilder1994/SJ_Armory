@@ -33,3 +33,4 @@ class WeaponPhoto extends Model
         return $this->belongsTo(File::class);
     }
 }
+

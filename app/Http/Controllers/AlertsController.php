@@ -41,3 +41,4 @@ class AlertsController extends Controller
         }
     }
 }
+

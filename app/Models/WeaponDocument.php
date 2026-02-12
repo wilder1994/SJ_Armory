@@ -38,3 +38,4 @@ class WeaponDocument extends Model
         return $this->belongsTo(File::class);
     }
 }
+

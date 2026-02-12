@@ -32,3 +32,4 @@ class PostPolicy
         return $user->isAdmin();
     }
 }
+

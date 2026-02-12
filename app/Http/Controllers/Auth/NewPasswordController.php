@@ -70,3 +70,4 @@ class NewPasswordController extends Controller
                             ->withErrors(['email' => __($status)]);
     }
 }
+

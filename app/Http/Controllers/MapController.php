@@ -82,3 +82,4 @@ class MapController extends Controller
         return response()->json($data);
     }
 }
+

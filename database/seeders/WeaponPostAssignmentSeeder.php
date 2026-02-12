@@ -54,3 +54,4 @@ class WeaponPostAssignmentSeeder extends Seeder
         }
     }
 }
+

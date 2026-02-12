@@ -31,3 +31,4 @@ return new class extends Migration
         Schema::dropIfExists('weapon_post_assignments');
     }
 };
+

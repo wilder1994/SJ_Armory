@@ -53,3 +53,4 @@ class WeaponPolicy
         return $user->isAdmin();
     }
 }
+

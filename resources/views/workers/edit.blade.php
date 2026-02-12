@@ -9,7 +9,7 @@
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
-                    <form method="POST" action="{{ route('workers.update', $worker) }}" class="space-y-4">
+                    <form method="POST" action="{{ route('workers.update', $worker) }}">
                         @csrf
                         @method('PUT')
 
@@ -84,3 +84,7 @@
         </div>
     </div>
 </x-app-layout>
+
+
+
+

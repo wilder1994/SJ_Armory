@@ -137,3 +137,4 @@ class WeaponClientAssignmentController extends Controller
         }
     }
 }
+

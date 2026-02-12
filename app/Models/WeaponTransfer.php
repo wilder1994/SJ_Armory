@@ -68,3 +68,4 @@ class WeaponTransfer extends Model
         return $this->belongsTo(Client::class, 'from_client_id');
     }
 }
+

@@ -125,7 +125,7 @@
                             </div>
                             <div>
                                 <div class="text-base font-semibold text-gray-800">{{ __('Mapa') }}</div>
-                                <div class="text-xs text-gray-500">{{ __('UbicaciÃ³n de armas') }}</div>
+                                <div class="text-xs text-gray-500">{{ __('Ubicación de armas') }}</div>
                             </div>
                         </div>
                     </a>
@@ -188,3 +188,7 @@
         </div>
     </div>
 </x-app-layout>
+
+
+
+

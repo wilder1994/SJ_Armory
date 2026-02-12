@@ -191,3 +191,4 @@ class PostController extends Controller
         return redirect()->route('posts.index')->with('status', 'Puesto eliminado.');
     }
 }
+
