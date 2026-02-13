@@ -31,7 +31,7 @@ class WeaponPolicy
             return true;
         }
 
-        if ($user->isResponsible()) {
+        if ($user->isResponsibleLevelOne()) {
             return $weapon->activeClientAssignment?->responsible_user_id === $user->id;
         }
 

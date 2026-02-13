@@ -10,7 +10,7 @@ class MapController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        if (!$user || (!$user->isAdmin() && !$user->isResponsible())) {
+        if (!$user || (!$user->isAdmin() && !$user->isResponsible() && !$user->isAuditor())) {
             abort(403);
         }
 
@@ -20,7 +20,7 @@ class MapController extends Controller
     public function weapons(Request $request)
     {
         $user = $request->user();
-        if (!$user || (!$user->isAdmin() && !$user->isResponsible())) {
+        if (!$user || (!$user->isAdmin() && !$user->isResponsible() && !$user->isAuditor())) {
             abort(403);
         }
 

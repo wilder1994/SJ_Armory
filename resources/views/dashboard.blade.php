@@ -1,6 +1,6 @@
 <x-app-layout>
     <div class="py-10">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="mb-6">
                 <h1 class="text-2xl font-semibold text-gray-800">{{ __('Inicio') }}</h1>
                 <p class="text-sm text-gray-500">{{ __('Accesos rápidos a los módulos principales.') }}</p>
@@ -97,7 +97,7 @@
                     </a>
                 @endcan
 
-                @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsible())
+                @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsible() || Auth::user()?->isAuditor())
                     <a href="{{ route('transfers.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
                         <div class="flex items-center gap-4">
                             <div class="flex h-14 w-14 items-center justify-center rounded-full bg-slate-50 text-slate-600">
@@ -114,7 +114,7 @@
                     </a>
                 @endif
 
-                @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsible())
+                @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsible() || Auth::user()?->isAuditor())
                     <a href="{{ route('maps.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
                         <div class="flex items-center gap-4">
                             <div class="flex h-14 w-14 items-center justify-center rounded-full bg-sky-50 text-sky-600">
@@ -131,7 +131,7 @@
                     </a>
                 @endif
 
-                @if (Auth::user()?->isAdmin())
+                @if (Auth::user()?->isAdmin() || Auth::user()?->isAuditor())
                     <a href="{{ route('reports.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
                         <div class="flex items-center gap-4">
                             <div class="flex h-14 w-14 items-center justify-center rounded-full bg-sky-50 text-sky-600">
@@ -150,7 +150,7 @@
                     </a>
                 @endif
 
-                @if (Auth::user()?->isAdmin())
+                @if (Auth::user()?->isAdmin() || Auth::user()?->isAuditor())
                     <a href="{{ route('alerts.documents') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
                         <div class="flex items-center gap-4">
                             <div class="flex h-14 w-14 items-center justify-center rounded-full bg-rose-50 text-rose-600">

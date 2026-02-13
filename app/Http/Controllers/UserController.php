@@ -24,7 +24,7 @@ class UserController extends Controller
 
     public function index()
     {
-        $users = User::with(['position', 'responsibilityLevel'])
+        $users = User::with(['position', 'responsibilityLevel', 'clients'])
             ->orderBy('name')
             ->paginate(15)
             ->withQueryString();
@@ -37,7 +37,7 @@ class UserController extends Controller
     {
         $roles = $this->roleOptions();
         $positions = Position::orderBy('name')->get();
-        $responsibilityLevels = ResponsibilityLevel::orderBy('level')->get();
+        $responsibilityLevels = ResponsibilityLevel::whereIn('level', [1, 2])->orderBy('level')->get();
 
         return view('users.create', compact('roles', 'positions', 'responsibilityLevels'));
     }
@@ -54,6 +54,16 @@ class UserController extends Controller
             'is_active' => ['required', 'boolean'],
             'cost_center' => ['nullable', 'string', 'max:100'],
         ]);
+
+        if ($data['role'] === 'RESPONSABLE') {
+            if (empty($data['responsibility_level_id'])) {
+                return back()
+                    ->withErrors(['responsibility_level_id' => 'Seleccione el nivel de responsabilidad para el responsable.'])
+                    ->withInput();
+            }
+        } else {
+            $data['responsibility_level_id'] = null;
+        }
 
         $data['password'] = Hash::make($data['password']);
 
@@ -75,7 +85,7 @@ class UserController extends Controller
     {
         $roles = $this->roleOptions();
         $positions = Position::orderBy('name')->get();
-        $responsibilityLevels = ResponsibilityLevel::orderBy('level')->get();
+        $responsibilityLevels = ResponsibilityLevel::whereIn('level', [1, 2])->orderBy('level')->get();
 
         return view('users.edit', compact('user', 'roles', 'positions', 'responsibilityLevels'));
     }
@@ -92,6 +102,16 @@ class UserController extends Controller
             'is_active' => ['required', 'boolean'],
             'cost_center' => ['nullable', 'string', 'max:100'],
         ]);
+
+        if ($data['role'] === 'RESPONSABLE') {
+            if (empty($data['responsibility_level_id'])) {
+                return back()
+                    ->withErrors(['responsibility_level_id' => 'Seleccione el nivel de responsabilidad para el responsable.'])
+                    ->withInput();
+            }
+        } else {
+            $data['responsibility_level_id'] = null;
+        }
 
         if (empty($data['password'])) {
             unset($data['password']);

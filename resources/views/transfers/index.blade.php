@@ -8,17 +8,19 @@
                 <a href="{{ route('dashboard') }}" class="text-sm text-gray-600 hover:text-gray-900">
                     {{ __('Volver') }}
                 </a>
-                <button type="button" class="text-sm font-medium text-indigo-600 hover:text-indigo-900"
-                    x-data
-                    x-on:click.prevent="$dispatch('open-modal', 'bulk-transfer')">
-                    {{ __('Enviar') }}
-                </button>
+                @if ($canManageTransfers)
+                    <button type="button" class="text-sm font-medium text-indigo-600 hover:text-indigo-900"
+                        x-data
+                        x-on:click.prevent="$dispatch('open-modal', 'bulk-transfer')">
+                        {{ __('Enviar') }}
+                    </button>
+                @endif
             </div>
         </div>
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-7xl mx-auto space-y-6 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
             @if (session('status'))
                 <div class="rounded bg-green-50 p-3 text-sm text-green-700">
                     {{ session('status') }}
@@ -68,6 +70,7 @@
                     <h3 class="text-lg font-semibold">
                         {{ $status === 'pending' ? __('Pendientes por aceptar') : __('Recibidas') . ' - ' . $statusLabel }}
                     </h3>
+                    <div class="overflow-x-auto">
                     <table class="mt-3 min-w-full divide-y divide-gray-200 text-sm">
                         <thead class="bg-gray-50">
                             <tr>
@@ -90,7 +93,7 @@
                                     <td class="px-3 py-2">{{ $transfer->fromUser?->name }}</td>
                                     <td class="px-3 py-2">{{ $transfer->newClient?->name ?? '-' }}</td>
                                     <td class="px-3 py-2 text-right space-x-2">
-                                        @if ($status === 'pending')
+                                        @if ($status === 'pending' && $canManageTransfers)
                                             <button type="button"
                                                 class="text-emerald-600 hover:text-emerald-900"
                                                 data-transfer-id="{{ $transfer->id }}"
@@ -121,12 +124,14 @@
                             @endforelse
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <h3 class="text-lg font-semibold">{{ __('Transferencias enviadas') }} - {{ $statusLabel }}</h3>
+                    <div class="overflow-x-auto">
                     <table class="mt-3 min-w-full divide-y divide-gray-200 text-sm">
                         <thead class="bg-gray-50">
                             <tr>
@@ -159,11 +164,13 @@
                             @endforelse
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    @if ($canManageTransfers)
     <x-modal name="bulk-transfer" maxWidth="2xl">
         <div class="p-6 text-gray-900">
             <div class="flex items-center justify-between">
@@ -346,8 +353,10 @@
             </form>
         </div>
     </x-modal>
+    @endif
 </x-app-layout>
 
+@if ($canManageTransfers)
 <script>
     (() => {
         const selectAll = document.getElementById('select-all');
@@ -486,6 +495,7 @@
         }
     })();
 </script>
+@endif
 
 
 

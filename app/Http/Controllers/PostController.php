@@ -17,7 +17,7 @@ class PostController extends Controller
             $action = $request->route()?->getActionMethod();
 
             if ($action === 'index') {
-                if (!$user?->isAdmin() && !$user?->isResponsible()) {
+                if (!$user?->isAdmin() && !$user?->isResponsible() && !$user?->isAuditor()) {
                     abort(403);
                 }
 

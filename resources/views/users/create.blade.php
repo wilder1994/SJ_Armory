@@ -68,12 +68,6 @@
                         </div>
 
                         <div>
-                            <x-input-label for="cost_center" :value="__('Centro de costo')" />
-                            <x-text-input id="cost_center" name="cost_center" type="text" class="mt-1 block w-full" value="{{ old('cost_center') }}" />
-                            <x-input-error :messages="$errors->get('cost_center')" class="mt-2" />
-                        </div>
-
-                        <div>
                             <x-input-label for="password" :value="__('Contraseña')" />
                             <x-text-input id="password" name="password" type="password" class="mt-1 block w-full" required />
                             <x-input-error :messages="$errors->get('password')" class="mt-2" />

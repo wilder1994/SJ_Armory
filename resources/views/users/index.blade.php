@@ -10,8 +10,8 @@
         </div>
     </x-slot>
 
-    <div class="py-8">
-        <div class="max-w-7xl mx-auto space-y-6 sm:px-6 lg:px-8">
+    <div class="py-8" x-data="{ showClientsModal: false, modalUserName: '', modalClients: [] }">
+        <div class="max-w-7xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
             @if (session('status'))
                 <div class="rounded bg-green-50 p-3 text-sm text-green-700">
                     {{ session('status') }}
@@ -29,7 +29,7 @@
                                     <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Responsable') }}</th>
                                     <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Cargo') }}</th>
                                     <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Nivel de responsabilidad') }}</th>
-                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Centro de costo') }}</th>
+                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Clientes asignados') }}</th>
                                     <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Estado activo') }}</th>
                                     <th class="px-3 py-2 text-right font-medium text-gray-600">{{ __('Acciones') }}</th>
                                 </tr>
@@ -44,7 +44,19 @@
                                         <td class="px-3 py-2">
                                             {{ $user->responsibilityLevel?->level ? $user->responsibilityLevel->level . ' - ' . $user->responsibilityLevel->name : '-' }}
                                         </td>
-                                        <td class="px-3 py-2">{{ $user->cost_center ?: '-' }}</td>
+                                        <td class="px-3 py-2">
+                                            <button
+                                                type="button"
+                                                class="text-xs font-medium text-indigo-600 hover:text-indigo-900"
+                                                @click='
+                                                    modalUserName = @js($user->name);
+                                                    modalClients = @js($user->clients->pluck('name')->values());
+                                                    showClientsModal = true;
+                                                '
+                                            >
+                                                {{ __('Ver clientes') }}
+                                            </button>
+                                        </td>
                                         <td class="px-3 py-2">
                                             <span class="{{ $user->is_active ? 'text-green-700' : 'text-gray-500' }}">
                                                 {{ $user->is_active ? __('Activo') : __('Inactivo') }}
@@ -88,9 +100,40 @@
                 </div>
             </div>
         </div>
+
+        <div
+            x-show="showClientsModal"
+            x-transition.opacity
+            class="fixed inset-0 z-[1300] flex items-center justify-center bg-black/50 p-4"
+            style="display: none;"
+            @click.self="showClientsModal = false"
+        >
+            <div class="w-full max-w-lg rounded-lg bg-white shadow-xl">
+                <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+                    <h3 class="text-base font-semibold text-gray-900">
+                        {{ __('Clientes asignados') }}:
+                        <span class="font-medium" x-text="modalUserName"></span>
+                    </h3>
+                    <button
+                        type="button"
+                        class="text-lg leading-none text-gray-500 hover:text-gray-700"
+                        @click="showClientsModal = false"
+                        aria-label="{{ __('Cerrar') }}"
+                    >
+                        X
+                    </button>
+                </div>
+                <div class="max-h-80 overflow-y-auto px-5 py-4">
+                    <ul class="space-y-2 text-sm text-gray-700" x-show="modalClients.length > 0">
+                        <template x-for="(clientName, idx) in modalClients" :key="idx">
+                            <li class="rounded border border-gray-200 px-3 py-2" x-text="clientName"></li>
+                        </template>
+                    </ul>
+                    <p class="text-sm text-gray-500" x-show="modalClients.length === 0">
+                        {{ __('Sin clientes asignados.') }}
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 </x-app-layout>
-
-
-
-

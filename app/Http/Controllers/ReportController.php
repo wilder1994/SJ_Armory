@@ -207,7 +207,7 @@ class ReportController extends Controller
 
     private function authorizeAdmin(): void
     {
-        if (!request()->user()?->isAdmin()) {
+        if (!request()->user()?->isAdmin() && !request()->user()?->isAuditor()) {
             abort(403);
         }
     }

@@ -9,12 +9,12 @@ class PostPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isAdmin() || $user->isResponsible();
+        return $user->isAdmin() || $user->isResponsible() || $user->isAuditor();
     }
 
     public function view(User $user, Post $post): bool
     {
-        return $user->isAdmin() || $user->isResponsible();
+        return $user->isAdmin() || $user->isResponsible() || $user->isAuditor();
     }
 
     public function create(User $user): bool

@@ -11,7 +11,7 @@
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-6xl mx-auto space-y-6 sm:px-6 lg:px-8">
+        <div class="max-w-6xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
             <form method="GET" class="flex items-center gap-2">
                 <label class="text-sm text-gray-600">{{ __('Ventana') }}</label>
                 <select name="days" class="rounded-md border-gray-300 text-sm">
@@ -27,6 +27,7 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <h3 class="text-lg font-semibold mb-3">{{ __('Documentos vencidos') }}</h3>
+                    <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 text-sm">
                         <thead class="bg-gray-50">
                             <tr>
@@ -52,12 +53,14 @@
                             @endforelse
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <h3 class="text-lg font-semibold mb-3">{{ __('Documentos por vencer') }}</h3>
+                    <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 text-sm">
                         <thead class="bg-gray-50">
                             <tr>
@@ -83,6 +86,7 @@
                             @endforelse
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
 

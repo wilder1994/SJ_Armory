@@ -21,6 +21,7 @@ class WeaponTransferController extends Controller
         if (!$user) {
             abort(403);
         }
+        $canManageTransfers = $user->isAdmin() || $user->isResponsibleLevelOne();
 
         $search = trim((string) $request->input('q', ''));
         $status = $request->input('status', WeaponTransfer::STATUS_PENDING);
@@ -36,7 +37,7 @@ class WeaponTransferController extends Controller
         $incomingQuery = WeaponTransfer::with(['weapon', 'fromUser', 'fromClient', 'newClient'])
             ->where('status', $status);
 
-        if (!$user->isAdmin()) {
+        if ($user->isResponsible()) {
             $incomingQuery->where('to_user_id', $user->id);
         }
 
@@ -56,8 +57,11 @@ class WeaponTransferController extends Controller
         $incoming = $incomingQuery->orderByDesc('requested_at')->get();
 
         $outgoingQuery = WeaponTransfer::with(['weapon', 'toUser', 'fromClient', 'newClient'])
-            ->where('requested_by', $user->id)
             ->where('status', $status);
+
+        if (!$user->isAdmin() && !$user->isAuditor()) {
+            $outgoingQuery->where('requested_by', $user->id);
+        }
 
         if ($search !== '') {
             $outgoingQuery->where(function ($builder) use ($search) {
@@ -85,7 +89,7 @@ class WeaponTransferController extends Controller
             });
         }
 
-        $weapons = $weaponsQuery->get();
+        $weapons = $canManageTransfers ? $weaponsQuery->get() : collect();
         $transferRecipients = User::where('role', 'RESPONSABLE')->orderBy('name')->get();
         $acceptClients = $user->isAdmin()
             ? Client::orderBy('name')->get()
@@ -108,7 +112,8 @@ class WeaponTransferController extends Controller
             'transferRecipients',
             'acceptClients',
             'acceptPosts',
-            'acceptWorkers'
+            'acceptWorkers',
+            'canManageTransfers'
         ));
     }
 
@@ -116,6 +121,9 @@ class WeaponTransferController extends Controller
     {
         $user = $request->user();
         if (!$user) {
+            abort(403);
+        }
+        if (!$user->isAdmin() && !$user->isResponsibleLevelOne()) {
             abort(403);
         }
 
@@ -215,6 +223,9 @@ class WeaponTransferController extends Controller
         if (!$user) {
             abort(403);
         }
+        if (!$user->isAdmin() && !$user->isResponsibleLevelOne()) {
+            abort(403);
+        }
 
         if ($transfer->status !== WeaponTransfer::STATUS_PENDING) {
             abort(422, 'La transferencia ya fue resuelta.');
@@ -298,6 +309,9 @@ class WeaponTransferController extends Controller
     {
         $user = $request->user();
         if (!$user) {
+            abort(403);
+        }
+        if (!$user->isAdmin() && !$user->isResponsibleLevelOne()) {
             abort(403);
         }
 

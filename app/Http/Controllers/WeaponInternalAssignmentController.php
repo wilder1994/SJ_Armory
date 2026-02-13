@@ -152,7 +152,7 @@ class WeaponInternalAssignmentController extends Controller
             return;
         }
 
-        if (!$user->isResponsible()) {
+        if (!$user->isResponsibleLevelOne()) {
             abort(403);
         }
 

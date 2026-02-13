@@ -57,7 +57,7 @@
         top: 0;
         left: 0;
         right: 0;
-        z-index: 60;
+        z-index: 1200;
         background: linear-gradient(90deg, #ffffff 0 10%, #ffffff 10%, #cfd9ea 13%, #2a3a74 16%, var(--sj-navy) 20%, var(--sj-navy) 100%);
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         color: #e2e8f0;
@@ -80,6 +80,8 @@
 
     .sj-mobile-menu {
         background: var(--sj-navy);
+        position: relative;
+        z-index: 1201;
     }
 
     .sj-page-header {

@@ -13,7 +13,7 @@
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             @if (session('status'))
                 <div class="mb-4 rounded bg-green-50 p-3 text-sm text-green-700">
                     {{ session('status') }}
@@ -46,6 +46,7 @@
                         </div>
                     </form>
 
+                    <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 text-sm">
                         <thead class="bg-gray-50">
                             <tr>
@@ -87,6 +88,7 @@
                             @endforelse
                         </tbody>
                     </table>
+                    </div>
 
                     <div class="mt-4">
                         {{ $posts->links() }}

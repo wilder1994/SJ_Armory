@@ -78,5 +78,33 @@ class User extends Authenticatable
     {
         return $this->role === 'AUDITOR';
     }
+
+    public function responsibilityLevelNumber(): ?int
+    {
+        if ($this->responsibilityLevel) {
+            return (int) $this->responsibilityLevel->level;
+        }
+
+        if (!$this->responsibility_level_id) {
+            return null;
+        }
+
+        return (int) optional($this->responsibilityLevel()->first())->level;
+    }
+
+    public function isResponsibleLevelOne(): bool
+    {
+        return $this->isResponsible() && $this->responsibilityLevelNumber() === 1;
+    }
+
+    public function isResponsibleReadOnly(): bool
+    {
+        return $this->isResponsible() && $this->responsibilityLevelNumber() === 2;
+    }
+
+    public function isReadOnlyOperator(): bool
+    {
+        return $this->isAuditor() || $this->isResponsibleReadOnly();
+    }
 }
 

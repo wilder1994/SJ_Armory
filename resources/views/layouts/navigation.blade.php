@@ -33,13 +33,15 @@
                             <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
                                 {{ __('Usuarios') }}
                             </x-nav-link>
+                        @endif
+                        @if (Auth::user()?->isAdmin() || Auth::user()?->isAuditor())
                             <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
                                 {{ __('Reportes') }}
                             </x-nav-link>
                             <x-nav-link :href="route('alerts.documents')" :active="request()->routeIs('alerts.*')">
                                 {{ __('Alertas') }}
                             </x-nav-link>
-        @endif
+                        @endif
                         @can('viewAny', App\Models\Post::class)
                             <x-nav-link :href="route('posts.index')" :active="request()->routeIs('posts.*')">
                                 {{ __('Puestos') }}
@@ -50,7 +52,7 @@
                                 {{ __('Trabajadores') }}
                             </x-nav-link>
                         @endcan
-        @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsible())
+        @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsible() || Auth::user()?->isAuditor())
             <x-nav-link :href="route('maps.index')" :active="request()->routeIs('maps.*')">
                 {{ __('Mapa') }}
             </x-nav-link>
@@ -140,13 +142,15 @@
                 <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
                     {{ __('Usuarios') }}
                 </x-responsive-nav-link>
+            @endif
+            @if (Auth::user()?->isAdmin() || Auth::user()?->isAuditor())
                 <x-responsive-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
                     {{ __('Reportes') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('alerts.documents')" :active="request()->routeIs('alerts.*')">
                     {{ __('Alertas') }}
                 </x-responsive-nav-link>
-        @endif
+            @endif
             @can('viewAny', App\Models\Post::class)
                 <x-responsive-nav-link :href="route('posts.index')" :active="request()->routeIs('posts.*')">
                     {{ __('Puestos') }}
@@ -157,7 +161,7 @@
                     {{ __('Trabajadores') }}
                 </x-responsive-nav-link>
             @endcan
-        @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsible())
+        @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsible() || Auth::user()?->isAuditor())
             <x-responsive-nav-link :href="route('maps.index')" :active="request()->routeIs('maps.*')">
                 {{ __('Mapa') }}
             </x-responsive-nav-link>
