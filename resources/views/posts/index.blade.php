@@ -25,7 +25,7 @@
                     <form method="GET" action="{{ route('posts.index') }}" class="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
                         <div>
                             <label class="text-sm text-gray-600">{{ __('Buscar') }}</label>
-                            <input type="text" name="q" value="{{ $search }}" class="mt-1 block w-full rounded-md border-gray-300 text-sm" placeholder="{{ __('Nombre o direccion') }}">
+                            <input type="text" name="q" value="{{ $search }}" class="mt-1 block w-full rounded-md border-gray-300 text-sm" placeholder="{{ __('Nombre o dirección') }}">
                         </div>
                         <div>
                             <label class="text-sm text-gray-600">{{ __('Cliente') }}</label>
@@ -71,7 +71,7 @@
                                             <form action="{{ route('posts.destroy', $post) }}" method="POST" class="inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Eliminar puesto?')">
+                                                <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm(@js(__('¿Eliminar puesto?')))">
                                                     {{ __('Eliminar') }}
                                                 </button>
                                             </form>

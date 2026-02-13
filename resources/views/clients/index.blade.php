@@ -38,7 +38,7 @@
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('NIT') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Contacto') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Ciudad') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Correo') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Correo electrónico') }}</th>
                                 <th class="px-3 py-2 text-right font-medium text-gray-600">{{ __('Acciones') }}</th>
                             </tr>
                         </thead>
@@ -60,7 +60,7 @@
                                             <form action="{{ route('clients.destroy', $client) }}" method="POST" class="inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Eliminar cliente?')">
+                                                <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm(@js(__('¿Eliminar cliente?')))">
                                                     {{ __('Eliminar') }}
                                                 </button>
                                             </form>

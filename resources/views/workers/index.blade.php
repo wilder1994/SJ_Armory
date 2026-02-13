@@ -93,7 +93,7 @@
                                             <form action="{{ route('workers.destroy', $worker) }}" method="POST" class="inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Eliminar trabajador?')">
+                                                <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm(@js(__('¿Eliminar trabajador?')))">
                                                     {{ __('Eliminar') }}
                                                 </button>
                                             </form>

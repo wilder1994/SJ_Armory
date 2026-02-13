@@ -100,7 +100,7 @@
                 <form action="{{ route('weapons.destroy', $weapon) }}" method="POST" class="inline">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('¿Eliminar arma?')">
+                    <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm(@js(__('¿Eliminar arma?')))">
                         {{ __('Eliminar') }}
                     </button>
                 </form>

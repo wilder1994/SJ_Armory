@@ -65,7 +65,7 @@
                                             <form method="POST" action="{{ route('users.destroy', $user) }}" class="inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button class="text-xs text-red-600 hover:text-red-900" onclick="return confirm('¿Eliminar usuario?')">
+                                                <button class="text-xs text-red-600 hover:text-red-900" onclick="return confirm(@js(__('¿Eliminar usuario?')))">
                                                     {{ __('Eliminar') }}
                                                 </button>
                                             </form>

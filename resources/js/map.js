@@ -14,6 +14,17 @@ L.Icon.Default.mergeOptions({
     shadowUrl,
 });
 
+const locale = document.documentElement.lang?.startsWith('en') ? 'en' : 'es';
+const t = {
+    layerMap: locale === 'en' ? 'Map' : 'Mapa',
+    layerSatellite: locale === 'en' ? 'Satellite' : 'Satélite',
+    layerHybrid: locale === 'en' ? 'Hybrid' : 'Híbrida',
+    viewWeapon: locale === 'en' ? 'View weapon' : 'Ver arma',
+    weaponCount: locale === 'en' ? 'Weapon count' : 'Cantidad de armas',
+    serial: locale === 'en' ? 'Serial' : 'Serie',
+    detail: locale === 'en' ? 'Detail' : 'Detalle',
+};
+
 const initMap = () => {
     const mapElement = document.getElementById('weapons-map');
     if (!mapElement) {
@@ -42,11 +53,11 @@ const initMap = () => {
         }
     );
     const baseLayers = {
-        Mapa: streetLayer,
-        Satelite: satelliteLayer,
-        Hibrida: L.layerGroup([satelliteLayer, labelsLayer]),
+        [t.layerMap]: streetLayer,
+        [t.layerSatellite]: satelliteLayer,
+        [t.layerHybrid]: L.layerGroup([satelliteLayer, labelsLayer]),
     };
-    baseLayers.Hibrida.addTo(map);
+    baseLayers[t.layerHybrid].addTo(map);
     L.control.layers(baseLayers, null, { position: 'topright' }).addTo(map);
 
     if (!endpoint) {
@@ -97,7 +108,7 @@ const initMap = () => {
                     <tr>
                         <td class="pr-3 py-1">${item.serial_number ?? '-'}</td>
                         <td class="py-1 text-right">
-                            <a href="${item.link}" target="_blank">Ver arma</a>
+                            <a href="${item.link}" target="_blank">${t.viewWeapon}</a>
                         </td>
                     </tr>
                 `
@@ -106,12 +117,12 @@ const initMap = () => {
                 const popup = `
                     <div class="text-sm">
                         <div class="font-semibold mb-1">${clientName}</div>
-                        <div class="mb-2 text-xs text-gray-600">Cantidad de armas: ${groupItems.length}</div>
+                        <div class="mb-2 text-xs text-gray-600">${t.weaponCount}: ${groupItems.length}</div>
                         <table class="w-full text-xs">
                             <thead>
                                 <tr class="text-left text-gray-600">
-                                    <th class="pr-3">Serie</th>
-                                    <th class="text-right">Detalle</th>
+                                    <th class="pr-3">${t.serial}</th>
+                                    <th class="text-right">${t.detail}</th>
                                 </tr>
                             </thead>
                             <tbody>${rows}</tbody>

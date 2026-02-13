@@ -106,7 +106,7 @@
             const selected = Array.from(clientCheckboxes).filter((checkbox) => checkbox.checked);
             if (selected.length === 0) {
                 event.preventDefault();
-                alert('Seleccione al menos un cliente para transferir.');
+                alert(@json(__('Seleccione al menos un cliente para transferir.')));
                 return;
             }
 
@@ -121,8 +121,10 @@
             });
 
             const count = selected.length;
-            const destinationName = destinationSelect?.selectedOptions?.[0]?.textContent?.trim() || 'el nuevo responsable';
-            const message = `¿Confirmas la transferencia de ${count} cliente${count === 1 ? '' : 's'} a ${destinationName}?`;
+            const destinationName = destinationSelect?.selectedOptions?.[0]?.textContent?.trim() || @json(__('el nuevo responsable'));
+            const message = @json(__('¿Confirmas la transferencia de :count cliente(s) a :destination?'))
+                .replace(':count', count)
+                .replace(':destination', destinationName);
             if (!confirm(message)) {
                 event.preventDefault();
             }

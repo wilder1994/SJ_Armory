@@ -3,13 +3,13 @@
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-4">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    {{ __('Auditoria reciente') }}
+                    {{ __('Auditoría reciente') }}
                 </h2>
                 <form method="GET" class="flex flex-wrap items-center gap-2">
                     <label class="text-sm text-gray-600">{{ __('Rango') }}</label>
                     <select name="days" class="rounded-md border-gray-300 text-sm">
-                        <option value="30" @selected($days === 30)>{{ __('Ultimos 30 dias') }}</option>
-                        <option value="90" @selected($days === 90)>{{ __('Ultimos 90 dias') }}</option>
+                        <option value="30" @selected($days === 30)>{{ __('Últimos 30 días') }}</option>
+                        <option value="90" @selected($days === 90)>{{ __('Últimos 90 días') }}</option>
                     </select>
                     <label class="text-sm text-gray-600">{{ __('Módulo') }}</label>
                     <select name="module" class="rounded-md border-gray-300 text-sm">
@@ -37,7 +37,7 @@
                             <tr>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Fecha') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Usuario') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Accion') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Acción') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Entidad') }}</th>
                             </tr>
                         </thead>
@@ -68,9 +68,9 @@
                                                     $fromName = $transferWeapon->fromUser?->name;
                                                     $toName = $transferWeapon->toUser?->name;
                                                     $transferDate = $log->auditable->requested_at?->format('Y-m-d H:i');
-                                                    $entityName = 'Arma ' . $weaponCode;
+                                                    $entityName = __('Arma') . ' ' . $weaponCode;
                                                     if ($fromName || $toName) {
-                                                        $entityName .= ' (' . ($fromName ?? '-') . ' â†’ ' . ($toName ?? '-') . ')';
+                                                        $entityName .= ' (' . ($fromName ?? '-') . ' -> ' . ($toName ?? '-') . ')';
                                                     }
                                                     if ($transferDate) {
                                                         $entityName .= ' - ' . $transferDate;
@@ -107,7 +107,3 @@
         </div>
     </div>
 </x-app-layout>
-
-
-
-

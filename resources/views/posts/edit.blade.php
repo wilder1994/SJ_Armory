@@ -70,9 +70,11 @@
 
                             <div class="md:col-span-2">
                                 <button type="button" class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50" data-map-trigger>
-                                    Seleccionar en el mapa
+                                    {{ __('Seleccionar en el mapa') }}
                                 </button>
-                            </div>                            <div class="md:col-span-2">
+                            </div>
+
+                            <div class="md:col-span-2">
                                 <x-input-label for="notes" :value="__('Notas')" />
                                 <textarea id="notes" name="notes" class="mt-1 block w-full rounded-md border-gray-300 text-sm" rows="3">{{ old('notes', $post->notes) }}</textarea>
                                 <x-input-error :messages="$errors->get('notes')" class="mt-2" />
@@ -102,14 +104,14 @@
 <div id="location-map-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
     <div class="w-full max-w-4xl rounded-lg bg-white p-4 shadow-lg">
         <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold">Seleccionar ubicación</h3>
+            <h3 class="text-lg font-semibold">{{ __('Seleccionar ubicación') }}</h3>
             <button type="button" class="text-gray-500 hover:text-gray-700" data-map-close>&times;</button>
         </div>
         <div id="location-map" class="mt-4 h-96 w-full rounded border"></div>
         <p class="mt-3 hidden text-sm text-red-600" data-map-error></p>
         <div class="mt-4 flex justify-end gap-2">
-            <button type="button" class="rounded-md border border-gray-300 px-4 py-2 text-sm" data-map-close>Cancelar</button>
-            <button type="button" class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-60" data-map-accept disabled>Aceptar</button>
+            <button type="button" class="rounded-md border border-gray-300 px-4 py-2 text-sm" data-map-close>{{ __('Cancelar') }}</button>
+            <button type="button" class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-60" data-map-accept disabled>{{ __('Aceptar') }}</button>
         </div>
     </div>
 </div>

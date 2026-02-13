@@ -41,7 +41,7 @@
                             <form method="POST" action="{{ route('weapons.photos.destroy', [$weapon, $photo]) }}" onclick="event.stopPropagation();">
                                 @csrf
                                 @method('DELETE')
-                                <button class="text-red-600 hover:text-red-900" onclick="return confirm('Eliminar foto?')">
+                                <button class="text-red-600 hover:text-red-900" onclick="return confirm(@js(__('¿Eliminar foto?')))">
                                     {{ __('Eliminar') }}
                                 </button>
                             </form>
@@ -252,7 +252,7 @@
                         window.location.reload();
                     })
                     .catch(() => {
-                        alert('No se pudo actualizar la foto.');
+                        alert(@json(__('No se pudo actualizar la foto.')));
                     });
             };
 

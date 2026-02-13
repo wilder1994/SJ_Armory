@@ -108,7 +108,7 @@
                 return;
             }
 
-            const shouldReplace = window.confirm('Ya existe una asignación interna activa. ¿Deseas reemplazarla?');
+            const shouldReplace = window.confirm(@json(__('Ya existe una asignación interna activa. ¿Deseas reemplazarla?')));
             if (!shouldReplace) {
                 event.preventDefault();
                 return;

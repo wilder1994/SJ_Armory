@@ -12,6 +12,18 @@ L.Icon.Default.mergeOptions({
     shadowUrl,
 });
 
+const locale = document.documentElement.lang?.startsWith('en') ? 'en' : 'es';
+const t = {
+    select: locale === 'en' ? 'Select' : 'Seleccione',
+    searching: locale === 'en' ? 'Searching...' : 'Buscando...',
+    incompleteAddress: locale === 'en'
+        ? 'Address or municipality could not be completed. Adjust it manually if needed.'
+        : 'No se pudo completar la dirección o el municipio. Ajusta manualmente si es necesario.',
+    geocodeFailed: locale === 'en'
+        ? 'Location could not be obtained. Try again or complete the data manually.'
+        : 'No se pudo obtener la ubicación. Intenta nuevamente o completa los datos manualmente.',
+};
+
 const buildOption = (value, label) => {
     const option = document.createElement('option');
     option.value = value;
@@ -31,7 +43,7 @@ const populateDepartments = (select, selected) => {
 
 const populateMunicipalities = (select, department, selected) => {
     select.innerHTML = '';
-    select.appendChild(buildOption('', 'Seleccione'));
+    select.appendChild(buildOption('', t.select));
     if (!department || !municipios[department]) {
         return;
     }
@@ -113,7 +125,7 @@ const initLocationSelects = () => {
         const currentMunicipality = municipalitySelect.dataset.current || '';
 
         departmentSelect.innerHTML = '';
-        departmentSelect.appendChild(buildOption('', 'Seleccione'));
+        departmentSelect.appendChild(buildOption('', t.select));
         populateDepartments(departmentSelect, currentDepartment);
         populateMunicipalities(municipalitySelect, currentDepartment, currentMunicipality);
 
@@ -258,7 +270,7 @@ const initMapPicker = () => {
         const response = await fetch(publicUrl.toString(), {
             headers: {
                 'Accept': 'application/json',
-                'Accept-Language': 'es',
+                'Accept-Language': locale,
             },
         });
         if (!response.ok) {
@@ -313,9 +325,9 @@ const initMapPicker = () => {
             if (!selectedLatLng) {
                 return;
             }
-            const { addressInput, departmentSelect, municipalitySelect } = resolveInputs();
+            const { addressInput, departmentSelect, municipalitySelect, coordsSourceInput } = resolveInputs();
             const originalText = acceptButton.textContent;
-            acceptButton.textContent = 'Buscando...';
+            acceptButton.textContent = t.searching;
             acceptButton.disabled = true;
             if (errorMessage) {
                 errorMessage.textContent = '';
@@ -364,7 +376,7 @@ const initMapPicker = () => {
                 }
                 if (!addressValue || !department || !municipality) {
                     if (errorMessage) {
-                        errorMessage.textContent = 'No se pudo completar la direcciÃ³n o el municipio. Ajusta manualmente si es necesario.';
+                        errorMessage.textContent = t.incompleteAddress;
                         errorMessage.classList.remove('hidden');
                     }
                 } else {
@@ -372,13 +384,12 @@ const initMapPicker = () => {
                 }
             } catch (error) {
                 if (errorMessage) {
-                    errorMessage.textContent = 'No se pudo obtener la ubicaciÃ³n. Intenta nuevamente o completa los datos manualmente.';
+                    errorMessage.textContent = t.geocodeFailed;
                     errorMessage.classList.remove('hidden');
                 }
             } finally {
                 acceptButton.textContent = originalText;
                 acceptButton.disabled = false;
-                closeModal();
             }
         });
     }
@@ -400,4 +411,5 @@ if (document.readyState === 'loading') {
 } else {
     init();
 }
+
 
