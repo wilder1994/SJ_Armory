@@ -233,13 +233,37 @@ class WeaponController extends Controller
         $posts = collect();
         $workers = collect();
         $clientOptions = collect();
+        $clientResponsibleMap = [];
 
         if (request()->user()?->isAdmin()) {
-            $responsibles = \App\Models\User::where('role', 'RESPONSABLE')->orderBy('name')->get();
+            $responsibles = \App\Models\User::whereIn('role', ['RESPONSABLE', 'ADMIN'])->orderBy('name')->get();
             $clientOptions = Client::orderBy('name')->get();
         } elseif (request()->user()?->isResponsible()) {
             $responsibles = collect([request()->user()]);
             $clientOptions = request()->user()?->clients()->orderBy('name')->get() ?? collect();
+        }
+
+        if ($clientOptions->isNotEmpty()) {
+            $clientResponsibleMap = Client::query()
+                ->whereIn('id', $clientOptions->pluck('id'))
+                ->with([
+                    'users' => function ($query) {
+                        $query->whereIn('role', ['RESPONSABLE', 'ADMIN'])
+                            ->orderByRaw("CASE WHEN role = 'RESPONSABLE' THEN 0 WHEN role = 'ADMIN' THEN 1 ELSE 2 END")
+                            ->orderBy('name');
+                    },
+                ])
+                ->get()
+                ->mapWithKeys(function (Client $client) {
+                    $responsible = $client->users->first();
+                    return [
+                        $client->id => [
+                            'id' => $responsible?->id,
+                            'name' => $responsible?->name,
+                        ],
+                    ];
+                })
+                ->all();
         }
 
         $activeClientId = $weapon->activeClientAssignment?->client_id;
@@ -267,7 +291,7 @@ class WeaponController extends Controller
                 ->values()
         );
 
-        return view('weapons.show', compact('weapon', 'ownershipTypes', 'responsibles', 'posts', 'workers', 'clientOptions'));
+        return view('weapons.show', compact('weapon', 'ownershipTypes', 'responsibles', 'posts', 'workers', 'clientOptions', 'clientResponsibleMap'));
     }
 
     public function permitPhoto(Weapon $weapon)
@@ -545,5 +569,3 @@ class WeaponController extends Controller
         return back();
     }
 }
-
-

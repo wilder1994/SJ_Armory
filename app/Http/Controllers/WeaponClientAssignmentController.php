@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
-use App\Models\Client;
 use App\Models\User;
 use App\Models\Weapon;
 use App\Models\WeaponPostAssignment;
@@ -24,42 +23,36 @@ class WeaponClientAssignmentController extends Controller
 
         $data = $request->validate([
             'client_id' => ['required', 'exists:clients,id'],
-            'responsible_user_id' => ['nullable', 'exists:users,id'],
             'reason' => ['nullable', 'string'],
         ]);
 
         $activeAssignment = $weapon->activeClientAssignment;
         $clientId = (int) $data['client_id'];
-        $responsibleId = $activeAssignment?->responsible_user_id;
+        $responsibleUser = null;
 
         if ($user->isResponsible() && !$user->isAdmin()) {
-            $responsibleId = $user->id;
             $inPortfolio = $user->clients()->whereKey($clientId)->exists();
             if (!$inPortfolio) {
                 return back()->withErrors(['client_id' => 'El cliente no pertenece a sus asignaciones.'])->withInput();
             }
+            $responsibleUser = $user;
         }
 
         if ($user->isAdmin()) {
-            if (!$responsibleId) {
-                $responsibleId = $data['responsible_user_id'] ?? null;
-                if (!$responsibleId) {
-                    return back()->withErrors(['responsible_user_id' => 'Seleccione un responsable.'])->withInput();
-                }
-            }
-
-            $responsibleUser = User::where('role', 'RESPONSABLE')->find($responsibleId);
-            if (!$responsibleUser) {
-                return back()->withErrors(['responsible_user_id' => 'El responsable no es válido.'])->withInput();
-            }
-
-            $inPortfolio = $responsibleUser->clients()->whereKey($clientId)->exists();
-            if (!$inPortfolio) {
-                return back()->withErrors(['client_id' => 'El cliente no pertenece a las asignaciones del usuario.'])->withInput();
-            }
+            $responsibleUser = User::query()
+                ->whereIn('role', ['RESPONSABLE', 'ADMIN'])
+                ->whereHas('clients', fn ($query) => $query->whereKey($clientId))
+                ->orderByRaw("CASE WHEN role = 'RESPONSABLE' THEN 0 WHEN role = 'ADMIN' THEN 1 ELSE 2 END")
+                ->orderBy('name')
+                ->first();
         }
 
-        $responsibleUser = User::findOrFail($responsibleId);
+        if (!$responsibleUser) {
+            return back()->withErrors([
+                'client_id' => 'Primero debe realizar la asignación del responsable.',
+            ])->withInput();
+        }
+
         $clientChanged = $activeAssignment?->client_id !== $clientId;
 
         if ($clientChanged) {
