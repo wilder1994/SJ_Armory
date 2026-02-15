@@ -37,7 +37,7 @@
                             </div>
                             <div>
                                 <div class="text-base font-semibold text-gray-800">{{ __('Clientes') }}</div>
-                                <div class="text-xs text-gray-500">{{ __('Cartera y contactos') }}</div>
+                                <div class="text-xs text-gray-500">{{ __('Asignaciones y contactos') }}</div>
                             </div>
                         </div>
                     </a>
@@ -53,7 +53,7 @@
                                 </svg>
                             </div>
                             <div>
-                                <div class="text-base font-semibold text-gray-800">{{ __('Carteras') }}</div>
+                                <div class="text-base font-semibold text-gray-800">{{ __('Asignaciones') }}</div>
                                 <div class="text-xs text-gray-500">{{ __('Asignación de clientes') }}</div>
                             </div>
                         </div>
@@ -188,7 +188,6 @@
         </div>
     </div>
 </x-app-layout>
-
 
 
 

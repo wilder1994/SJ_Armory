@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Cartera de') }} {{ $user->name }}
+            {{ __('Asignaciones de') }} {{ $user->name }}
         </h2>
     </x-slot>
 
@@ -53,7 +53,7 @@
                                 {{ __('Cancelar') }}
                             </a>
                             <x-primary-button>
-                                {{ __('Guardar cartera') }}
+                                {{ __('Guardar asignaciones') }}
                             </x-primary-button>
                         </div>
                     </form>
@@ -62,16 +62,16 @@
 
             <div class="mt-6 bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
-                    <h3 class="text-lg font-semibold">{{ __('Transferir cartera') }}</h3>
+                    <h3 class="text-lg font-semibold">{{ __('Transferir asignaciones') }}</h3>
                     <p class="mt-1 text-sm text-gray-600">
-                        {{ __('Seleccione los clientes y el responsable destino para transferir la cartera completa.') }}
+                        {{ __('Seleccione los clientes y el usuario destino para transferir las asignaciones completas.') }}
                     </p>
 
                     <form method="POST" action="{{ route('portfolios.transfer', $user) }}" class="mt-4 space-y-4" id="portfolio-transfer-form">
                         @csrf
 
                         <div>
-                            <label class="text-sm text-gray-600">{{ __('Responsable destino') }}</label>
+                            <label class="text-sm text-gray-600">{{ __('Usuario destino') }}</label>
                             <select name="to_user_id" class="mt-1 block w-full rounded-md border-gray-300 text-sm" required>
                                 <option value="">{{ __('Seleccione') }}</option>
                                 @foreach ($responsibles as $responsible)
@@ -84,7 +84,7 @@
 
                         <div class="flex justify-end gap-2">
                             <button type="submit" class="text-sm text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded" id="portfolio-transfer-submit">
-                                {{ __('Transferir cartera') }}
+                                {{ __('Transferir asignaciones') }}
                             </button>
                         </div>
                     </form>
@@ -121,8 +121,8 @@
             });
 
             const count = selected.length;
-            const destinationName = destinationSelect?.selectedOptions?.[0]?.textContent?.trim() || @json(__('el nuevo responsable'));
-            const message = @json(__('¿Confirmas la transferencia de :count cliente(s) a :destination?'))
+            const destinationName = destinationSelect?.selectedOptions?.[0]?.textContent?.trim() || @json(__('el nuevo usuario'));
+            const message = @json(__('¿Confirmas la transferencia de :count cliente(s) de asignaciones a :destination?'))
                 .replace(':count', count)
                 .replace(':destination', destinationName);
             if (!confirm(message)) {
@@ -131,7 +131,6 @@
         });
     })();
 </script>
-
 
 
 

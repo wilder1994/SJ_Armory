@@ -102,7 +102,7 @@ class ReportController extends Controller
             'posts' => 'Puestos',
             'workers' => 'Trabajadores',
             'users' => 'Usuarios',
-            'portfolios' => 'Carteras',
+            'portfolios' => 'Asignaciones',
         ];
         if (!array_key_exists($module, $modules)) {
             $module = 'all';
@@ -187,8 +187,8 @@ class ReportController extends Controller
             'weapon_created' => 'Arma creada',
             'weapon_updated' => 'Arma actualizada',
             'weapon_deleted' => 'Arma eliminada',
-            'portfolio_updated' => 'Cartera actualizada',
-            'portfolio_transferred' => 'Cartera transferida',
+            'portfolio_updated' => 'Asignaciones actualizadas',
+            'portfolio_transferred' => 'Asignaciones transferidas',
             'internal_assigned_post' => 'Arma asignada a puesto',
             'internal_assigned_worker' => 'Arma asignada a trabajador',
             'internal_assignment_retired' => 'Asignación interna retirada',
@@ -212,4 +212,3 @@ class ReportController extends Controller
         }
     }
 }
-

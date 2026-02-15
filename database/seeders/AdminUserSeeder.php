@@ -21,7 +21,7 @@ class AdminUserSeeder extends Seeder
                 'email' => 'wilder.rivera@example.com',
                 'password' => 'WilderA9K3',
                 'role' => 'ADMIN',
-                'position' => 'Administrador',
+                'position' => 'Gerencia General',
                 'responsibility_level' => null,
                 'is_active' => true,
                 'cost_center' => 'CC-1001',
@@ -31,7 +31,7 @@ class AdminUserSeeder extends Seeder
                 'email' => 'andres.sanmiguel@example.com',
                 'password' => 'AndresM7P2',
                 'role' => 'ADMIN',
-                'position' => 'Administrador',
+                'position' => 'Gerencia General',
                 'responsibility_level' => null,
                 'is_active' => true,
                 'cost_center' => 'CC-1002',
@@ -54,4 +54,3 @@ class AdminUserSeeder extends Seeder
         }
     }
 }
-

@@ -18,7 +18,7 @@ class ResponsiblePortfolioController extends Controller
             abort(403);
         }
 
-        $responsibles = User::where('role', 'RESPONSABLE')->orderBy('name')->get();
+        $responsibles = User::whereIn('role', ['RESPONSABLE', 'ADMIN'])->orderBy('name')->get();
 
         return view('portfolios.index', compact('responsibles'));
     }
@@ -30,7 +30,7 @@ class ResponsiblePortfolioController extends Controller
             abort(403);
         }
 
-        if (!$user->isResponsible()) {
+        if (!$user->isResponsible() && !$user->isAdmin()) {
             abort(404);
         }
 
@@ -43,7 +43,7 @@ class ResponsiblePortfolioController extends Controller
             ->groupBy('client_id')
             ->pluck('total', 'client_id')
             ->all();
-        $responsibles = User::where('role', 'RESPONSABLE')->orderBy('name')->get();
+        $responsibles = User::whereIn('role', ['RESPONSABLE', 'ADMIN'])->orderBy('name')->get();
 
         return view('portfolios.edit', compact('user', 'clients', 'assigned', 'blockedClientCounts', 'responsibles'));
     }
@@ -55,7 +55,7 @@ class ResponsiblePortfolioController extends Controller
             abort(403);
         }
 
-        if (!$user->isResponsible()) {
+        if (!$user->isResponsible() && !$user->isAdmin()) {
             abort(404);
         }
 
@@ -94,7 +94,7 @@ class ResponsiblePortfolioController extends Controller
                 return back()
                     ->withInput()
                     ->withErrors([
-                        'clients' => 'No se puede quitar la cartera porque tiene armas asignadas: ' . $details . '. Debe reasignarlas o transferirlas primero.',
+                        'clients' => 'No se pueden quitar las asignaciones porque tiene armas asignadas: ' . $details . '. Debe reasignarlas o transferirlas primero.',
                     ]);
             }
         }
@@ -110,7 +110,7 @@ class ResponsiblePortfolioController extends Controller
             'after' => ['client_ids' => $after],
         ]);
 
-        return redirect()->route('portfolios.index')->with('status', 'Cartera actualizada.');
+        return redirect()->route('portfolios.index')->with('status', 'Asignaciones actualizadas.');
     }
 
     public function transfer(Request $request, User $user)
@@ -120,7 +120,7 @@ class ResponsiblePortfolioController extends Controller
             abort(403);
         }
 
-        if (!$user->isResponsible()) {
+        if (!$user->isResponsible() && !$user->isAdmin()) {
             abort(404);
         }
 
@@ -130,19 +130,19 @@ class ResponsiblePortfolioController extends Controller
             'clients.*' => ['exists:clients,id'],
         ]);
 
-        $toUser = User::where('role', 'RESPONSABLE')->find($data['to_user_id']);
+        $toUser = User::whereIn('role', ['RESPONSABLE', 'ADMIN'])->find($data['to_user_id']);
         if (!$toUser) {
-            return back()->withErrors(['to_user_id' => 'El responsable destino no es válido.']);
+            return back()->withErrors(['to_user_id' => 'El usuario destino no es válido.']);
         }
 
         if ($toUser->id === $user->id) {
-            return back()->withErrors(['to_user_id' => 'El responsable destino debe ser diferente.']);
+            return back()->withErrors(['to_user_id' => 'El usuario destino debe ser diferente.']);
         }
 
         $clientIds = array_values(array_unique($data['clients']));
         $ownedClientIds = $user->clients()->whereIn('clients.id', $clientIds)->pluck('clients.id')->all();
         if (count($ownedClientIds) !== count($clientIds)) {
-            return back()->withErrors(['clients' => 'Seleccione solo clientes que pertenezcan a la cartera actual.']);
+            return back()->withErrors(['clients' => 'Seleccione solo clientes que pertenezcan a las asignaciones actuales.']);
         }
 
         DB::transaction(function () use ($authUser, $user, $toUser, $clientIds) {
@@ -198,7 +198,6 @@ class ResponsiblePortfolioController extends Controller
             ]);
         });
 
-        return redirect()->route('portfolios.index')->with('status', 'Cartera transferida.');
+        return redirect()->route('portfolios.index')->with('status', 'Asignaciones transferidas.');
     }
 }
-

@@ -173,7 +173,7 @@ class WeaponInternalAssignmentController extends Controller
 
         $inPortfolio = $user->clients()->whereKey($targetClientId)->exists();
         if (!$inPortfolio) {
-            abort(403, 'El cliente no pertenece a su cartera.');
+            abort(403, 'El cliente no pertenece a sus asignaciones.');
         }
     }
 
@@ -228,4 +228,3 @@ class WeaponInternalAssignmentController extends Controller
         ]);
     }
 }
-

@@ -4,14 +4,14 @@
         <div class="flex justify-between h-16">
             <div class="flex items-center">
                 <!-- Logo -->
-                <div class="shrink-0 flex items-center ml-2">
+                <div class="shrink-0 flex items-center ml-2 sj-nav-brand-shift">
                     <a href="{{ route('dashboard') }}">
                         <x-application-logo class="block" />
                     </a>
                 </div>
                 <!-- Navigation Links -->
                 <div class="hidden sm:-my-px sm:flex sm:items-center">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="me-4">
+                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="me-4 sj-nav-home-shift">
                         <span class="text-gray-900">{{ __('Inicio') }}</span>
                     </x-nav-link>
                     
@@ -28,7 +28,7 @@
                         @endcan
                         @if (Auth::user()?->isAdmin())
                             <x-nav-link :href="route('portfolios.index')" :active="request()->routeIs('portfolios.*')">
-                                {{ __('Carteras') }}
+                                {{ __('Asignaciones') }}
                             </x-nav-link>
                             <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
                                 {{ __('Usuarios') }}
@@ -137,7 +137,7 @@
             @endcan
             @if (Auth::user()?->isAdmin())
                 <x-responsive-nav-link :href="route('portfolios.index')" :active="request()->routeIs('portfolios.*')">
-                    {{ __('Carteras') }}
+                    {{ __('Asignaciones') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
                     {{ __('Usuarios') }}
@@ -206,7 +206,5 @@
         </div>
     </div>
 </nav>
-
-
 
 

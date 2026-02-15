@@ -36,7 +36,7 @@ class WeaponClientAssignmentController extends Controller
             $responsibleId = $user->id;
             $inPortfolio = $user->clients()->whereKey($clientId)->exists();
             if (!$inPortfolio) {
-                return back()->withErrors(['client_id' => 'El cliente no pertenece a su cartera.'])->withInput();
+                return back()->withErrors(['client_id' => 'El cliente no pertenece a sus asignaciones.'])->withInput();
             }
         }
 
@@ -55,7 +55,7 @@ class WeaponClientAssignmentController extends Controller
 
             $inPortfolio = $responsibleUser->clients()->whereKey($clientId)->exists();
             if (!$inPortfolio) {
-                return back()->withErrors(['client_id' => 'El cliente no pertenece a la cartera del responsable.'])->withInput();
+                return back()->withErrors(['client_id' => 'El cliente no pertenece a las asignaciones del usuario.'])->withInput();
             }
         }
 
@@ -137,4 +137,3 @@ class WeaponClientAssignmentController extends Controller
         }
     }
 }
-

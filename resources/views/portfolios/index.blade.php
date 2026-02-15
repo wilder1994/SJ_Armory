@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Carteras por responsable') }}
+            {{ __('Asignaciones por usuario') }}
         </h2>
     </x-slot>
 
@@ -19,7 +19,7 @@
                     <table class="min-w-full divide-y divide-gray-200 text-sm">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Responsable') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Usuario') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Correo electrónico') }}</th>
                                 <th class="px-3 py-2 text-right font-medium text-gray-600">{{ __('Acciones') }}</th>
                             </tr>
@@ -31,14 +31,14 @@
                                     <td class="px-3 py-2">{{ $responsible->email }}</td>
                                     <td class="px-3 py-2 text-right">
                                         <a href="{{ route('portfolios.edit', $responsible) }}" class="text-indigo-600 hover:text-indigo-900">
-                                            {{ __('Gestionar cartera') }}
+                                            {{ __('Gestionar asignaciones') }}
                                         </a>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
                                     <td colspan="3" class="px-3 py-6 text-center text-gray-500">
-                                        {{ __('No hay responsables registrados.') }}
+                                        {{ __('No hay usuarios registrados.') }}
                                     </td>
                                 </tr>
                             @endforelse
@@ -50,7 +50,6 @@
         </div>
     </div>
 </x-app-layout>
-
 
 
 

@@ -55,14 +55,10 @@ class UserController extends Controller
             'cost_center' => ['nullable', 'string', 'max:100'],
         ]);
 
-        if ($data['role'] === 'RESPONSABLE') {
-            if (empty($data['responsibility_level_id'])) {
-                return back()
-                    ->withErrors(['responsibility_level_id' => 'Seleccione el nivel de responsabilidad para el responsable.'])
-                    ->withInput();
-            }
-        } else {
-            $data['responsibility_level_id'] = null;
+        if ($data['role'] === 'RESPONSABLE' && empty($data['responsibility_level_id'])) {
+            return back()
+                ->withErrors(['responsibility_level_id' => 'Seleccione el nivel de responsabilidad para el responsable.'])
+                ->withInput();
         }
 
         $data['password'] = Hash::make($data['password']);
@@ -103,14 +99,10 @@ class UserController extends Controller
             'cost_center' => ['nullable', 'string', 'max:100'],
         ]);
 
-        if ($data['role'] === 'RESPONSABLE') {
-            if (empty($data['responsibility_level_id'])) {
-                return back()
-                    ->withErrors(['responsibility_level_id' => 'Seleccione el nivel de responsabilidad para el responsable.'])
-                    ->withInput();
-            }
-        } else {
-            $data['responsibility_level_id'] = null;
+        if ($data['role'] === 'RESPONSABLE' && empty($data['responsibility_level_id'])) {
+            return back()
+                ->withErrors(['responsibility_level_id' => 'Seleccione el nivel de responsabilidad para el responsable.'])
+                ->withInput();
         }
 
         if (empty($data['password'])) {
@@ -184,4 +176,3 @@ class UserController extends Controller
         ];
     }
 }
-

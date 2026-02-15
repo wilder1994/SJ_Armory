@@ -170,7 +170,7 @@ class WeaponTransferController extends Controller
 
                 $inPortfolio = $toUser->clients()->whereKey($activeAssignment->client_id)->exists();
                 if (!$inPortfolio) {
-                    abort(422, 'El cliente no pertenece a la cartera del destinatario.');
+                    abort(422, 'El cliente no pertenece a las asignaciones del destinatario.');
                 }
 
                 continue;
@@ -252,7 +252,7 @@ class WeaponTransferController extends Controller
         $clientId = (int) $data['client_id'];
         $inPortfolio = $transfer->toUser->clients()->whereKey($clientId)->exists();
         if (!$inPortfolio) {
-            abort(422, 'El cliente no pertenece a la cartera del destinatario.');
+            abort(422, 'El cliente no pertenece a las asignaciones del destinatario.');
         }
 
         if ($postId) {
@@ -490,4 +490,3 @@ class WeaponTransferController extends Controller
         ]);
     }
 }
-
