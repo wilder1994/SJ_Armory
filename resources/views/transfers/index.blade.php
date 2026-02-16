@@ -221,7 +221,7 @@
                                 <tr data-search="{{ strtolower(($weapon->internal_code ?? '') . ' ' . ($weapon->serial_number ?? '') . ' ' . ($weapon->weapon_type ?? '') . ' ' . ($weapon->activeClientAssignment?->client?->name ?? '') . ' ' . ($weapon->activeClientAssignment?->responsible?->name ?? '')) }}"
                                     data-responsible-id="{{ $weapon->activeClientAssignment?->responsible_user_id }}">
                                     <td class="px-3 py-2">
-                                        <input type="checkbox" name="weapon_ids[]" value="{{ $weapon->id }}" class="weapon-checkbox rounded border-gray-300">
+                                        <input type="checkbox" name="weapon_ids[]" value="{{ $weapon->id }}" @checked(in_array((string) $weapon->id, old('weapon_ids', []), true)) class="weapon-checkbox rounded border-gray-300">
                                     </td>
                                     <td class="px-3 py-2">{{ $weapon->internal_code }}</td>
                                     <td class="px-3 py-2">{{ $weapon->activeClientAssignment?->client?->name ?? __('Sin destino') }}</td>
@@ -246,28 +246,60 @@
                 </div>
                 <x-input-error :messages="$errors->get('weapon_ids')" class="mt-2" />
 
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
                     <div>
-                        <label class="text-sm text-gray-600">{{ __('Destinatario') }}</label>
-                        <select name="to_user_id" class="mt-1 block w-full rounded-md border-gray-300 text-sm" required>
+                        <label class="block min-h-[20px] text-sm text-gray-600">{{ __('Destinatario') }}</label>
+                        <select name="to_user_id" id="bulk-to-user" class="mt-1 block w-full rounded-md border-gray-300 text-sm" required>
                             <option value="">{{ __('Seleccione') }}</option>
                             @foreach ($transferRecipients as $recipient)
-                                <option value="{{ $recipient->id }}">{{ $recipient->name }}</option>
+                                <option value="{{ $recipient->id }}"
+                                    data-client-ids="{{ $recipient->clients->pluck('id')->implode(',') }}"
+                                    @selected(old('to_user_id') == $recipient->id)>
+                                    {{ $recipient->name }}
+                                </option>
                             @endforeach
                         </select>
                         <x-input-error :messages="$errors->get('to_user_id')" class="mt-2" />
                     </div>
 
                     <div>
-                        <label class="text-sm text-gray-600">{{ __('Fecha y hora') }}</label>
+                        <label class="block min-h-[20px] text-sm text-gray-600">{{ __('Cliente destino') }}</label>
+                        <select name="client_id" id="bulk-client" class="mt-1 block w-full rounded-md border-gray-300 text-sm" required>
+                            <option value="">{{ __('Seleccione') }}</option>
+                            @foreach ($transferClients as $client)
+                                <option value="{{ $client->id }}" @selected(old('client_id') == $client->id)>
+                                    {{ $client->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <x-input-error :messages="$errors->get('client_id')" class="mt-2" />
+                    </div>
+
+                    <div>
+                        <label class="block min-h-[20px] whitespace-nowrap text-sm text-gray-600">{{ __('Puesto destino (opcional)') }}</label>
+                        <select name="post_id" id="bulk-post" class="mt-1 block w-full rounded-md border-gray-300 text-sm">
+                            <option value="">{{ __('Seleccione') }}</option>
+                            @foreach ($transferPosts as $post)
+                                <option value="{{ $post->id }}"
+                                    data-client-id="{{ $post->client_id }}"
+                                    @selected(old('post_id') == $post->id)>
+                                    {{ $post->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <x-input-error :messages="$errors->get('post_id')" class="mt-2" />
+                    </div>
+
+                    <div>
+                        <label class="block min-h-[20px] text-sm text-gray-600">{{ __('Fecha y hora') }}</label>
                         <div class="mt-1 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700">
                             {{ now()->format('Y-m-d H:i') }}
                         </div>
                     </div>
 
-                    <div class="md:col-span-2">
+                    <div class="md:col-span-4">
                         <label class="text-sm text-gray-600">{{ __('Observaciones') }}</label>
-                        <input type="text" name="note" spellcheck="true" class="mt-1 block w-full rounded-md border-gray-300 text-sm">
+                        <input type="text" name="note" value="{{ old('note') }}" spellcheck="true" class="mt-1 block w-full rounded-md border-gray-300 text-sm">
                         <x-input-error :messages="$errors->get('note')" class="mt-2" />
                     </div>
                 </div>
@@ -359,11 +391,17 @@
 @if ($canManageTransfers)
 <script>
     (() => {
+        @if ($errors->has('weapon_ids') || $errors->has('to_user_id') || $errors->has('client_id') || $errors->has('post_id') || $errors->has('note'))
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'bulk-transfer' }));
+        @endif
+
         const selectAll = document.getElementById('select-all');
         const list = document.getElementById('weapons-list');
         const count = document.getElementById('selected-count');
         const filter = document.getElementById('weapons-filter');
-        const recipientSelect = document.querySelector('select[name="to_user_id"]');
+        const recipientSelect = document.getElementById('bulk-to-user');
+        const bulkClientSelect = document.getElementById('bulk-client');
+        const bulkPostSelect = document.getElementById('bulk-post');
 
         if (!list || !count) return;
 
@@ -431,6 +469,58 @@
             }
         });
 
+        const filterBulkClientsByRecipient = () => {
+            if (!recipientSelect || !bulkClientSelect) return;
+            const selectedOption = recipientSelect.options[recipientSelect.selectedIndex];
+            const allowedIds = selectedOption?.dataset.clientIds
+                ? selectedOption.dataset.clientIds.split(',').filter(Boolean)
+                : [];
+            const hasRecipient = Boolean(recipientSelect.value);
+
+            bulkClientSelect.querySelectorAll('option').forEach((option) => {
+                if (!option.value) {
+                    option.hidden = false;
+                    return;
+                }
+                option.hidden = hasRecipient && !allowedIds.includes(option.value);
+            });
+
+            const selectedClient = bulkClientSelect.options[bulkClientSelect.selectedIndex];
+            if (selectedClient && selectedClient.hidden) {
+                bulkClientSelect.value = '';
+            }
+        };
+
+        const filterBulkPostsByClient = () => {
+            if (!bulkPostSelect || !bulkClientSelect) return;
+            const clientId = bulkClientSelect.value;
+            bulkPostSelect.querySelectorAll('option').forEach((option) => {
+                if (!option.value) {
+                    option.hidden = false;
+                    return;
+                }
+                option.hidden = clientId && option.dataset.clientId !== clientId;
+            });
+
+            const selectedPost = bulkPostSelect.options[bulkPostSelect.selectedIndex];
+            if (selectedPost && selectedPost.hidden) {
+                bulkPostSelect.value = '';
+            }
+        };
+
+        if (recipientSelect) {
+            recipientSelect.addEventListener('change', () => {
+                filterBulkClientsByRecipient();
+                filterBulkPostsByClient();
+            });
+        }
+
+        if (bulkClientSelect) {
+            bulkClientSelect.addEventListener('change', filterBulkPostsByClient);
+        }
+
+        filterBulkClientsByRecipient();
+        filterBulkPostsByClient();
         updateCount();
 
         const acceptForm = document.getElementById('accept-transfer-form');
@@ -496,7 +586,3 @@
     })();
 </script>
 @endif
-
-
-
-

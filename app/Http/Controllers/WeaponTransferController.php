@@ -90,7 +90,12 @@ class WeaponTransferController extends Controller
         }
 
         $weapons = $canManageTransfers ? $weaponsQuery->get() : collect();
-        $transferRecipients = User::where('role', 'RESPONSABLE')->orderBy('name')->get();
+        $transferRecipients = User::whereIn('role', ['RESPONSABLE', 'ADMIN'])
+            ->with(['clients:id,name'])
+            ->orderBy('name')
+            ->get();
+        $transferClients = Client::orderBy('name')->get(['id', 'name']);
+        $transferPosts = Post::orderBy('name')->get(['id', 'client_id', 'name']);
         $acceptClients = $user->isAdmin()
             ? Client::orderBy('name')->get()
             : $user->clients()->orderBy('name')->get();
@@ -110,6 +115,8 @@ class WeaponTransferController extends Controller
             'status',
             'weapons',
             'transferRecipients',
+            'transferClients',
+            'transferPosts',
             'acceptClients',
             'acceptPosts',
             'acceptWorkers',
@@ -131,12 +138,35 @@ class WeaponTransferController extends Controller
             'weapon_ids' => ['required', 'array', 'min:1'],
             'weapon_ids.*' => ['integer', 'exists:weapons,id'],
             'to_user_id' => ['required', 'exists:users,id'],
+            'client_id' => ['required', 'exists:clients,id'],
+            'post_id' => ['nullable', 'exists:posts,id'],
             'note' => ['nullable', 'string'],
         ]);
 
-        $toUser = User::where('role', 'RESPONSABLE')->find($data['to_user_id']);
+        $toUser = User::whereIn('role', ['RESPONSABLE', 'ADMIN'])->find($data['to_user_id']);
         if (!$toUser) {
-            abort(422, 'El destinatario no es válido.');
+            return back()->withErrors([
+                'to_user_id' => 'El destinatario no es válido.',
+            ])->withInput();
+        }
+
+        $clientId = (int) $data['client_id'];
+        $postId = isset($data['post_id']) && $data['post_id'] !== '' ? (int) $data['post_id'] : null;
+
+        $inPortfolio = $toUser->clients()->whereKey($clientId)->exists();
+        if (!$inPortfolio) {
+            return back()->withErrors([
+                'client_id' => 'El cliente no pertenece a las asignaciones del destinatario.',
+            ])->withInput();
+        }
+
+        if ($postId) {
+            $post = Post::findOrFail($postId);
+            if ($post->client_id !== $clientId) {
+                return back()->withErrors([
+                    'post_id' => 'El puesto seleccionado no pertenece al cliente destino.',
+                ])->withInput();
+            }
         }
 
         $weaponsQuery = Weapon::query()
@@ -152,7 +182,9 @@ class WeaponTransferController extends Controller
         $weapons = $weaponsQuery->get();
 
         if ($weapons->count() !== count($data['weapon_ids'])) {
-            abort(422, 'Algunas armas seleccionadas no son válidas para transferir.');
+            return back()->withErrors([
+                'weapon_ids' => 'Algunas armas seleccionadas no son válidas para transferir.',
+            ])->withInput();
         }
 
         foreach ($weapons as $weapon) {
@@ -165,12 +197,9 @@ class WeaponTransferController extends Controller
                 }
 
                 if ($toUser->id === $fromUserId) {
-                    abort(422, 'El destinatario debe ser diferente al responsable actual.');
-                }
-
-                $inPortfolio = $toUser->clients()->whereKey($activeAssignment->client_id)->exists();
-                if (!$inPortfolio) {
-                    abort(422, 'El cliente no pertenece a las asignaciones del destinatario.');
+                    return back()->withErrors([
+                        'to_user_id' => 'El destinatario debe ser diferente al responsable actual.',
+                    ])->withInput();
                 }
 
                 continue;
@@ -181,7 +210,7 @@ class WeaponTransferController extends Controller
             }
         }
 
-        DB::transaction(function () use ($weapons, $user, $toUser, $data) {
+        DB::transaction(function () use ($weapons, $user, $toUser, $data, $clientId, $postId) {
             foreach ($weapons as $weapon) {
                 $activeAssignment = $weapon->activeClientAssignment;
                 $this->closeInternalAssignments($weapon, $user);
@@ -193,6 +222,7 @@ class WeaponTransferController extends Controller
                     'to_user_id' => $toUser->id,
                     'requested_by' => $user->id,
                     'from_client_id' => $activeAssignment?->client_id,
+                    'new_client_id' => $clientId,
                     'status' => WeaponTransfer::STATUS_PENDING,
                     'requested_at' => now(),
                     'note' => $data['note'] ?? null,
@@ -209,6 +239,8 @@ class WeaponTransferController extends Controller
                         'from_user_id' => $activeAssignment?->responsible_user_id ?? $user->id,
                         'to_user_id' => $toUser->id,
                         'from_client_id' => $activeAssignment?->client_id,
+                        'new_client_id' => $clientId,
+                        'post_id' => $postId,
                     ],
                 ]);
             }
