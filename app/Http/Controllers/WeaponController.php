@@ -87,7 +87,7 @@ class WeaponController extends Controller
         $data = $request->validate([
             'internal_code' => ['nullable', 'string', 'max:100', 'unique:weapons,internal_code'],
             'serial_number' => ['required', 'string', 'max:100', 'unique:weapons,serial_number'],
-            'weapon_type' => ['required', 'string', 'max:100'],
+            'weapon_type' => ['required', 'in:' . implode(',', $this->weaponTypeOptions())],
             'caliber' => ['required', 'string', 'max:100'],
             'brand' => ['required', 'string', 'max:100'],
             'capacity' => ['required', 'string', 'max:50'],
@@ -363,7 +363,7 @@ class WeaponController extends Controller
         $data = $request->validate([
             'internal_code' => ['required', 'string', 'max:100', 'unique:weapons,internal_code,' . $weapon->id],
             'serial_number' => ['required', 'string', 'max:100', 'unique:weapons,serial_number,' . $weapon->id],
-            'weapon_type' => ['required', 'string', 'max:100'],
+            'weapon_type' => ['required', 'in:' . implode(',', $this->weaponTypeOptions())],
             'caliber' => ['required', 'string', 'max:100'],
             'brand' => ['required', 'string', 'max:100'],
             'capacity' => ['required', 'string', 'max:50'],
@@ -527,6 +527,16 @@ class WeaponController extends Controller
             'company_owned' => 'Propiedad de la empresa',
             'leased' => 'Arrendada',
             'third_party' => 'Terceros',
+        ];
+    }
+
+    private function weaponTypeOptions(): array
+    {
+        return [
+            'Escopeta',
+            'Pistola',
+            'Revólver',
+            'Uzi',
         ];
     }
 

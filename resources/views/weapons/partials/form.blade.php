@@ -2,6 +2,33 @@
     $weapon = $weapon ?? null;
     $photoDescriptions = \App\Models\WeaponPhoto::DESCRIPTIONS;
     $existingPhotos = $weapon?->photos?->keyBy('description') ?? collect();
+    $photoGuidesByType = [
+        'escopeta' => [
+            'lado_derecho' => asset('images/weapon-guides/Escopeta lado derecho-09.svg'),
+            'lado_izquierdo' => asset('images/weapon-guides/Escopeta lado izquierdo-10.svg'),
+            'canon_disparador_marca' => asset('images/weapon-guides/Escopeta cañon-11.svg'),
+            'serie' => asset('images/weapon-guides/Escopeta serie.svg'),
+        ],
+        'pistola' => [
+            'lado_derecho' => asset('images/weapon-guides/Pistola lado derecho-01.svg'),
+            'lado_izquierdo' => asset('images/weapon-guides/Pistola lado izquierdo-02.svg'),
+            'canon_disparador_marca' => asset('images/weapon-guides/Pistola cañon-03.svg'),
+            'serie' => asset('images/weapon-guides/Pistola serie-04.svg'),
+        ],
+        'revolver' => [
+            'lado_derecho' => asset('images/weapon-guides/Revolver lado derecho-05.svg'),
+            'lado_izquierdo' => asset('images/weapon-guides/Revolver lado izquierdo-06.svg'),
+            'canon_disparador_marca' => asset('images/weapon-guides/Revolver cañon-07.svg'),
+            'serie' => asset('images/weapon-guides/Revolver Serie-08.svg'),
+        ],
+        'uzi' => [
+            'lado_derecho' => asset('images/weapon-guides/Uzi lado derecho-13.svg'),
+            'lado_izquierdo' => asset('images/weapon-guides/Uzi lado izquierdo-14.svg'),
+            'canon_disparador_marca' => asset('images/weapon-guides/Uzi cañon-15.svg'),
+            'serie' => asset('images/weapon-guides/Uzi serie-16.svg'),
+        ],
+    ];
+    $weaponTypes = ['Escopeta', 'Pistola', 'Revólver', 'Uzi'];
     $photoIndex = 1;
 @endphp
 
@@ -21,7 +48,20 @@
 
 <div>
     <x-input-label for="weapon_type" :value="__('Tipo de arma')" />
-    <x-text-input id="weapon_type" name="weapon_type" type="text" class="mt-1 block w-full" value="{{ old('weapon_type', $weapon?->weapon_type) }}" required />
+    @php
+        $selectedWeaponType = old('weapon_type', $weapon?->weapon_type);
+    @endphp
+    <select id="weapon_type" name="weapon_type" class="mt-1 block w-full rounded-md border-gray-300 text-sm" required>
+        <option value="">{{ __('Seleccione') }}</option>
+        @foreach ($weaponTypes as $weaponTypeOption)
+            <option value="{{ $weaponTypeOption }}" @selected($selectedWeaponType === $weaponTypeOption)>
+                {{ __($weaponTypeOption) }}
+            </option>
+        @endforeach
+        @if ($selectedWeaponType && !in_array($selectedWeaponType, $weaponTypes, true))
+            <option value="{{ $selectedWeaponType }}" selected>{{ $selectedWeaponType }}</option>
+        @endif
+    </select>
     <x-input-error :messages="$errors->get('weapon_type')" class="mt-2" />
 </div>
 
@@ -71,13 +111,22 @@
             @endphp
             <label for="photo_{{ $photoIndex }}" class="block cursor-pointer">
                 <input id="photo_{{ $photoIndex }}" name="photos[]" type="file" accept="image/*" class="hidden"
-                    data-preview-target="photo_preview_{{ $photoIndex }}" data-placeholder-target="photo_placeholder_{{ $photoIndex }}" />
-                <div class="flex h-24 w-full items-center justify-center rounded border border-dashed border-gray-300 bg-gray-50 text-xs text-gray-500">
-                    <span id="photo_placeholder_{{ $photoIndex }}" @class(['hidden' => $photoUrl])>
+                    data-photo-description="{{ $description }}"
+                    data-preview-target="photo_preview_{{ $photoIndex }}"
+                    data-guide-target="photo_guide_{{ $photoIndex }}"
+                    data-placeholder-target="photo_placeholder_{{ $photoIndex }}" />
+                <div class="relative flex h-24 w-full items-center justify-center overflow-hidden rounded border border-dashed border-gray-300 bg-gray-50 text-xs text-gray-500">
+                    <img id="photo_guide_{{ $photoIndex }}" alt="Guia"
+                        class="pointer-events-none hidden absolute inset-0 h-full w-full object-contain p-1 opacity-55" />
+                    <span id="photo_placeholder_{{ $photoIndex }}"
+                        @class([
+                            'hidden' => $photoUrl,
+                            'absolute inset-x-0 top-1 z-10 px-1 py-0.5 text-center text-[10px] font-medium text-gray-600',
+                        ])>
                         {{ __('Seleccionar foto') }}
                     </span>
                     <img id="photo_preview_{{ $photoIndex }}" alt="Previsualizacion"
-                        class="{{ $photoUrl ? '' : 'hidden' }} h-full w-full rounded object-cover"
+                        class="{{ $photoUrl ? '' : 'hidden' }} relative z-10 h-full w-full rounded object-cover"
                         @if ($photoUrl) src="{{ $photoUrl }}" @endif />
                 </div>
                 <div class="mt-1 text-xs text-gray-500">{{ $label }}</div>
@@ -196,45 +245,113 @@
     <script>
         let activeInput = null;
         let cropper = null;
+        const photoGuidesByType = @json($photoGuidesByType);
 
-    const modal = document.getElementById('image_editor_modal');
-    const modalImage = document.getElementById('image_editor_image');
+        const normalizeText = (value) => {
+            if (!value) {
+                return '';
+            }
+            return value
+                .toString()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .trim();
+        };
+
+        const resolveWeaponTypeKey = (weaponTypeValue) => {
+            const normalized = normalizeText(weaponTypeValue);
+            if (!normalized) {
+                return '';
+            }
+            if (normalized.includes('escopeta')) {
+                return 'escopeta';
+            }
+            if (normalized.includes('pistola')) {
+                return 'pistola';
+            }
+            if (normalized.includes('revolver')) {
+                return 'revolver';
+            }
+            if (normalized.includes('uzi')) {
+                return 'uzi';
+            }
+            return '';
+        };
+
+	    const modal = document.getElementById('image_editor_modal');
+	    const modalImage = document.getElementById('image_editor_image');
     const closeButton = document.getElementById('image_editor_close');
     const cancelButton = document.getElementById('image_editor_cancel');
     const cropButton = document.getElementById('image_editor_crop');
-    const rotateLeftButton = document.getElementById('image_editor_rotate_left');
-    const rotateRightButton = document.getElementById('image_editor_rotate_right');
+	    const rotateLeftButton = document.getElementById('image_editor_rotate_left');
+	    const rotateRightButton = document.getElementById('image_editor_rotate_right');
+        const weaponTypeInput = document.getElementById('weapon_type');
 
-    const setPreview = (preview, placeholder, file) => {
-        if (!preview || !placeholder || !file) {
-            return;
-        }
+        const syncGuideForInput = (input) => {
+            if (!input || !input.dataset.photoDescription) {
+                return;
+            }
+
+            const previewId = input.dataset.previewTarget;
+            const guideId = input.dataset.guideTarget;
+            const preview = previewId ? document.getElementById(previewId) : null;
+            const guide = guideId ? document.getElementById(guideId) : null;
+            if (!guide) {
+                return;
+            }
+
+            const typeKey = resolveWeaponTypeKey(weaponTypeInput?.value || '');
+            const guideUrl = typeKey ? (photoGuidesByType[typeKey]?.[input.dataset.photoDescription] || '') : '';
+            const hasPhotoPreview = preview && !preview.classList.contains('hidden');
+
+            if (guideUrl && !hasPhotoPreview) {
+                guide.src = guideUrl;
+                guide.classList.remove('hidden');
+            } else {
+                guide.removeAttribute('src');
+                guide.classList.add('hidden');
+            }
+        };
+
+        const syncAllGuides = () => {
+            document.querySelectorAll('input[data-photo-description]').forEach((input) => {
+                syncGuideForInput(input);
+            });
+        };
+
+	    const setPreview = (input, preview, placeholder, file) => {
+	        if (!input || !preview || !placeholder || !file) {
+	            return;
+	        }
 
         if (preview.dataset.objectUrl) {
             URL.revokeObjectURL(preview.dataset.objectUrl);
         }
 
         const url = URL.createObjectURL(file);
-        preview.dataset.objectUrl = url;
-        preview.src = url;
-        preview.classList.remove('hidden');
-        placeholder.classList.add('hidden');
-    };
+	        preview.dataset.objectUrl = url;
+	        preview.src = url;
+	        preview.classList.remove('hidden');
+	        placeholder.classList.add('hidden');
+            syncGuideForInput(input);
+	    };
 
-    const clearPreview = (preview, placeholder) => {
-        if (!preview || !placeholder) {
-            return;
-        }
+	    const clearPreview = (input, preview, placeholder) => {
+	        if (!input || !preview || !placeholder) {
+	            return;
+	        }
 
         if (preview.dataset.objectUrl) {
             URL.revokeObjectURL(preview.dataset.objectUrl);
             delete preview.dataset.objectUrl;
         }
 
-        preview.removeAttribute('src');
-        preview.classList.add('hidden');
-        placeholder.classList.remove('hidden');
-    };
+	        preview.removeAttribute('src');
+	        preview.classList.add('hidden');
+	        placeholder.classList.remove('hidden');
+            syncGuideForInput(input);
+	    };
 
     const openEditor = (input) => {
         const file = input.files && input.files[0];
@@ -275,13 +392,13 @@
         modalImage.removeAttribute('src');
 
         if (discardSelection && activeInput) {
-            const previewId = activeInput.dataset.previewTarget;
-            const placeholderId = activeInput.dataset.placeholderTarget;
-            const preview = previewId ? document.getElementById(previewId) : null;
-            const placeholder = placeholderId ? document.getElementById(placeholderId) : null;
-            clearPreview(preview, placeholder);
-            activeInput.value = '';
-        }
+	            const previewId = activeInput.dataset.previewTarget;
+	            const placeholderId = activeInput.dataset.placeholderTarget;
+	            const preview = previewId ? document.getElementById(previewId) : null;
+	            const placeholder = placeholderId ? document.getElementById(placeholderId) : null;
+	            clearPreview(activeInput, preview, placeholder);
+	            activeInput.value = '';
+	        }
 
         activeInput = null;
     };
@@ -304,11 +421,11 @@
             dataTransfer.items.add(file);
             activeInput.files = dataTransfer.files;
 
-            const previewId = activeInput.dataset.previewTarget;
-            const placeholderId = activeInput.dataset.placeholderTarget;
-            const preview = previewId ? document.getElementById(previewId) : null;
-            const placeholder = placeholderId ? document.getElementById(placeholderId) : null;
-            setPreview(preview, placeholder, file);
+	            const previewId = activeInput.dataset.previewTarget;
+	            const placeholderId = activeInput.dataset.placeholderTarget;
+	            const preview = previewId ? document.getElementById(previewId) : null;
+	            const placeholder = placeholderId ? document.getElementById(placeholderId) : null;
+	            setPreview(activeInput, preview, placeholder, file);
 
             closeEditor();
         }, 'image/jpeg', 0.92);
@@ -320,9 +437,16 @@
     rotateLeftButton.addEventListener('click', () => cropper && cropper.rotate(-90));
     rotateRightButton.addEventListener('click', () => cropper && cropper.rotate(90));
 
-        document.querySelectorAll('input[data-preview-target]').forEach((input) => {
-            input.addEventListener('change', () => openEditor(input));
-        });
+	        document.querySelectorAll('input[data-preview-target]').forEach((input) => {
+	            input.addEventListener('change', () => openEditor(input));
+	        });
+
+            if (weaponTypeInput) {
+                weaponTypeInput.addEventListener('input', syncAllGuides);
+                weaponTypeInput.addEventListener('change', syncAllGuides);
+            }
+
+            syncAllGuides();
 
         const form = document.querySelector('form[enctype="multipart/form-data"]');
         const permitInput = document.getElementById('permit_photo');

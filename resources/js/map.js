@@ -17,16 +17,34 @@ L.Icon.Default.mergeOptions({
 const locale = document.documentElement.lang?.startsWith('en') ? 'en' : 'es';
 const t = {
     layerMap: locale === 'en' ? 'Map' : 'Mapa',
-    layerSatellite: locale === 'en' ? 'Satellite' : 'Satélite',
-    layerHybrid: locale === 'en' ? 'Hybrid' : 'Híbrida',
+    layerSatellite: locale === 'en' ? 'Satellite' : 'Satelite',
+    layerHybrid: locale === 'en' ? 'Hybrid' : 'Hibrida',
     viewWeapon: locale === 'en' ? 'View weapon' : 'Ver arma',
     weaponCount: locale === 'en' ? 'Weapon count' : 'Cantidad de armas',
     serial: locale === 'en' ? 'Serial' : 'Serie',
     detail: locale === 'en' ? 'Detail' : 'Detalle',
+    noResults: locale === 'en' ? 'No matches found.' : 'No se encontraron coincidencias.',
+    writeSerial: locale === 'en' ? 'Type at least 2 characters.' : 'Escribe al menos 2 caracteres.',
+    clearSearch: locale === 'en' ? 'Clear' : 'Limpiar',
+};
+
+const normalizeText = (value) => {
+    if (!value) {
+        return '';
+    }
+    return value
+        .toString()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
 };
 
 const initMap = () => {
     const mapElement = document.getElementById('weapons-map');
+    const searchInput = document.getElementById('weapons-map-search');
+    const searchResults = document.getElementById('weapons-map-search-results');
+    const searchShell = document.getElementById('weapons-map-search-shell');
     if (!mapElement) {
         return;
     }
@@ -59,6 +77,123 @@ const initMap = () => {
     };
     baseLayers[t.layerHybrid].addTo(map);
     L.control.layers(baseLayers, null, { position: 'topright' }).addTo(map);
+
+    let searchIndex = [];
+    let searchDebounce = null;
+
+    const hideSearchResults = () => {
+        if (!searchResults) {
+            return;
+        }
+        searchResults.classList.add('hidden');
+        searchResults.innerHTML = '';
+    };
+
+    const zoomToItem = (item) => {
+        if (!item) {
+            return;
+        }
+        map.setView([item.lat, item.lng], 16, { animate: true });
+        if (item.marker) {
+            item.marker.openPopup();
+        }
+    };
+
+    const renderSearchResults = (items) => {
+        if (!searchResults) {
+            return;
+        }
+        if (!items.length) {
+            searchResults.innerHTML = `<div class="px-3 py-2 text-sm text-gray-500">${t.noResults}</div>`;
+            searchResults.classList.remove('hidden');
+            return;
+        }
+
+        const shown = items.slice(0, 8);
+        const rows = shown
+            .map(
+                (item, index) => `
+                    <button
+                        type="button"
+                        class="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-blue-50"
+                        data-weapon-result-index="${index}"
+                    >
+                        <span class="block font-medium text-gray-800">${item.serial || '-'}</span>
+                        <span class="block text-xs text-gray-500">${item.client || '-'}</span>
+                    </button>
+                `
+            )
+            .join('');
+        searchResults.innerHTML = rows;
+        searchResults.classList.remove('hidden');
+
+        Array.from(searchResults.querySelectorAll('[data-weapon-result-index]')).forEach((button) => {
+            button.addEventListener('click', () => {
+                const index = Number.parseInt(button.dataset.weaponResultIndex || '', 10);
+                const item = shown[index];
+                if (!item) {
+                    return;
+                }
+                searchInput.value = item.serial || '';
+                hideSearchResults();
+                zoomToItem(item);
+            });
+        });
+    };
+
+    if (searchInput && searchResults) {
+        searchInput.insertAdjacentHTML(
+            'afterend',
+            `<button id="weapons-map-search-clear" type="button" class="mt-2 text-xs text-blue-700 hover:text-blue-900">${t.clearSearch}</button>`
+        );
+        const clearButton = document.getElementById('weapons-map-search-clear');
+
+        searchInput.addEventListener('input', (event) => {
+            const query = normalizeText(event.target.value || '');
+            if (searchDebounce) {
+                clearTimeout(searchDebounce);
+            }
+            searchDebounce = setTimeout(() => {
+                if (query.length < 2) {
+                    searchResults.innerHTML = `<div class="px-3 py-2 text-sm text-gray-500">${t.writeSerial}</div>`;
+                    searchResults.classList.remove('hidden');
+                    return;
+                }
+                const filtered = searchIndex.filter((item) => {
+                    const serialMatch = normalizeText(item.serial).includes(query);
+                    const clientMatch = normalizeText(item.client).includes(query);
+                    return serialMatch || clientMatch;
+                });
+                renderSearchResults(filtered);
+            }, 180);
+        });
+
+        searchInput.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter') {
+                return;
+            }
+            const firstButton = searchResults.querySelector('[data-weapon-result-index="0"]');
+            if (!firstButton) {
+                return;
+            }
+            event.preventDefault();
+            firstButton.click();
+        });
+
+        if (clearButton) {
+            clearButton.addEventListener('click', () => {
+                searchInput.value = '';
+                hideSearchResults();
+            });
+        }
+
+        document.addEventListener('click', (event) => {
+            if (!searchShell || searchShell.contains(event.target)) {
+                return;
+            }
+            hideSearchResults();
+        });
+    }
 
     if (!endpoint) {
         return;
@@ -134,6 +269,16 @@ const initMap = () => {
                 marker.bindPopup(popup);
                 clusterGroup.addLayer(marker);
                 bounds.push([lat, lng]);
+
+                groupItems.forEach((item) => {
+                    searchIndex.push({
+                        serial: item.serial_number ?? '',
+                        client: item.client ?? '',
+                        lat,
+                        lng,
+                        marker,
+                    });
+                });
             });
 
             map.addLayer(clusterGroup);
@@ -150,4 +295,3 @@ if (document.readyState === 'loading') {
 } else {
     initMap();
 }
-
