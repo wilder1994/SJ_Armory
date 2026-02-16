@@ -79,7 +79,8 @@
     }
 
     .sj-nav a {
-        color: #dbe7ff;
+        color: #f3f7ff;
+        text-shadow: 0 1px 2px rgba(2, 6, 23, 0.45);
     }
 
     .sj-nav a:hover {
@@ -97,10 +98,17 @@
         z-index: 1201;
     }
 
+    .sj-nav select {
+        background-color: #ffffff !important;
+        color: #111827 !important;
+        opacity: 1 !important;
+        font-weight: 500;
+    }
+
     @media (min-width: 640px) {
         .sj-nav-brand-shift,
         .sj-nav-home-shift {
-            transform: translateX(-8.75rem);
+            transform: none;
         }
     }
 

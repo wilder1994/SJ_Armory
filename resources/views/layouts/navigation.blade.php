@@ -82,8 +82,8 @@
                     <x-slot name="content">
                         <form method="POST" action="{{ route('locale.switch') }}" class="px-4 py-2">
                             @csrf
-                            <label for="locale-select" class="mb-1 block text-xs text-gray-500">{{ __('Idioma') }}</label>
-                            <select id="locale-select" name="locale" class="block w-full rounded border-gray-300 text-sm" onchange="this.form.submit()">
+                            <label for="locale-select" class="mb-1 block text-xs text-gray-700">{{ __('Idioma') }}</label>
+                            <select id="locale-select" name="locale" class="block w-full rounded border-gray-300 text-sm text-gray-900" onchange="this.form.submit()">
                                 <option value="es" @selected(app()->getLocale() === 'es')>{{ __('Español') }}</option>
                                 <option value="en" @selected(app()->getLocale() === 'en')>{{ __('Inglés') }}</option>
                             </select>
@@ -181,7 +181,7 @@
             <div class="mt-3 space-y-1">
                 <form method="POST" action="{{ route('locale.switch') }}" class="px-4 py-2">
                     @csrf
-                    <label for="locale-select-mobile" class="mb-1 block text-xs text-slate-300">{{ __('Idioma') }}</label>
+                    <label for="locale-select-mobile" class="mb-1 block text-xs text-slate-100">{{ __('Idioma') }}</label>
                     <select id="locale-select-mobile" name="locale" class="block w-full rounded border-gray-300 text-sm text-gray-900" onchange="this.form.submit()">
                         <option value="es" @selected(app()->getLocale() === 'es')>{{ __('Español') }}</option>
                         <option value="en" @selected(app()->getLocale() === 'en')>{{ __('Inglés') }}</option>
@@ -206,5 +206,4 @@
         </div>
     </div>
 </nav>
-
 
