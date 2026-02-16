@@ -158,6 +158,9 @@ class ReportController extends Controller
         ];
 
         $actionLabels = [
+            'created' => 'Creado',
+            'updated' => 'Actualizado',
+            'deleted' => 'Eliminado',
             'client_created' => 'Cliente creado',
             'client_updated' => 'Cliente actualizado',
             'client_deleted' => 'Cliente eliminado',
@@ -200,6 +203,8 @@ class ReportController extends Controller
             'transfer_accepted' => 'Transferencia aceptada',
             'transfer_rejected' => 'Transferencia rechazada',
             'upload_photo' => 'Foto cargada',
+            'update_photo' => 'Foto actualizada',
+            'upload_document' => 'Documento cargado',
         ];
 
         return view('reports.audit', compact('logs', 'days', 'actionLabels', 'entityLabels', 'modules', 'module'));
