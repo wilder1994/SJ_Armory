@@ -196,6 +196,13 @@
         height: 41px;
     }
 
+    .sj-cluster-icon img {
+        width: 26px;
+        height: 41px;
+        display: block;
+        object-fit: contain;
+    }
+
     .sj-cluster-icon span {
         position: absolute;
         right: -6px;

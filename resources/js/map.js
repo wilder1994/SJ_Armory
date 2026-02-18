@@ -3,16 +3,23 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import 'leaflet.markercluster';
-import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
-import iconUrl from 'leaflet/dist/images/marker-icon.png';
 import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
 
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl,
-    iconUrl,
+const customLocationIconUrl = '/images/map/Icono_Ubicacion.png';
+const customIconOptions = {
+    iconRetinaUrl: customLocationIconUrl,
+    iconUrl: customLocationIconUrl,
     shadowUrl,
-});
+    iconSize: [36, 52],
+    iconAnchor: [18, 52],
+    popupAnchor: [0, -44],
+    shadowSize: [41, 41],
+    shadowAnchor: [13, 41],
+};
+const customMarkerIcon = L.icon(customIconOptions);
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions(customIconOptions);
 
 const locale = document.documentElement.lang?.startsWith('en') ? 'en' : 'es';
 const t = {
@@ -220,15 +227,15 @@ const initMap = () => {
                     const count = cluster.getChildCount();
                     return L.divIcon({
                         html: `
-                            <div class="sj-cluster-icon">
-                                <img src="${iconUrl}" alt="" />
-                                <span>${count}</span>
+                            <div style="position:relative;width:26px;height:41px;">
+                                <img src="${customLocationIconUrl}" alt="" style="width:26px;height:41px;display:block;object-fit:contain;" />
+                                <span style="position:absolute;right:-6px;top:-6px;background:#1f6fb2;color:#fff;font-size:11px;font-weight:700;line-height:1;padding:4px 6px;border-radius:999px;border:2px solid #fff;box-shadow:0 4px 10px rgba(15,23,42,.25);">${count}</span>
                             </div>
                         `,
-                        className: 'sj-cluster-wrapper',
-                        iconSize: [30, 44],
-                        iconAnchor: [15, 44],
-                        popupAnchor: [1, -38],
+                        className: '',
+                        iconSize: [36, 52],
+                        iconAnchor: [18, 52],
+                        popupAnchor: [1, -44],
                     });
                 },
             });
@@ -266,6 +273,7 @@ const initMap = () => {
                 `;
 
                 const marker = L.marker([lat, lng]);
+                marker.setIcon(customMarkerIcon);
                 marker.bindPopup(popup);
                 clusterGroup.addLayer(marker);
                 bounds.push([lat, lng]);

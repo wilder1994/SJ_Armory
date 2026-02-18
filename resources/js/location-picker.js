@@ -1,16 +1,23 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
-import iconUrl from 'leaflet/dist/images/marker-icon.png';
 import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
 import municipios from '../data/colombia_municipios.json';
 
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl,
-    iconUrl,
+const customLocationIconUrl = '/images/map/Icono_Ubicacion.png';
+const customIconOptions = {
+    iconRetinaUrl: customLocationIconUrl,
+    iconUrl: customLocationIconUrl,
     shadowUrl,
-});
+    iconSize: [36, 52],
+    iconAnchor: [18, 52],
+    popupAnchor: [0, -44],
+    shadowSize: [41, 41],
+    shadowAnchor: [13, 41],
+};
+const customMarkerIcon = L.icon(customIconOptions);
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions(customIconOptions);
 
 const locale = document.documentElement.lang?.startsWith('en') ? 'en' : 'es';
 const t = {
@@ -241,8 +248,9 @@ const initMapPicker = () => {
         }
         if (marker) {
             marker.setLatLng([lat, lng]);
+            marker.setIcon(customMarkerIcon);
         } else {
-            marker = L.marker([lat, lng]).addTo(mapInstance);
+            marker = L.marker([lat, lng], { icon: customMarkerIcon }).addTo(mapInstance);
         }
         selectedLatLng = { lat, lng };
         mapInstance.setView([lat, lng], zoom);
