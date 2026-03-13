@@ -277,6 +277,7 @@ class RevalidationDocumentBuilder
             ]);
 
             foreach ($pageWeapons->chunk(2) as $pair) {
+                $pair = $pair->values();
                 $table->addRow($this->cmToTwip(self::BATCH_PERMIT_HEIGHT_CM));
 
                 foreach ([0, 1] as $index) {
