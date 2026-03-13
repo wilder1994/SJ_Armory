@@ -1,46 +1,20 @@
 @forelse ($weapons as $weapon)
     @php
-        $expiredDocs = $weapon->documents
-            ->filter(function ($doc) {
-                if (!($doc->is_permit || $doc->is_renewal) || !$doc->valid_until) {
-                    return false;
-                }
-
-                return now()->startOfDay()->diffInDays($doc->valid_until, false) <= 0;
-            })
-            ->map(function ($doc) {
-                $name = $doc->document_name ?: __('Documento');
-                if ($doc->document_number) {
-                    $name .= ' #' . $doc->document_number;
-                }
-                return $name;
-            })
-            ->values();
-        $hasExpiredDocs = $expiredDocs->isNotEmpty();
-        $expiredLabel = $expiredDocs->implode(', ');
-
-        $observationDocs = $weapon->documents
-            ->filter(function ($doc) {
-                return !empty($doc->observations);
-            })
-            ->map(function ($doc) {
-                $name = $doc->document_name ?: __('Documento');
-                if ($doc->document_number) {
-                    $name .= ' #' . $doc->document_number;
-                }
-                return $name . ' (' . $doc->observations . ')';
-            })
-            ->values();
-        $hasObservationDocs = $observationDocs->isNotEmpty();
-        $observationLabel = $observationDocs->implode(', ');
-        $hasInProcess = $weapon->documents->contains(function ($doc) {
-            return ($doc->status ?? '') === 'En proceso';
-        });
+        $renewalDocument = $weapon->documents->firstWhere('is_renewal', true) ?? $weapon->documents->firstWhere('is_permit', true);
+        $renewalAlert = \App\Support\WeaponDocumentAlert::forComplianceDocument($renewalDocument);
+        $manualInProcess = $weapon->documents
+            ->filter(fn ($doc) => !($doc->is_permit || $doc->is_renewal))
+            ->first(fn ($doc) => ($doc->status ?? '') === 'En proceso');
         $internalAssignment = $weapon->activePostAssignment ?? $weapon->activeWorkerAssignment;
         $imprintChecked = $weapon->imprint_month === now()->format('Y-m');
         $canToggleImprint = auth()->user()?->isAdmin();
+        $rowClass = $manualInProcess ? 'bg-red-100' : ($renewalAlert['row_class'] ?? '');
+        $statusText = $manualInProcess
+            ? trim(($manualInProcess->document_name ?: 'Documento') . ': ' . ($manualInProcess->observations ?: 'En proceso'))
+            : ($renewalAlert['observation'] !== '-' ? $renewalAlert['observation'] : ($weapon->activeClientAssignment ? __('Asignada') : __('Sin destino')));
+        $statusClass = $manualInProcess ? 'text-red-700' : ($renewalAlert['text_class'] ?? '');
     @endphp
-    <tr @class(['bg-red-100' => $hasExpiredDocs || $hasInProcess])>
+    <tr class="{{ $rowClass }}">
         <td class="px-3 py-2 whitespace-nowrap">
             <span title="{{ $weapon->internal_code }}">
                 {{ \Illuminate\Support\Str::limit($weapon->internal_code, 8) }}
@@ -56,17 +30,7 @@
         <td class="px-3 py-2 whitespace-nowrap">{{ $weapon->permit_number ?? '-' }}</td>
         <td class="px-3 py-2 whitespace-nowrap">{{ $weapon->permit_expires_at?->format('Y-m-d') ?? '-' }}</td>
         <td class="px-3 py-2 whitespace-nowrap">
-            @if ($hasExpiredDocs)
-                <span title="Documentos vencidos: {{ $expiredLabel }}@if($hasObservationDocs) | Observaciones: {{ $observationLabel }}@endif" class="text-red-700">
-                    {{ $expiredDocs->first() }}
-                </span>
-            @elseif ($hasObservationDocs)
-                <span title="Observaciones: {{ $observationLabel }}" class="@if($hasInProcess) text-red-700 @endif">
-                    {{ $weapon->documents->firstWhere('observations')?->observations }}
-                </span>
-            @else
-                {{ $weapon->activeClientAssignment ? __('Asignada') : __('Sin destino') }}
-            @endif
+            <span class="{{ $statusClass }}">{{ $statusText }}</span>
         </td>
         <td class="px-3 py-2 whitespace-nowrap text-center">
             {{ $internalAssignment?->ammo_count ?? '-' }}

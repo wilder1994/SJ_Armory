@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('permit_type')->nullable();
             $table->string('permit_number')->nullable();
             $table->date('permit_expires_at')->nullable();
-            $table->unsignedBigInteger('permit_file_id')->nullable();
+            $table->foreignId('permit_file_id')->nullable()->constrained('files')->nullOnDelete();
             $table->text('notes')->nullable();
             $table->string('imprint_month', 7)->nullable();
             $table->foreignId('imprint_received_by')->nullable()->constrained('users')->nullOnDelete();

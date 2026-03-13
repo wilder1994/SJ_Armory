@@ -14,56 +14,77 @@
             <div class="mt-2 text-sm text-red-600">{{ $errors->first('photo') }}</div>
         @endif
 
+        @php
+            $photoDescriptions = \App\Models\WeaponPhoto::DESCRIPTIONS;
+            $photosByDescription = $weapon->photos->keyBy('description');
+        @endphp
+
         <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3" id="weapon-photo-grid">
-            @php
-                $photoDescriptions = $photoDescriptions ?? \App\Models\WeaponPhoto::DESCRIPTIONS;
-                $orderedLabels = array_values($photoDescriptions);
-            @endphp
-            @if ($weapon->photos->isNotEmpty())
-                @foreach ($weapon->photos as $index => $photo)
-                <div class="border rounded-lg p-3 weapon-photo-card" data-photo-type="weapon" data-photo-id="{{ $photo->id }}" data-photo-src="{{ $photo->file ? Storage::disk($photo->file->disk)->url($photo->file->path) : '' }}">
-                    @if ($photo->file)
-                        <img src="{{ Storage::disk($photo->file->disk)->url($photo->file->path) }}" alt="Foto" class="h-40 w-full rounded object-contain bg-gray-50">
-                    @endif
-                    <div class="mt-2 flex items-center justify-between text-sm">
-                        <div class="text-gray-600">
-                            @php
-                                $label = $photoDescriptions[$photo->description]
-                                    ?? $orderedLabels[$index]
-                                    ?? __('Foto');
-                            @endphp
-                            <div class="flex items-center gap-2">
-                                <span>{{ $label }}</span>
-                                <span class="text-xs text-gray-500">{{ $photo->created_at?->format('Y-m-d') ?? '-' }}</span>
+            @foreach ($photoDescriptions as $description => $label)
+                @php
+                    $photo = $photosByDescription->get($description);
+                    $photoUrl = $photo?->file ? Storage::disk($photo->file->disk)->url($photo->file->path) : null;
+                @endphp
+                <div
+                    class="border rounded-lg p-3 weapon-photo-card"
+                    data-photo-type="weapon"
+                    data-photo-id="{{ $photo?->id }}"
+                    data-photo-description="{{ $description }}"
+                    data-photo-src="{{ $photoUrl ?? '' }}"
+                    data-photo-empty="{{ $photo ? '0' : '1' }}"
+                >
+                    @if ($photoUrl)
+                        <img src="{{ $photoUrl }}" alt="{{ $label }}" class="h-40 w-full rounded object-contain bg-gray-50">
+                    @else
+                        <div class="flex h-40 w-full items-center justify-center rounded border border-dashed border-gray-300 bg-gray-50 text-center text-sm text-gray-400">
+                            <div>
+                                <div class="font-medium">{{ __('Foto pendiente') }}</div>
+                                <div class="mt-1 text-xs text-gray-400">{{ $label }}</div>
                             </div>
                         </div>
+                    @endif
+
+                    <div class="mt-2 flex items-center justify-between text-sm">
+                        <div class="text-gray-600">
+                            <div class="flex items-center gap-2">
+                                <span>{{ $label }}</span>
+                                <span class="text-xs text-gray-500">{{ $photo?->created_at?->format('Y-m-d') ?? __('Pendiente') }}</span>
+                            </div>
+                        </div>
+
                         @can('update', $weapon)
-                            <form method="POST" action="{{ route('weapons.photos.destroy', [$weapon, $photo]) }}" onclick="event.stopPropagation();">
-                                @csrf
-                                @method('DELETE')
-                                <button class="text-red-600 hover:text-red-900" onclick="return confirm(@js(__('¿Eliminar foto?')))">
-                                    {{ __('Eliminar') }}
-                                </button>
-                            </form>
+                            @if ($photo)
+                                <form method="POST" action="{{ route('weapons.photos.destroy', [$weapon, $photo]) }}" onclick="event.stopPropagation();">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="text-red-600 hover:text-red-900" onclick="return confirm(@js(__('¿Eliminar foto?')))">
+                                        {{ __('Eliminar') }}
+                                    </button>
+                                </form>
+                            @endif
                         @endcan
                     </div>
                 </div>
-                @endforeach
-            @endif
-            @if ($weapon->permitFile)
-                <div class="border rounded-lg p-3 weapon-photo-card" data-photo-type="permit" data-photo-src="{{ route('weapons.permit', $weapon) }}">
+            @endforeach
+
+            <div class="border rounded-lg p-3 weapon-photo-card" data-photo-type="permit" data-photo-src="{{ $weapon->permitFile ? route('weapons.permit', $weapon) : '' }}" data-photo-empty="{{ $weapon->permitFile ? '0' : '1' }}">
+                @if ($weapon->permitFile)
                     <img src="{{ route('weapons.permit', $weapon) }}" alt="Permiso" class="h-40 w-full rounded object-contain bg-gray-50">
-                    <div class="mt-2 text-sm text-gray-600">
-                        <div class="flex items-center gap-2">
-                            <span>{{ __('Permiso') }}</span>
-                            <span class="text-xs text-gray-500">{{ $weapon->permitFile?->created_at?->format('Y-m-d') ?? '-' }}</span>
+                @else
+                    <div class="flex h-40 w-full items-center justify-center rounded border border-dashed border-gray-300 bg-gray-50 text-center text-sm text-gray-400">
+                        <div>
+                            <div class="font-medium">{{ __('Foto pendiente') }}</div>
+                            <div class="mt-1 text-xs text-gray-400">{{ __('Permiso') }}</div>
                         </div>
                     </div>
+                @endif
+                <div class="mt-2 text-sm text-gray-600">
+                    <div class="flex items-center gap-2">
+                        <span>{{ __('Permiso') }}</span>
+                        <span class="text-xs text-gray-500">{{ $weapon->permitFile?->created_at?->format('Y-m-d') ?? __('Pendiente') }}</span>
+                    </div>
                 </div>
-            @endif
-            @if ($weapon->photos->isEmpty() && !$weapon->permitFile)
-                <div class="text-sm text-gray-500">{{ __('Sin fotos cargadas.') }}</div>
-            @endif
+            </div>
         </div>
 
         <div id="photo_action_modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
@@ -150,9 +171,11 @@
             let activePhotoId = null;
             let activePhotoSrc = null;
             let activePhotoType = 'weapon';
+            let activePhotoDescription = null;
             let cropper = null;
 
             const csrfToken = @json(csrf_token());
+            const storeUrl = @json(route('weapons.photos.store', $weapon));
             const updateUrlBase = @json(route('weapons.photos.update', [$weapon, 0]));
             const updatePermitUrl = @json(route('weapons.permit.update', $weapon));
 
@@ -219,24 +242,28 @@
                     return;
                 }
 
-                if (activePhotoType !== 'permit' && !activePhotoId) {
-                    return;
-                }
-
+                const formData = new FormData();
                 const fileName = activePhotoType === 'permit'
                     ? 'permit.jpg'
-                    : `photo_${activePhotoId}.jpg`;
+                    : `photo_${activePhotoDescription || activePhotoId || 'new'}.jpg`;
                 const file = new File([blob], fileName, { type: blob.type });
-                const formData = new FormData();
                 formData.append('photo', file);
-                formData.append('_method', 'PATCH');
 
-                const url = activePhotoType === 'permit'
-                    ? updatePermitUrl
-                    : updateUrlBase.replace(/\/0$/, `/${activePhotoId}`);
+                let url = storeUrl;
+                let method = 'POST';
+
+                if (activePhotoType === 'permit') {
+                    formData.append('_method', 'PATCH');
+                    url = updatePermitUrl;
+                } else if (activePhotoId) {
+                    formData.append('_method', 'PATCH');
+                    url = updateUrlBase.replace(/\/0$/, `/${activePhotoId}`);
+                } else {
+                    formData.append('description', activePhotoDescription || '');
+                }
 
                 fetch(url, {
-                    method: 'POST',
+                    method,
                     headers: {
                         'X-CSRF-TOKEN': csrfToken,
                     },
@@ -246,7 +273,13 @@
                         if (!response.ok) {
                             throw new Error('Upload failed');
                         }
-                        return response.json();
+
+                        const contentType = response.headers.get('content-type') || '';
+                        if (contentType.includes('application/json')) {
+                            return response.json();
+                        }
+
+                        return null;
                     })
                     .then(() => {
                         window.location.reload();
@@ -283,9 +316,17 @@
                     if (!isEditing) {
                         return;
                     }
-                    activePhotoId = card.dataset.photoId;
-                    activePhotoSrc = card.dataset.photoSrc;
+
+                    activePhotoId = card.dataset.photoId || null;
+                    activePhotoSrc = card.dataset.photoSrc || null;
                     activePhotoType = card.dataset.photoType || 'weapon';
+                    activePhotoDescription = card.dataset.photoDescription || null;
+
+                    if (card.dataset.photoEmpty === '1') {
+                        replaceInput?.click();
+                        return;
+                    }
+
                     openActionModal();
                 });
             });
@@ -323,7 +364,3 @@
         @endpush
     </div>
 </div>
-
-
-
-

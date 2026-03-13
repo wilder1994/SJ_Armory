@@ -57,40 +57,9 @@
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     @forelse ($weapon->documents as $document)
-                        @php
-                            $days = (($document->is_permit || $document->is_renewal) && $document->valid_until)
-                                ? now()->startOfDay()->diffInDays($document->valid_until, false)
-                                : null;
-                            $statusLabel = '-';
-                            $rowClass = '';
-
-                            if ($document->is_permit || $document->is_renewal) {
-                                if ($days !== null) {
-                                    if ($days <= 0) {
-                                        $statusLabel = __('Vencido');
-                                        $rowClass = 'bg-red-100';
-                                    } elseif ($days <= 90) {
-                                        $statusLabel = __('Renovar permiso');
-                                        $rowClass = 'bg-orange-50';
-                                    } elseif ($days <= 120) {
-                                        $statusLabel = __('Proximo a renovar');
-                                        $rowClass = 'bg-yellow-50';
-                                    } else {
-                                        $statusLabel = __('Vigente');
-                                    }
-                                }
-                            } else {
-                                $statusLabel = $document->status ?: '-';
-                                if (($document->status ?? '') === 'En proceso') {
-                                    $rowClass = 'bg-red-100';
-                                }
-                            }
-
-                            $fileType = $document->file?->original_name
-                                ? strtoupper(pathinfo($document->file->original_name, PATHINFO_EXTENSION))
-                                : ($document->file?->mime_type ?? '-');
-                        @endphp
-                        <tr class="{{ $rowClass }}">
+                        @php($alert = \App\Support\WeaponDocumentAlert::forDocument($document))
+                        @php($fileType = $document->file?->original_name ? strtoupper(pathinfo($document->file->original_name, PATHINFO_EXTENSION)) : ($document->file?->mime_type ?? '-'))
+                        <tr class="{{ $alert['row_class'] }}">
                             <td class="px-3 py-2">
                                 <div class="font-medium">{{ $document->document_name ?? __('Documento') }}</div>
                                 <div class="text-xs text-gray-500">
@@ -110,8 +79,8 @@
                                     {{ __('No aplica') }}
                                 @endif
                             </td>
-                            <td class="px-3 py-2">{{ $statusLabel }}</td>
-                            <td class="px-3 py-2">{{ $document->observations ?? '-' }}</td>
+                            <td class="px-3 py-2 {{ $alert['text_class'] }}">{{ $alert['state'] }}</td>
+                            <td class="px-3 py-2 {{ $alert['text_class'] }}">{{ $alert['observation'] }}</td>
                             <td class="px-3 py-2 text-right space-x-2">
                                 <a href="{{ route('weapons.documents.download', [$weapon, $document]) }}" class="text-indigo-600 hover:text-indigo-900">
                                     {{ __('Descargar') }}

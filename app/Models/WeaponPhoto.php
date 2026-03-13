@@ -14,7 +14,7 @@ class WeaponPhoto extends Model
         'lado_izquierdo' => 'Lado izquierdo',
         'canon_disparador_marca' => 'Cañon, disparador, marca',
         'serie' => 'Serie',
-        'aseo' => 'Impronta',
+        'impronta' => 'Impronta',
     ];
 
     protected $fillable = [

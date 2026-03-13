@@ -109,13 +109,14 @@
                     ? Storage::disk($photo->file->disk)->url($photo->file->path)
                     : null;
             @endphp
-            <label for="photo_{{ $photoIndex }}" class="block cursor-pointer">
+            <label for="photo_{{ $photoIndex }}" class="block cursor-pointer" data-drop-zone>
                 <input id="photo_{{ $photoIndex }}" name="photos[]" type="file" accept="image/*" class="hidden"
                     data-photo-description="{{ $description }}"
                     data-preview-target="photo_preview_{{ $photoIndex }}"
                     data-guide-target="photo_guide_{{ $photoIndex }}"
                     data-placeholder-target="photo_placeholder_{{ $photoIndex }}" />
-                <div class="relative flex h-24 w-full items-center justify-center overflow-hidden rounded border border-dashed border-gray-300 bg-gray-50 text-xs text-gray-500">
+                <div class="relative flex h-24 w-full items-center justify-center overflow-hidden rounded border border-dashed border-gray-300 bg-gray-50 text-xs text-gray-500 transition"
+                    data-drop-surface>
                     <img id="photo_guide_{{ $photoIndex }}" alt="Guia"
                         class="pointer-events-none hidden absolute inset-0 h-full w-full object-contain p-1 opacity-55" />
                     <span id="photo_placeholder_{{ $photoIndex }}"
@@ -123,7 +124,7 @@
                             'hidden' => $photoUrl,
                             'absolute inset-x-0 top-1 z-10 px-1 py-0.5 text-center text-[10px] font-medium text-gray-600',
                         ])>
-                        {{ __('Seleccionar foto') }}
+                        {{ __('Arrastra o selecciona foto') }}
                     </span>
                     <img id="photo_preview_{{ $photoIndex }}" alt="Previsualizacion"
                         class="{{ $photoUrl ? '' : 'hidden' }} relative z-10 h-full w-full rounded object-cover"
@@ -169,11 +170,12 @@
 
     <div class="md:col-start-2 md:row-start-1 md:row-span-3 flex flex-col">
         <x-input-label for="permit_photo" :value="__('Foto del permiso')" />
-        <label for="permit_photo" class="mt-1 block h-full cursor-pointer">
+        <label for="permit_photo" class="mt-1 block h-full cursor-pointer" data-drop-zone>
             <input id="permit_photo" name="permit_photo" type="file" accept="image/*" class="hidden" @if (!empty($requirePermitPhoto)) required @endif
                 data-preview-target="permit_preview" data-placeholder-target="permit_placeholder" />
-            <div class="flex h-full min-h-[12rem] w-full items-center justify-center rounded border border-dashed border-gray-300 bg-gray-50 text-xs text-gray-500">
-                <span id="permit_placeholder">{{ __('Seleccionar foto') }}</span>
+            <div class="flex h-full min-h-[12rem] w-full items-center justify-center rounded border border-dashed border-gray-300 bg-gray-50 text-xs text-gray-500 transition"
+                data-drop-surface>
+                <span id="permit_placeholder">{{ __('Arrastra o selecciona foto') }}</span>
                 <img id="permit_preview" alt="Previsualizacion"
                     class="hidden h-full w-full rounded object-cover" />
             </div>
@@ -246,6 +248,7 @@
         let activeInput = null;
         let cropper = null;
         const photoGuidesByType = @json($photoGuidesByType);
+        const dropZones = Array.from(document.querySelectorAll('[data-drop-zone]'));
 
         const normalizeText = (value) => {
             if (!value) {
@@ -378,6 +381,30 @@
         });
     };
 
+    const assignFileToInput = (input, file) => {
+        if (!input || !file || !file.type.startsWith('image/')) {
+            return false;
+        }
+
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        input.files = dataTransfer.files;
+
+        return true;
+    };
+
+    const setDropZoneActive = (zone, active) => {
+        const surface = zone?.querySelector('[data-drop-surface]');
+        if (!surface) {
+            return;
+        }
+
+        surface.classList.toggle('border-indigo-400', active);
+        surface.classList.toggle('bg-indigo-50', active);
+        surface.classList.toggle('ring-2', active);
+        surface.classList.toggle('ring-indigo-200', active);
+    };
+
     const closeEditor = (discardSelection = false) => {
         if (cropper) {
             cropper.destroy();
@@ -440,6 +467,51 @@
 	        document.querySelectorAll('input[data-preview-target]').forEach((input) => {
 	            input.addEventListener('change', () => openEditor(input));
 	        });
+
+            dropZones.forEach((zone) => {
+                const input = zone.querySelector('input[type="file"]');
+                if (!input) {
+                    return;
+                }
+
+                ['dragenter', 'dragover'].forEach((eventName) => {
+                    zone.addEventListener(eventName, (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setDropZoneActive(zone, true);
+                    });
+                });
+
+                ['dragleave', 'dragend'].forEach((eventName) => {
+                    zone.addEventListener(eventName, (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (event.target === zone || !zone.contains(event.relatedTarget)) {
+                            setDropZoneActive(zone, false);
+                        }
+                    });
+                });
+
+                zone.addEventListener('drop', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setDropZoneActive(zone, false);
+
+                    const file = event.dataTransfer?.files?.[0];
+                    if (!file) {
+                        return;
+                    }
+
+                    if (!file.type.startsWith('image/')) {
+                        alert(@json(__('Solo puede soltar archivos de imagen.')));
+                        return;
+                    }
+
+                    if (assignFileToInput(input, file)) {
+                        openEditor(input);
+                    }
+                });
+            });
 
             if (weaponTypeInput) {
                 weaponTypeInput.addEventListener('input', syncAllGuides);

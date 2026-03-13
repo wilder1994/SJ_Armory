@@ -110,6 +110,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/audit', [ReportController::class, 'audit'])->name('reports.audit');
 
     Route::get('/alerts/documents', [AlertsController::class, 'documents'])->name('alerts.documents');
+    Route::post('/alerts/documents/download', [AlertsController::class, 'downloadBatch'])->name('alerts.documents.download');
 });
 
 require __DIR__.'/auth.php';
