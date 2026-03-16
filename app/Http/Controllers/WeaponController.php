@@ -536,7 +536,7 @@ class WeaponController extends Controller
             'Escopeta',
             'Pistola',
             'Revólver',
-            'Uzi',
+            'Subametralladora',
         ];
     }
 

@@ -21,6 +21,11 @@
                                 {{ __('Armamento') }}
                             </x-nav-link>
                         @endcan
+                        @if (Auth::user()?->isAdmin())
+                            <x-nav-link :href="route('weapon-imports.index')" :active="request()->routeIs('weapon-imports.*')">
+                                {{ __('Subir armas') }}
+                            </x-nav-link>
+                        @endif
                         @can('viewAny', App\Models\Client::class)
                             <x-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.*')">
                                 {{ __('Clientes') }}
@@ -130,6 +135,11 @@
                     {{ __('Armamento') }}
                 </x-responsive-nav-link>
             @endcan
+            @if (Auth::user()?->isAdmin())
+                <x-responsive-nav-link :href="route('weapon-imports.index')" :active="request()->routeIs('weapon-imports.*')">
+                    {{ __('Subir armas') }}
+                </x-responsive-nav-link>
+            @endif
             @can('viewAny', App\Models\Client::class)
                 <x-responsive-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.*')">
                     {{ __('Clientes') }}
@@ -206,4 +216,3 @@
         </div>
     </div>
 </nav>
-

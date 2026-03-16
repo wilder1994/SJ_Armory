@@ -21,14 +21,14 @@
             'canon_disparador_marca' => asset('images/weapon-guides/Revolver cañon-07.svg'),
             'serie' => asset('images/weapon-guides/Revolver Serie-08.svg'),
         ],
-        'uzi' => [
+        'subametralladora' => [
             'lado_derecho' => asset('images/weapon-guides/Uzi lado derecho-13.svg'),
             'lado_izquierdo' => asset('images/weapon-guides/Uzi lado izquierdo-14.svg'),
             'canon_disparador_marca' => asset('images/weapon-guides/Uzi cañon-15.svg'),
             'serie' => asset('images/weapon-guides/Uzi serie-16.svg'),
         ],
     ];
-    $weaponTypes = ['Escopeta', 'Pistola', 'Revólver', 'Uzi'];
+    $weaponTypes = ['Escopeta', 'Pistola', 'Revólver', 'Subametralladora'];
     $photoIndex = 1;
 @endphp
 
@@ -276,8 +276,8 @@
             if (normalized.includes('revolver')) {
                 return 'revolver';
             }
-            if (normalized.includes('uzi')) {
-                return 'uzi';
+            if (normalized.includes('subametralladora') || normalized.includes('uzi')) {
+                return 'subametralladora';
             }
             return '';
         };

@@ -7,6 +7,7 @@ Sistema web de gestion de armamento, asignaciones operativas, transferencias, do
 El proyecto cubre de extremo a extremo:
 
 - Gestion de armas.
+- Carga masiva de armas con validacion previa y ejecucion por lote.
 - Gestion de clientes.
 - Gestion de puestos e instalaciones del cliente.
 - Gestion de trabajadores (escoltas y supervisores).
@@ -32,6 +33,7 @@ Backend:
 - PHPUnit 10
 - Laravel Breeze (auth scaffold)
 - PhpOffice/PhpWord (generacion de documento de renovacion)
+- Lectura nativa de `.xlsx` y `.csv` mediante `ZipArchive` + parser interno
 
 Frontend:
 
@@ -59,7 +61,7 @@ Servicios externos:
 - Persistencia principal en MySQL.
 - Archivos binarios en discos Laravel:
   - `public` para fotos.
-  - `local` para documentos/permiso/renovacion.
+  - `local` para documentos/permiso/renovacion/importaciones.
 
 ## 4. Roles, permisos y niveles
 
@@ -129,13 +131,97 @@ Tipos de arma permitidos en validacion actual:
 - `Escopeta`
 - `Pistola`
 - `Revolver`
-- `Uzi`
+- `Subametralladora`
 
 Tipos de propiedad:
 
 - `company_owned`
 - `leased`
 - `third_party`
+
+### 5.1.1 Subir armas
+
+Controlador: `app/Http/Controllers/WeaponImportController.php`  
+Servicios: `app/Services/WeaponImportService.php`, `app/Services/WeaponImportSpreadsheetReader.php`
+
+Flujo:
+
+- Modulo exclusivo para `ADMIN`.
+- Permite cargar archivos `.xlsx`, `.csv` y `.txt`.
+- El usuario sube el archivo desde modal:
+  - arrastrar,
+  - pegar desde portapapeles,
+  - seleccionar desde el equipo.
+- El sistema crea un lote en estado `draft` y muestra vista previa antes de aplicar cambios.
+- Si el usuario cancela la carga antes de ejecutar:
+  - el lote pendiente se elimina,
+  - el archivo importado se elimina,
+  - la pantalla vuelve a estado limpio para iniciar una nueva carga.
+- Cada fila se clasifica en:
+  - `create`
+  - `update`
+  - `no_change`
+  - `error`
+- Si existe al menos una fila con error, el lote no puede ejecutarse.
+- Si no hay errores, el usuario puede ejecutar el lote y aplicar cambios sobre `weapons`.
+- El modulo conserva historial de lotes ejecutados y solo mantiene un borrador activo durante la revision.
+- La vista principal del modulo se mantiene limpia mientras el lote siga pendiente:
+  - la validacion detallada se revisa solo en el modal,
+  - el resultado detallado solo aparece en el `index` despues de ejecutar.
+
+Reglas de negocio:
+
+- La llave principal de comparacion es `serial_number`.
+- Si la serie no existe:
+  - crea el arma.
+- Si la serie existe y hay cambios:
+  - actualiza solo los campos importables.
+- Si la serie existe y no hay diferencias:
+  - marca la fila como `no_change`.
+- Si faltan columnas o hay datos invalidos:
+  - marca la fila como `error`.
+
+Columnas soportadas:
+
+- `TIPO DE ARMA`
+- `MARCA ARMA`
+- `No. SERIE`
+- `CALIBRE`
+- `CAPACIDAD`
+- `TIPO PERMISO`
+- `No. PERMISO`
+- `FECHA VENCIMIENTO SALVOCONDUCTO`
+
+Normalizaciones incluidas:
+
+- Tipos de arma:
+  - `ESCOPETA` -> `Escopeta`
+  - `PISTOLA` -> `Pistola`
+  - `Revolver` -> `Revolver`
+  - `SUBAMETRALLADORA` -> `Subametralladora`
+  - `UZI` -> `Subametralladora`
+- Tipos de permiso:
+  - `PORTE` -> `porte`
+  - `TENENCIA` -> `tenencia`
+- Fechas:
+  - soporta fechas comunes de Excel (`d/m/Y`, `Y-m-d`, serial numerico Excel).
+
+Campos que actualmente se crean o actualizan por importacion:
+
+- `weapon_type`
+- `brand`
+- `serial_number`
+- `caliber`
+- `capacity`
+- `permit_type`
+- `permit_number`
+- `permit_expires_at`
+
+Campos excluidos por ahora:
+
+- foto del permiso
+- cantidad de municion
+- cantidad de proveedor
 
 ### 5.2 Asignacion a cliente (destino operativo)
 
@@ -337,6 +423,7 @@ Se registran, entre otros:
 - Cierres de asignaciones por transferencia/cambio cliente.
 - Solicitud, aceptacion y rechazo de transferencias.
 - Cambios de cartera.
+- Cargas masivas de armas (`weapon_import_created`, `weapon_import_updated`).
 
 ## 7. Modelo de datos (tablas)
 
@@ -366,6 +453,8 @@ Se registran, entre otros:
 - `files`
 - `weapon_photos`
 - `weapon_documents`
+- `weapon_import_batches`
+- `weapon_import_rows`
 - `audit_logs`
 
 ### Restricciones importantes
@@ -374,6 +463,7 @@ Se registran, entre otros:
 - Unicidad de `weapons.internal_code` y `weapons.serial_number`.
 - Unicidad de `user_clients (user_id, client_id)`.
 - Unicidad de foto por tipo en arma: `weapon_photos (weapon_id, description)`.
+- Indexado por lote/accion y lote/fila en `weapon_import_rows`.
 - Unicidad de activa por arma en asignaciones:
   - `weapon_client_assignments (weapon_id, is_active)`
   - `weapon_post_assignments (weapon_id, is_active)`
@@ -393,6 +483,7 @@ Grupos funcionales:
   - `users.*`, `users.status`.
 - Operacion:
   - `weapons.*`
+  - `weapon-imports.index`, `weapon-imports.preview`, `weapon-imports.execute`, `weapon-imports.discard`
   - `weapons.client_assignments.store`
   - `weapons.internal_assignments.store/retire`
   - `weapons.photos.*`
@@ -412,7 +503,7 @@ Grupos funcionales:
 - Locale:
   - `locale.switch`.
 
-`php artisan route:list` actualmente reporta 87 rutas.
+`php artisan route:list` actualmente reporta 90 rutas.
 
 ## 9. Frontend y UX
 
@@ -446,6 +537,7 @@ Rutas usadas por el dominio:
 - Permiso arma: `storage/app/weapons/{weapon_id}/permits`
 - Documentos arma: `storage/app/weapons/{weapon_id}/documents`
 - Renovacion autogenerada: `storage/app/weapons/{weapon_id}/documents/renovacion_{internal_code}.docx`
+- Archivos de importacion: `storage/app/weapon-imports`
 - Plantilla de renovacion: `resources/templates/PLANTILLA_REVALIDACION.docx`
 - Icono de mapa: `public/images/map/Icono_Ubicacion.png`
 
@@ -505,6 +597,7 @@ Suite actual en `tests/`:
 
 - Unit basica.
 - Feature de autenticacion y perfil (Breeze).
+- Feature basica de vista previa para `Subir armas`.
 
 Comando:
 

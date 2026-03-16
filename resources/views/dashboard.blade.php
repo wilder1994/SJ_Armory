@@ -24,6 +24,24 @@
                     </a>
                 @endcan
 
+                @if (Auth::user()?->isAdmin())
+                    <a href="{{ route('weapon-imports.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-cyan-200 hover:shadow">
+                        <div class="flex items-center gap-4">
+                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-cyan-50 text-cyan-600">
+                                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                                    <path d="M12 16V4" />
+                                    <path d="M8 8l4-4 4 4" />
+                                    <path d="M4 17v1a2 2 0 002 2h12a2 2 0 002-2v-1" />
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="text-base font-semibold text-gray-800">{{ __('Subir armas') }}</div>
+                                <div class="text-xs text-gray-500">{{ __('Carga masiva y validacion previa') }}</div>
+                            </div>
+                        </div>
+                    </a>
+                @endif
+
                 @can('viewAny', App\Models\Client::class)
                     <a href="{{ route('clients.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
                         <div class="flex items-center gap-4">
@@ -188,6 +206,5 @@
         </div>
     </div>
 </x-app-layout>
-
 
 

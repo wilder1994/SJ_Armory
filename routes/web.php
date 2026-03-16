@@ -11,6 +11,7 @@ use App\Http\Controllers\WeaponController;
 use App\Http\Controllers\WeaponClientAssignmentController;
 use App\Http\Controllers\WeaponDocumentController;
 use App\Http\Controllers\WeaponInternalAssignmentController;
+use App\Http\Controllers\WeaponImportController;
 use App\Http\Controllers\WeaponPhotoController;
 use App\Http\Controllers\WeaponTransferController;
 use App\Http\Controllers\MapController;
@@ -62,6 +63,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('users', UserController::class)->except(['show']);
     Route::patch('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.status');
     Route::resource('weapons', WeaponController::class);
+    Route::get('/subir-armas', [WeaponImportController::class, 'index'])->name('weapon-imports.index');
+    Route::post('/subir-armas/preview', [WeaponImportController::class, 'preview'])->name('weapon-imports.preview');
+    Route::post('/subir-armas/{weaponImportBatch}/execute', [WeaponImportController::class, 'execute'])->name('weapon-imports.execute');
+    Route::post('/subir-armas/{weaponImportBatch}/discard', [WeaponImportController::class, 'discard'])->name('weapon-imports.discard');
     Route::post('/weapons/{weapon}/client-assignments', [WeaponClientAssignmentController::class, 'store'])
         ->name('weapons.client_assignments.store');
     Route::get('/weapons/{weapon}/permit', [WeaponController::class, 'permitPhoto'])
