@@ -117,6 +117,7 @@
                     data-placeholder-target="photo_placeholder_{{ $photoIndex }}" />
                 <div class="relative flex h-24 w-full items-center justify-center overflow-hidden rounded border border-dashed border-gray-300 bg-gray-50 text-xs text-gray-500 transition"
                     data-drop-surface>
+                    <div class="sj-paste-proxy" data-paste-proxy contenteditable="true" spellcheck="false"></div>
                     <img id="photo_guide_{{ $photoIndex }}" alt="Guia"
                         class="pointer-events-none hidden absolute inset-0 h-full w-full object-contain p-1 opacity-55" />
                     <span id="photo_placeholder_{{ $photoIndex }}"
@@ -127,7 +128,7 @@
                         {{ __('Arrastra, selecciona o pega foto') }}
                     </span>
                     <img id="photo_preview_{{ $photoIndex }}" alt="Previsualizacion"
-                        class="{{ $photoUrl ? '' : 'hidden' }} relative z-10 h-full w-full rounded object-cover"
+                        class="{{ $photoUrl ? '' : 'hidden' }} relative z-10 h-full w-full rounded bg-gray-50 object-fill"
                         @if ($photoUrl) src="{{ $photoUrl }}" @endif />
                 </div>
                 <div class="mt-1 text-xs text-gray-500">{{ $label }}</div>
@@ -173,11 +174,12 @@
         <label for="permit_photo" class="mt-1 block h-full cursor-pointer" data-drop-zone tabindex="0" title="{{ __('Seleccione, arrastre o pegue una foto') }}">
             <input id="permit_photo" name="permit_photo" type="file" accept="image/*" class="hidden" @if (!empty($requirePermitPhoto)) required @endif
                 data-preview-target="permit_preview" data-placeholder-target="permit_placeholder" />
-            <div class="flex h-full min-h-[12rem] w-full items-center justify-center rounded border border-dashed border-gray-300 bg-gray-50 text-xs text-gray-500 transition"
+            <div class="relative flex h-full min-h-[12rem] w-full items-center justify-center rounded border border-dashed border-gray-300 bg-gray-50 text-xs text-gray-500 transition"
                 data-drop-surface>
+                <div class="sj-paste-proxy" data-paste-proxy contenteditable="true" spellcheck="false"></div>
                 <span id="permit_placeholder">{{ __('Arrastra, selecciona o pega foto') }}</span>
                 <img id="permit_preview" alt="Previsualizacion"
-                    class="hidden h-full w-full rounded object-cover" />
+                    class="hidden h-full w-full rounded bg-gray-50 object-fill" />
             </div>
         </label>
         <x-input-error :messages="$errors->get('permit_photo')" class="mt-2" />
@@ -214,8 +216,8 @@
             </button>
         </div>
         <div class="p-4">
-            <div class="max-h-[70vh] w-full overflow-hidden">
-                <img id="image_editor_image" alt="Editor" class="max-h-[70vh] w-full object-contain" />
+            <div class="h-[70vh] max-h-[70vh] w-full overflow-hidden rounded bg-slate-100">
+                <img id="image_editor_image" alt="Editor" class="block max-h-none max-w-none" />
             </div>
         </div>
         <div class="flex items-center justify-between gap-2 border-t px-4 py-3">
@@ -240,6 +242,31 @@
 @once
     @push('styles')
         <link rel="stylesheet" href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css">
+        <style>
+            .sj-paste-proxy {
+                position: absolute;
+                inset: 0;
+                z-index: 20;
+                background: transparent;
+                border: 0;
+                color: transparent;
+                caret-color: transparent;
+                opacity: 0;
+                font-size: 1px;
+                line-height: 1;
+                padding: 0;
+                margin: 0;
+                outline: none;
+                user-select: none;
+                -webkit-user-select: none;
+                white-space: pre-wrap;
+                word-break: break-word;
+            }
+
+            .sj-paste-proxy::selection {
+                background: transparent;
+            }
+        </style>
     @endpush
 @endonce
 @push('scripts')
@@ -247,10 +274,10 @@
     <script>
         let activeInput = null;
         let cropper = null;
+        let editorSourceFile = null;
+        let editorRotation = 0;
         const photoGuidesByType = @json($photoGuidesByType);
         const dropZones = Array.from(document.querySelectorAll('[data-drop-zone]'));
-        let activePasteZone = null;
-
         const normalizeText = (value) => {
             if (!value) {
                 return '';
@@ -357,29 +384,99 @@
             syncGuideForInput(input);
 	    };
 
-    const openEditor = (input) => {
+    const clearEditorPreviewUrl = () => {
+        if (modalImage.dataset.objectUrl) {
+            URL.revokeObjectURL(modalImage.dataset.objectUrl);
+            delete modalImage.dataset.objectUrl;
+        }
+    };
+
+    const destroyCropper = () => {
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+    };
+
+    const loadImageFromFile = (file) => new Promise((resolve, reject) => {
+        const objectUrl = URL.createObjectURL(file);
+        const image = new Image();
+
+        image.onload = () => {
+            URL.revokeObjectURL(objectUrl);
+            resolve(image);
+        };
+
+        image.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error('No se pudo cargar la imagen.'));
+        };
+
+        image.src = objectUrl;
+    });
+
+    const rebuildCropper = () => {
+        destroyCropper();
+
+        cropper = new Cropper(modalImage, {
+            viewMode: 1,
+            autoCropArea: 1,
+            responsive: true,
+            restore: false,
+            background: false,
+        });
+    };
+
+    const renderEditorImage = async () => {
+        if (!editorSourceFile) {
+            return;
+        }
+
+        const image = await loadImageFromFile(editorSourceFile);
+        const normalizedRotation = ((editorRotation % 360) + 360) % 360;
+        const swapSides = normalizedRotation === 90 || normalizedRotation === 270;
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        if (!context) {
+            return;
+        }
+
+        canvas.width = swapSides ? image.naturalHeight : image.naturalWidth;
+        canvas.height = swapSides ? image.naturalWidth : image.naturalHeight;
+
+        context.translate(canvas.width / 2, canvas.height / 2);
+        context.rotate((normalizedRotation * Math.PI) / 180);
+        context.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2);
+
+        const blob = await new Promise((resolve) => {
+            canvas.toBlob(resolve, editorSourceFile.type || 'image/jpeg', 0.92);
+        });
+
+        if (!blob) {
+            return;
+        }
+
+        clearEditorPreviewUrl();
+        modalImage.dataset.objectUrl = URL.createObjectURL(blob);
+        modalImage.src = modalImage.dataset.objectUrl;
+        rebuildCropper();
+    };
+
+    const openEditor = async (input) => {
         const file = input.files && input.files[0];
         if (!file) {
             return;
         }
 
         activeInput = input;
-        if (modalImage.dataset.objectUrl) {
-            URL.revokeObjectURL(modalImage.dataset.objectUrl);
-        }
-        modalImage.dataset.objectUrl = URL.createObjectURL(file);
-        modalImage.src = modalImage.dataset.objectUrl;
+        editorSourceFile = file;
+        editorRotation = 0;
+
         modal.classList.remove('hidden');
         modal.classList.add('flex');
 
-        if (cropper) {
-            cropper.destroy();
-        }
-
-        cropper = new Cropper(modalImage, {
-            viewMode: 1,
-            autoCropArea: 1,
-        });
+        await renderEditorImage();
     };
 
     const assignFileToInput = (input, file) => {
@@ -406,12 +503,14 @@
         surface.classList.toggle('ring-indigo-200', active);
     };
 
-    const getClipboardImage = (clipboardData) => {
-        const items = Array.from(clipboardData?.items || []);
-        const imageItem = items.find((item) => item.kind === 'file' && item.type.startsWith('image/'));
+        let hoveredPasteZone = null;
 
-        return imageItem ? imageItem.getAsFile() : null;
-    };
+        const getClipboardImage = (clipboardData) => {
+            const items = Array.from(clipboardData?.items || []);
+            const imageItem = items.find((item) => item.kind === 'file' && item.type.startsWith('image/'));
+
+            return imageItem ? imageItem.getAsFile() : null;
+        };
 
     const handleImageSelection = (input, file) => {
         if (!input || !file) {
@@ -432,17 +531,13 @@
     };
 
     const closeEditor = (discardSelection = false) => {
-        if (cropper) {
-            cropper.destroy();
-            cropper = null;
-        }
+        destroyCropper();
         modal.classList.add('hidden');
         modal.classList.remove('flex');
-        if (modalImage.dataset.objectUrl) {
-            URL.revokeObjectURL(modalImage.dataset.objectUrl);
-            delete modalImage.dataset.objectUrl;
-        }
+        clearEditorPreviewUrl();
         modalImage.removeAttribute('src');
+        editorSourceFile = null;
+        editorRotation = 0;
 
         if (discardSelection && activeInput) {
 	            const previewId = activeInput.dataset.previewTarget;
@@ -487,8 +582,22 @@
     closeButton.addEventListener('click', () => closeEditor(true));
     cancelButton.addEventListener('click', () => closeEditor(true));
     cropButton.addEventListener('click', applyCrop);
-    rotateLeftButton.addEventListener('click', () => cropper && cropper.rotate(-90));
-    rotateRightButton.addEventListener('click', () => cropper && cropper.rotate(90));
+    rotateLeftButton.addEventListener('click', async () => {
+        if (!editorSourceFile) {
+            return;
+        }
+
+        editorRotation -= 90;
+        await renderEditorImage();
+    });
+    rotateRightButton.addEventListener('click', async () => {
+        if (!editorSourceFile) {
+            return;
+        }
+
+        editorRotation += 90;
+        await renderEditorImage();
+    });
 
 	        document.querySelectorAll('input[data-preview-target]').forEach((input) => {
 	            input.addEventListener('change', () => openEditor(input));
@@ -496,6 +605,7 @@
 
             dropZones.forEach((zone) => {
                 const input = zone.querySelector('input[type="file"]');
+                const pasteProxy = zone.querySelector('[data-paste-proxy]');
                 if (!input) {
                     return;
                 }
@@ -504,7 +614,7 @@
                     zone.addEventListener(eventName, (event) => {
                         event.preventDefault();
                         event.stopPropagation();
-                        activePasteZone = zone;
+                        hoveredPasteZone = zone;
                         setDropZoneActive(zone, true);
                     });
                 });
@@ -522,7 +632,7 @@
                 zone.addEventListener('drop', (event) => {
                     event.preventDefault();
                     event.stopPropagation();
-                    activePasteZone = zone;
+                    hoveredPasteZone = zone;
                     setDropZoneActive(zone, false);
 
                     const file = event.dataTransfer?.files?.[0];
@@ -533,18 +643,6 @@
                     handleImageSelection(input, file);
                 });
 
-                zone.addEventListener('focus', () => {
-                    activePasteZone = zone;
-                });
-
-                zone.addEventListener('click', () => {
-                    activePasteZone = zone;
-                });
-
-                zone.addEventListener('mouseenter', () => {
-                    activePasteZone = zone;
-                });
-
                 zone.addEventListener('keydown', (event) => {
                     if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();
@@ -552,29 +650,67 @@
                     }
                 });
 
-                zone.addEventListener('paste', (event) => {
-                    const file = getClipboardImage(event.clipboardData);
-                    if (!file) {
-                        return;
-                    }
+                if (pasteProxy) {
+                    zone.addEventListener('mouseenter', () => {
+                        hoveredPasteZone = zone;
+                    });
 
-                    event.preventDefault();
-                    event.stopPropagation();
-                    activePasteZone = zone;
-                    handleImageSelection(input, file);
-                });
+                    zone.addEventListener('mouseleave', () => {
+                        if (hoveredPasteZone === zone) {
+                            hoveredPasteZone = null;
+                        }
+                    });
+
+                    pasteProxy.addEventListener('mousedown', (event) => {
+                        if (event.button === 0) {
+                            event.preventDefault();
+                            input.click();
+                        }
+                    });
+
+                    pasteProxy.addEventListener('focus', () => {
+                        hoveredPasteZone = zone;
+                        pasteProxy.textContent = '';
+                    });
+
+                    pasteProxy.addEventListener('contextmenu', () => {
+                        hoveredPasteZone = zone;
+                        pasteProxy.focus({ preventScroll: true });
+                    });
+
+                    pasteProxy.addEventListener('paste', (event) => {
+                        const file = getClipboardImage(event.clipboardData);
+                        if (!file) {
+                            return;
+                        }
+
+                        event.preventDefault();
+                        event.stopPropagation();
+                        handleImageSelection(input, file);
+                        pasteProxy.textContent = '';
+                    });
+
+                    pasteProxy.addEventListener('blur', () => {
+                        pasteProxy.textContent = '';
+                    });
+                }
             });
 
             document.addEventListener('paste', (event) => {
-                const zone = activePasteZone;
-                const input = zone?.querySelector('input[type="file"]');
                 const file = getClipboardImage(event.clipboardData);
+                if (!file) {
+                    return;
+                }
 
-                if (!zone || !input || !file) {
+                const zone = hoveredPasteZone;
+                const input = zone?.querySelector('input[type="file"]');
+
+                if (!zone || !input) {
                     return;
                 }
 
                 event.preventDefault();
+                event.stopPropagation();
                 handleImageSelection(input, file);
             });
 

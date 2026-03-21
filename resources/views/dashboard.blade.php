@@ -1,210 +1,206 @@
 <x-app-layout>
-    <div class="py-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="mb-6">
-                <h1 class="text-2xl font-semibold text-gray-800">{{ __('Inicio') }}</h1>
-                <p class="text-sm text-gray-500">{{ __('Accesos rápidos a los módulos principales.') }}</p>
-            </div>
+    <div
+        class="sj-dashboard py-8"
+        x-data="dashboardMonitor({ initialData: @js($dashboard), dataUrl: '{{ route('dashboard.metrics') }}' })"
+        x-init="init()"
+    >
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <section class="sj-dashboard-hero">
+                <div>
+                    <p class="sj-dashboard-hero__eyebrow">Centro de monitoreo</p>
+                    <h1 class="sj-dashboard-hero__title">SJ Seguridad Privada LTDA</h1>
+                    <p class="sj-dashboard-hero__subtitle">
+                        <span x-text="dashboard.scope_label"></span>. Consolida inventario, renovación documental, transferencias y novedades operativas en una sola vista.
+                    </p>
+                </div>
 
-            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                @can('viewAny', App\Models\Weapon::class)
-                    <a href="{{ route('weapons.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
-                        <div class="flex items-center gap-4">
-                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
-                                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-                                    <path d="M3 16h8l3-3h6v4H3z" />
-                                    <path d="M6 16v3M10 16v3M16 13V9l3-3h2" />
-                                </svg>
+                <div class="sj-dashboard-hero__meta">
+                    <div class="sj-dashboard-stamp">
+                        <span class="sj-dashboard-stamp__label">Actualizado</span>
+                        <span class="sj-dashboard-stamp__value" x-text="formattedAsOf()"></span>
+                    </div>
+
+                    <div class="sj-dashboard-meta">
+                        <template x-for="meta in dashboard.meta" :key="meta.label">
+                            <div class="sj-metric-chip">
+                                <span class="sj-metric-chip__label" x-text="meta.label"></span>
+                                <span class="sj-metric-chip__value" x-text="formatNumber(meta.value)"></span>
                             </div>
-                            <div>
-                                <div class="text-base font-semibold text-gray-800">{{ __('Armamento') }}</div>
-                                <div class="text-xs text-gray-500">{{ __('Gestión de armas') }}</div>
+                        </template>
+                    </div>
+                </div>
+            </section>
+
+            <section class="sj-dashboard-kpis">
+                <template x-for="kpi in dashboard.kpis" :key="kpi.label">
+                    <article class="sj-kpi-card" :class="`sj-kpi-card--${kpi.tone}`">
+                        <div class="sj-kpi-card__label" x-text="kpi.label"></div>
+                        <div class="sj-kpi-card__value" x-text="formatNumber(kpi.value)"></div>
+                        <div class="sj-kpi-card__helper" x-text="kpi.helper"></div>
+                    </article>
+                </template>
+            </section>
+
+            <section class="sj-dashboard-grid sj-dashboard-grid--primary">
+                <article class="sj-panel">
+                    <div class="sj-panel__head">
+                        <div>
+                            <div class="sj-form-section__title">Responsables</div>
+                            <h2 class="sj-panel__title">Cantidad de armas por responsable</h2>
+                        </div>
+                    </div>
+
+                    <template x-if="dashboard.responsible_chart.items.length">
+                        <div class="sj-bar-list">
+                            <template x-for="item in dashboard.responsible_chart.items" :key="item.label">
+                                <div class="sj-bar-list__row">
+                                    <div class="sj-bar-list__top">
+                                        <span class="sj-bar-list__label" x-text="item.label"></span>
+                                        <span class="sj-bar-list__value" x-text="formatNumber(item.value)"></span>
+                                    </div>
+                                    <div class="sj-bar-list__track">
+                                        <div class="sj-bar-list__fill" :style="`width: ${barWidth(item.value, dashboard.responsible_chart.max)}%`"></div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template x-if="!dashboard.responsible_chart.items.length">
+                        <p class="sj-panel__empty">No hay responsables con armas activas dentro del alcance visible.</p>
+                    </template>
+                </article>
+
+                <article class="sj-panel">
+                    <div class="sj-panel__head">
+                        <div>
+                            <div class="sj-form-section__title">Riesgo documental</div>
+                            <h2 class="sj-panel__title">Estado general de renovación</h2>
+                        </div>
+                    </div>
+
+                    <div class="sj-donut-card">
+                        <div class="sj-donut-wrap">
+                            <div class="sj-donut" :style="dashboard.risk_chart.donut_style">
+                                <div class="sj-donut__center">
+                                    <span class="sj-donut__total" x-text="formatNumber(dashboard.risk_chart.total)"></span>
+                                    <span class="sj-donut__caption">armas</span>
+                                </div>
                             </div>
                         </div>
-                    </a>
-                @endcan
 
-                @if (Auth::user()?->isAdmin())
-                    <a href="{{ route('weapon-imports.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-cyan-200 hover:shadow">
-                        <div class="flex items-center gap-4">
-                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-cyan-50 text-cyan-600">
-                                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-                                    <path d="M12 16V4" />
-                                    <path d="M8 8l4-4 4 4" />
-                                    <path d="M4 17v1a2 2 0 002 2h12a2 2 0 002-2v-1" />
-                                </svg>
-                            </div>
-                            <div>
-                                <div class="text-base font-semibold text-gray-800">{{ __('Subir armas') }}</div>
-                                <div class="text-xs text-gray-500">{{ __('Carga masiva y validacion previa') }}</div>
-                            </div>
+                        <div class="sj-legend">
+                            <template x-for="item in dashboard.risk_chart.items" :key="item.label">
+                                <div class="sj-legend__item">
+                                    <span class="sj-legend__swatch" :style="`background: ${item.color}`"></span>
+                                    <div class="sj-legend__text">
+                                        <span class="sj-legend__label" x-text="item.label"></span>
+                                        <span class="sj-legend__value" x-text="formatNumber(item.value)"></span>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
-                    </a>
-                @endif
+                    </div>
+                </article>
+            </section>
 
-                @can('viewAny', App\Models\Client::class)
-                    <a href="{{ route('clients.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
-                        <div class="flex items-center gap-4">
-                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-                                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-                                    <circle cx="9" cy="8" r="3" />
-                                    <path d="M3 20a6 6 0 0112 0" />
-                                    <circle cx="17" cy="7" r="2" />
-                                    <path d="M17 9a5 5 0 014 4" />
-                                </svg>
-                            </div>
-                            <div>
-                                <div class="text-base font-semibold text-gray-800">{{ __('Clientes') }}</div>
-                                <div class="text-xs text-gray-500">{{ __('Asignaciones y contactos') }}</div>
-                            </div>
+            <section class="sj-dashboard-grid sj-dashboard-grid--secondary">
+                <article class="sj-panel">
+                    <div class="sj-panel__head">
+                        <div>
+                            <div class="sj-form-section__title">Planeación</div>
+                            <h2 class="sj-panel__title">Renovaciones por mes</h2>
                         </div>
-                    </a>
-                @endcan
+                    </div>
 
-                @if (Auth::user()?->isAdmin())
-                    <a href="{{ route('portfolios.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
-                        <div class="flex items-center gap-4">
-                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-amber-50 text-amber-600">
-                                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-                                    <path d="M4 7h16v10H4z" />
-                                    <path d="M8 7V5h8v2" />
-                                </svg>
+                    <div class="sj-column-chart">
+                        <template x-for="item in dashboard.renewal_chart.items" :key="item.label">
+                            <div class="sj-column-chart__item" :class="item.value === 0 ? 'sj-column-chart__item--empty' : ''">
+                                <div class="sj-column-chart__value" x-text="formatNumber(item.value)"></div>
+                                <div class="sj-column-chart__track">
+                                    <template x-if="item.value > 0">
+                                        <div class="sj-column-chart__bar" :style="`height: ${columnHeight(item.value, dashboard.renewal_chart.max)}%`"></div>
+                                    </template>
+                                </div>
+                                <div class="sj-column-chart__label" x-text="item.label"></div>
                             </div>
-                            <div>
-                                <div class="text-base font-semibold text-gray-800">{{ __('Asignaciones') }}</div>
-                                <div class="text-xs text-gray-500">{{ __('Asignación de clientes') }}</div>
-                            </div>
-                        </div>
-                    </a>
-                @endif
+                        </template>
+                    </div>
+                </article>
 
-                @can('viewAny', App\Models\Post::class)
-                    <a href="{{ route('posts.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
-                        <div class="flex items-center gap-4">
-                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-teal-50 text-teal-600">
-                                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-                                    <path d="M3 10h18" />
-                                    <path d="M5 10V6h14v4" />
-                                    <path d="M6 10v8M18 10v8M10 18h4" />
-                                </svg>
-                            </div>
-                            <div>
-                                <div class="text-base font-semibold text-gray-800">{{ __('Puestos') }}</div>
-                                <div class="text-xs text-gray-500">{{ __('Instalaciones fijas') }}</div>
-                            </div>
+                <article class="sj-panel">
+                    <div class="sj-panel__head">
+                        <div>
+                            <div class="sj-form-section__title">Novedades</div>
+                            <h2 class="sj-panel__title">Incidentes activos por observación</h2>
                         </div>
-                    </a>
-                @endcan
+                    </div>
 
-                @can('viewAny', App\Models\Worker::class)
-                    <a href="{{ route('workers.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
-                        <div class="flex items-center gap-4">
-                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-fuchsia-50 text-fuchsia-600">
-                                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-                                    <circle cx="9" cy="8" r="3" />
-                                    <path d="M3 20a6 6 0 0112 0" />
-                                    <path d="M17 7a3 3 0 013 3" />
-                                    <path d="M17 10a5 5 0 014 4" />
-                                </svg>
-                            </div>
-                            <div>
-                                <div class="text-base font-semibold text-gray-800">{{ __('Trabajadores') }}</div>
-                                <div class="text-xs text-gray-500">{{ __('Escoltas y supervisores') }}</div>
-                            </div>
+                    <template x-if="dashboard.incident_chart.total > 0">
+                        <div class="sj-bar-list sj-bar-list--compact">
+                            <template x-for="item in dashboard.incident_chart.items.filter((entry) => entry.value > 0)" :key="item.label">
+                                <div class="sj-bar-list__row">
+                                    <div class="sj-bar-list__top">
+                                        <span class="sj-bar-list__label" x-text="item.label"></span>
+                                        <span class="sj-bar-list__value" x-text="formatNumber(item.value)"></span>
+                                    </div>
+                                    <div class="sj-bar-list__track sj-bar-list__track--soft">
+                                        <div class="sj-bar-list__fill sj-bar-list__fill--custom" :style="`width: ${barWidth(item.value, dashboard.incident_chart.max, 8)}%; background: ${item.color}`"></div>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
-                    </a>
-                @endcan
+                    </template>
 
-                @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsible() || Auth::user()?->isAuditor())
-                    <a href="{{ route('transfers.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
-                        <div class="flex items-center gap-4">
-                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-slate-50 text-slate-600">
-                                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-                                    <path d="M7 7h10l-2-2" />
-                                    <path d="M17 17H7l2 2" />
-                                </svg>
-                            </div>
-                            <div>
-                                <div class="text-base font-semibold text-gray-800">{{ __('Transferencias') }}</div>
-                                <div class="text-xs text-gray-500">{{ __('Envios pendientes') }}</div>
-                            </div>
-                        </div>
-                    </a>
-                @endif
+                    <template x-if="dashboard.incident_chart.total === 0">
+                        <p class="sj-panel__empty">No hay novedades activas registradas en documentos manuales.</p>
+                    </template>
+                </article>
+            </section>
 
-                @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsible() || Auth::user()?->isAuditor())
-                    <a href="{{ route('maps.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
-                        <div class="flex items-center gap-4">
-                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-sky-50 text-sky-600">
-                                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-                                    <path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z" />
-                                    <path d="M9 4v14M15 6v14" />
-                                </svg>
-                            </div>
-                            <div>
-                                <div class="text-base font-semibold text-gray-800">{{ __('Mapa') }}</div>
-                                <div class="text-xs text-gray-500">{{ __('Ubicación de armas') }}</div>
-                            </div>
+            <section class="sj-dashboard-grid sj-dashboard-grid--tertiary">
+                <article class="sj-panel">
+                    <div class="sj-panel__head">
+                        <div>
+                            <div class="sj-form-section__title">Transferencias</div>
+                            <h2 class="sj-panel__title">Estado de solicitudes</h2>
                         </div>
-                    </a>
-                @endif
+                    </div>
 
-                @if (Auth::user()?->isAdmin() || Auth::user()?->isAuditor())
-                    <a href="{{ route('reports.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
-                        <div class="flex items-center gap-4">
-                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-sky-50 text-sky-600">
-                                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-                                    <path d="M4 19h16" />
-                                    <path d="M6 16V8" />
-                                    <path d="M12 16V5" />
-                                    <path d="M18 16v-6" />
-                                </svg>
+                    <div class="sj-stat-list">
+                        <template x-for="item in dashboard.transfer_chart.items" :key="item.label">
+                            <div class="sj-stat-list__item">
+                                <div class="sj-stat-list__meta">
+                                    <span class="sj-stat-list__dot" :style="`background: ${item.color}`"></span>
+                                    <span class="sj-stat-list__label" x-text="item.label"></span>
+                                </div>
+                                <span class="sj-stat-list__value" x-text="formatNumber(item.value)"></span>
                             </div>
-                            <div>
-                                <div class="text-base font-semibold text-gray-800">{{ __('Reportes') }}</div>
-                                <div class="text-xs text-gray-500">{{ __('Consultas y auditoría') }}</div>
-                            </div>
-                        </div>
-                    </a>
-                @endif
+                        </template>
+                    </div>
+                </article>
 
-                @if (Auth::user()?->isAdmin() || Auth::user()?->isAuditor())
-                    <a href="{{ route('alerts.documents') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
-                        <div class="flex items-center gap-4">
-                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-rose-50 text-rose-600">
-                                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-                                    <path d="M12 3v10" />
-                                    <path d="M12 17h.01" />
-                                    <path d="M4.5 20h15L12 4 4.5 20z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <div class="text-base font-semibold text-gray-800">{{ __('Alertas') }}</div>
-                                <div class="text-xs text-gray-500">{{ __('Vencimientos y revalidaciones') }}</div>
-                            </div>
+                <article class="sj-panel">
+                    <div class="sj-panel__head">
+                        <div>
+                            <div class="sj-form-section__title">Distribución</div>
+                            <h2 class="sj-panel__title">Ubicación operativa interna</h2>
                         </div>
-                    </a>
-                @endif
+                    </div>
 
-                @if (Auth::user()?->isAdmin())
-                    <a href="{{ route('users.index') }}" class="group rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow">
-                        <div class="flex items-center gap-4">
-                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-purple-50 text-purple-600">
-                                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-                                    <circle cx="12" cy="8" r="3" />
-                                    <path d="M4 20a8 8 0 0116 0" />
-                                </svg>
+                    <div class="sj-stat-list">
+                        <template x-for="item in dashboard.operational_chart.items" :key="item.label">
+                            <div class="sj-stat-list__item">
+                                <div class="sj-stat-list__meta">
+                                    <span class="sj-stat-list__dot" :style="`background: ${item.color}`"></span>
+                                    <span class="sj-stat-list__label" x-text="item.label"></span>
+                                </div>
+                                <span class="sj-stat-list__value" x-text="formatNumber(item.value)"></span>
                             </div>
-                            <div>
-                                <div class="text-base font-semibold text-gray-800">{{ __('Panel de usuarios') }}</div>
-                                <div class="text-xs text-gray-500">{{ __('Administración básica') }}</div>
-                            </div>
-                        </div>
-                    </a>
-                @endif
-            </div>
+                        </template>
+                    </div>
+                </article>
+            </section>
         </div>
     </div>
 </x-app-layout>
-
-

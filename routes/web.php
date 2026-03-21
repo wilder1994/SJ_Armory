@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AlertsController;
@@ -35,9 +36,12 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
+Route::get('/dashboard/metrics', [DashboardController::class, 'metrics'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.metrics');
 
 Route::post('/locale', function (Request $request) {
     $locale = (string) $request->input('locale', 'es');

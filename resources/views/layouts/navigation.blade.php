@@ -15,7 +15,7 @@
             background: #0b123c;
             height: 4rem;
             min-height: 4rem;
-            overflow: hidden;
+            overflow: visible !important;
         }
 
         .sj-nav .sj-nav-left {
@@ -82,6 +82,7 @@
             background: transparent;
             position: relative;
             z-index: 2;
+            overflow: visible !important;
         }
 
         .sj-nav .sj-nav-links {
@@ -102,6 +103,7 @@
             flex: 0 0 auto;
             margin-left: 0.75rem;
             padding-right: 0.1rem;
+            overflow: visible !important;
         }
 
         .sj-nav .sj-nav-user-button {
