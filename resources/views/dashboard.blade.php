@@ -35,7 +35,7 @@
                 </div>
             </section>
 
-            <section class="sj-dashboard-kpis">
+            <section class="sj-dashboard-kpis sj-dashboard-kpis--compact">
                 <template x-for="item in dashboard.kpis" :key="item.label">
                     <article class="sj-kpi-card" :class="`sj-kpi-card--${item.tone}`">
                         <div class="sj-kpi-card__label" x-text="item.label"></div>
@@ -46,7 +46,7 @@
             </section>
 
             <section class="sj-dashboard-grid sj-dashboard-grid--primary">
-                <article class="sj-panel">
+                <article class="sj-panel sj-panel--responsibles">
                     <div class="sj-panel__head">
                         <div>
                             <div class="sj-form-section__title">Responsables</div>
@@ -78,7 +78,7 @@
                     </template>
                 </article>
 
-                <article class="sj-panel">
+                <article class="sj-panel sj-panel--risk-summary">
                     <div class="sj-panel__head">
                         <div>
                             <div class="sj-form-section__title">Riesgo</div>
@@ -142,7 +142,7 @@
                     <template x-if="dashboard.renewal_chart.items.length">
                         <div class="sj-column-chart-wrap">
                             <div class="sj-column-chart">
-                                <template x-for="item in dashboard.renewal_chart.items" :key="item.label">
+                                <template x-for="item in dashboard.renewal_chart.items" :key="item.key || item.label">
                                     <div class="sj-column-chart__item">
                                         <div class="sj-column-chart__value" x-text="formatNumber(item.value)"></div>
                                         <div class="sj-column-chart__track">
@@ -173,13 +173,13 @@
 
                     <div class="sj-stat-list sj-stat-list--compact">
                         <template x-for="item in dashboard.incident_chart.items" :key="item.label">
-                            <div class="sj-stat-list__item">
+                            <a class="sj-stat-list__item block hover:bg-slate-50" :href="item.url">
                                 <div class="sj-stat-list__meta">
                                     <span class="sj-stat-list__dot" :style="`background:${item.color}`"></span>
                                     <span class="sj-stat-list__label" x-text="item.label"></span>
                                 </div>
                                 <span class="sj-stat-list__value" x-text="formatNumber(item.value)"></span>
-                            </div>
+                            </a>
                         </template>
                     </div>
                 </article>

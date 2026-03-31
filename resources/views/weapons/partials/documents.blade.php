@@ -1,7 +1,11 @@
 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
     <div class="p-6 text-gray-900">
-        <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold">{{ __('Documentos') }}</h3>
+        <div class="flex items-center justify-between gap-4">
+            <div>
+                <h3 class="text-lg font-semibold">{{ __('Documentos') }}</h3>
+                <p class="mt-1 text-sm text-slate-500">{{ __('Los documentos manuales soportan la operación interna. Para hurtos, pérdidas o bajas usa el módulo de Novedades.') }}</p>
+            </div>
+
             @can('update', $weapon)
                 @php
                     $statusOptions = [
@@ -11,7 +15,7 @@
                 @endphp
                 <form method="POST" action="{{ route('weapons.documents.store', $weapon) }}" enctype="multipart/form-data" class="flex flex-wrap items-center gap-2">
                     @csrf
-                    <label class="inline-flex items-center rounded border border-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
+                    <label class="inline-flex cursor-pointer items-center rounded border border-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50">
                         <span class="mr-2">{{ __('Seleccionar archivo') }}</span>
                         <span class="text-xs text-gray-500" data-document-file-name>{{ __('Ningún archivo') }}</span>
                         <input type="file" name="document" required class="hidden" accept=".pdf,.doc,.docx,image/jpeg,image/png,image/webp" data-document-file-input>
@@ -28,9 +32,6 @@
                         <option value="En Armerillo" @selected(old('observations') === 'En Armerillo')>{{ __('En Armerillo') }}</option>
                         <option value="En Mantenimiento" @selected(old('observations') === 'En Mantenimiento')>{{ __('En Mantenimiento') }}</option>
                         <option value="Para Mantenimiento" @selected(old('observations') === 'Para Mantenimiento')>{{ __('Para Mantenimiento') }}</option>
-                        <option value="Hurtada" @selected(old('observations') === 'Hurtada')>{{ __('Hurtada') }}</option>
-                        <option value="Perdida" @selected(old('observations') === 'Perdida')>{{ __('Perdida') }}</option>
-                        <option value="Dar de Baja" @selected(old('observations') === 'Dar de Baja')>{{ __('Dar de Baja') }}</option>
                     </select>
                     <x-primary-button class="text-xs">
                         {{ __('Subir') }}
@@ -111,7 +112,3 @@
         });
     })();
 </script>
-
-
-
-

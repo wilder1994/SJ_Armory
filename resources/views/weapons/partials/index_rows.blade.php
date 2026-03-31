@@ -1,18 +1,32 @@
-﻿@forelse ($weapons as $weapon)
+@forelse ($weapons as $weapon)
     @php
         $renewalDocument = $weapon->documents->firstWhere('is_renewal', true) ?? $weapon->documents->firstWhere('is_permit', true);
         $renewalAlert = \App\Support\WeaponDocumentAlert::forComplianceDocument($renewalDocument);
         $manualInProcess = $weapon->documents
             ->filter(fn ($doc) => !($doc->is_permit || $doc->is_renewal))
             ->first(fn ($doc) => ($doc->status ?? '') === 'En proceso');
+        $openIncident = $weapon->openIncidents->first();
         $internalAssignment = $weapon->activePostAssignment ?? $weapon->activeWorkerAssignment;
         $imprintChecked = $weapon->imprint_month === now()->format('Y-m');
         $canToggleImprint = auth()->user()?->isAdmin();
-        $rowClass = $manualInProcess ? 'bg-red-100' : ($renewalAlert['row_class'] ?? '');
-        $statusText = $manualInProcess
-            ? trim(($manualInProcess->document_name ?: 'Documento') . ': ' . ($manualInProcess->observations ?: 'En proceso'))
-            : ($renewalAlert['observation'] !== '-' ? $renewalAlert['observation'] : ($weapon->activeClientAssignment ? __('Asignada') : __('Sin destino')));
-        $statusClass = $manualInProcess ? 'text-red-700' : ($renewalAlert['text_class'] ?? '');
+        $rowClass = $openIncident ? 'bg-red-50' : ($manualInProcess ? 'bg-red-100' : ($renewalAlert['row_class'] ?? ''));
+        $statusText = $openIncident
+            ? trim(($openIncident->type?->name ?? __('Novedad')) . ($openIncident->modality ? ': ' . $openIncident->modality->name : ''))
+            : ($manualInProcess
+                ? trim(($manualInProcess->document_name ?: 'Documento') . ': ' . ($manualInProcess->observations ?: 'En proceso'))
+                : ($renewalAlert['observation'] !== '-' ? $renewalAlert['observation'] : ($weapon->activeClientAssignment ? __('Asignada') : __('Sin destino'))));
+        $statusClass = $openIncident ? 'text-red-700' : ($manualInProcess ? 'text-red-700' : ($renewalAlert['text_class'] ?? ''));
+        $incidentTone = $openIncident
+            ? 'danger'
+            : ($manualInProcess
+                ? 'danger'
+            : (($renewalAlert['severity'] ?? 0) >= 3
+                ? 'danger'
+                : (($renewalAlert['severity'] ?? 0) >= 2
+                    ? 'warning'
+                    : (($renewalAlert['severity'] ?? 0) >= 1
+                        ? 'notice'
+                        : ($weapon->activeClientAssignment || $weapon->activePostAssignment || $weapon->activeWorkerAssignment ? 'ok' : 'neutral')))));
         $destinationLabel = '-';
         if ($weapon->activePostAssignment) {
             $destinationLabel = $weapon->activePostAssignment->post?->name ?? '-';
@@ -25,9 +39,7 @@
         data-weapon-id="{{ $weapon->id }}"
         data-show-url="{{ route('weapons.show', $weapon) }}"
         data-edit-url="{{ route('weapons.edit', $weapon) }}"
-        data-delete-url="{{ route('weapons.destroy', $weapon) }}"
         data-can-edit="{{ auth()->user()?->can('update', $weapon) ? '1' : '0' }}"
-        data-can-delete="{{ auth()->user()?->can('delete', $weapon) ? '1' : '0' }}"
     >
         <td class="px-3 py-2 text-center whitespace-nowrap" data-searchable="false">
             <input
@@ -47,7 +59,10 @@
         <td class="px-3 py-2 whitespace-nowrap">{{ $weapon->permit_number ?? '-' }}</td>
         <td class="px-3 py-2 whitespace-nowrap">{{ $weapon->permit_expires_at?->format('Y-m-d') ?? '-' }}</td>
         <td class="px-3 py-2 whitespace-nowrap">
-            <span class="{{ $statusClass }}">{{ $statusText }}</span>
+            <span class="weapon-incident-status">
+                <span class="weapon-incident-status__dot weapon-incident-status__dot--{{ $incidentTone }}" title="{{ $statusText }}"></span>
+                <span class="{{ $statusClass }}">{{ $statusText }}</span>
+            </span>
         </td>
         <td class="px-3 py-2 whitespace-nowrap text-center">
             {{ $internalAssignment?->ammo_count ?? '-' }}
@@ -77,6 +92,3 @@
         </td>
     </tr>
 @endforelse
-
-
-

@@ -1,4 +1,4 @@
-﻿<x-app-layout>
+<x-app-layout>
     <x-slot name="header">
         <div class="weapon-header">
             <div class="weapon-header__row">
@@ -7,7 +7,7 @@
                         {{ Auth::user()->isResponsible() && !Auth::user()->isAdmin() ? __('Mis armas') : __('Armamento') }}
                     </h2>
                     <p class="mt-1 text-sm text-slate-500">
-                        {{ __('Selecciona una fila para ver, editar o eliminar. Usa la selección múltiple para exportar relaciones.') }}
+                        {{ __('Selecciona una fila para ver o editar. Usa la selección múltiple para exportar relaciones operativas. Las armas con novedad bloqueante se consultan desde historial y novedades.') }}
                     </p>
                 </div>
 
@@ -30,15 +30,6 @@
                         >
                             {{ __('Editar') }}
                         </a>
-
-                        <button
-                            type="button"
-                            id="weapon-delete-action"
-                            class="weapon-toolbar-action weapon-toolbar-action-danger is-disabled"
-                            aria-disabled="true"
-                        >
-                            {{ __('Eliminar') }}
-                        </button>
                     @endif
 
                     @can('create', App\Models\Weapon::class)
@@ -103,15 +94,31 @@
 
     <div class="py-8">
         <div class="w-full px-4 sm:px-6 lg:px-8 pb-20">
+            @php
+                $hasWeaponFilters = collect($filters)->reject(function ($value, $key) {
+                    if ($key === 'inventory_scope') {
+                        return ($value ?? 'operational') === 'operational';
+                    }
+
+                    return empty($value);
+                })->isNotEmpty();
+            @endphp
+
             @if (session('status'))
                 <div class="mb-4 rounded-xl bg-green-50 p-3 text-sm text-green-700">
                     {{ session('status') }}
                 </div>
             @endif
 
+            @if ($errors->has('weapon'))
+                <div class="mb-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">
+                    {{ $errors->first('weapon') }}
+                </div>
+            @endif
+
             <div
                 id="weapons-filters-panel"
-                class="{{ collect($filters)->filter()->isNotEmpty() ? '' : 'hidden' }} mb-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+                class="{{ $hasWeaponFilters ? '' : 'hidden' }} mb-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
             >
                 <div class="mb-4 flex items-center justify-between gap-4">
                     <div>
@@ -121,6 +128,15 @@
                 </div>
 
                 <form id="weapons-filters-form" class="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+                    <div>
+                        <label for="filter-inventory-scope" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Inventario') }}</label>
+                        <select id="filter-inventory-scope" name="inventory_scope" class="w-full rounded-xl border-slate-300 text-sm shadow-sm">
+                            <option value="operational" @selected(($filters['inventory_scope'] ?? 'operational') === 'operational')>{{ __('Operativas') }}</option>
+                            <option value="all" @selected(($filters['inventory_scope'] ?? null) === 'all')>{{ __('Todas') }}</option>
+                            <option value="non_operational" @selected(($filters['inventory_scope'] ?? null) === 'non_operational')>{{ __('No operativas') }}</option>
+                        </select>
+                    </div>
+
                     <div class="xl:col-span-2">
                         <label for="filter-client" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Cliente') }}</label>
                         <select id="filter-client" name="client_id" class="w-full rounded-xl border-slate-300 text-sm shadow-sm">
@@ -236,10 +252,6 @@
         </div>
     </div>
 
-    <form id="weapon-delete-form" method="POST" class="hidden">
-        @csrf
-        @method('DELETE')
-    </form>
 </x-app-layout>
 
 <style>
@@ -316,6 +328,10 @@
 
     .weapon-header__search {
         max-width: 46rem;
+    }
+
+    .weapon-header__intro p {
+        display: none;
     }
 
     .weapon-header__actions,
@@ -483,8 +499,6 @@
         const filtersReset = document.getElementById('weapons-filters-reset');
         const viewAction = document.getElementById('weapon-view-action');
         const editAction = document.getElementById('weapon-edit-action');
-        const deleteAction = document.getElementById('weapon-delete-action');
-        const deleteForm = document.getElementById('weapon-delete-form');
         const selectedCount = document.getElementById('weapons-selected-count');
         const exportFilteredForm = document.getElementById('weapons-export-filtered-form');
         const exportFilteredInputs = document.getElementById('weapons-export-filtered-inputs');
@@ -497,7 +511,7 @@
             return;
         }
 
-        const filterFieldNames = ['client_id', 'responsible_user_id', 'weapon_type', 'destination', 'permit_expires_from', 'permit_expires_to'];
+        const filterFieldNames = ['inventory_scope', 'client_id', 'responsible_user_id', 'weapon_type', 'destination', 'permit_expires_from', 'permit_expires_to'];
         const exportSelection = new Set();
         let selectedWeaponId = null;
 
@@ -611,10 +625,6 @@
                 setDisabledState(editAction, true);
             }
 
-            if (deleteAction) {
-                deleteForm.removeAttribute('action');
-                setDisabledState(deleteAction, true);
-            }
         };
 
         const setSelectedRow = (row) => {
@@ -633,10 +643,6 @@
                 setDisabledState(editAction, row.dataset.canEdit !== '1');
             }
 
-            if (deleteAction) {
-                deleteForm.action = row.dataset.deleteUrl;
-                setDisabledState(deleteAction, row.dataset.canDelete !== '1');
-            }
         };
 
         const syncExportCheckboxes = () => {
@@ -752,18 +758,6 @@
                 form.submit();
             }
         });
-
-        if (deleteAction) {
-            deleteAction.addEventListener('click', () => {
-                if (deleteAction.classList.contains('is-disabled') || !deleteForm.action) {
-                    return;
-                }
-
-                if (confirm(@js(__('¿Eliminar arma seleccionada?')))) {
-                    deleteForm.submit();
-                }
-            });
-        }
 
         exportFilteredForm.addEventListener('submit', () => {
             syncExportForms();

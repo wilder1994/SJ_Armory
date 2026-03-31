@@ -1,42 +1,55 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Reportes') }}
-        </h2>
+        <div>
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                {{ __('Reportes') }}
+            </h2>
+            <p class="mt-1 text-sm text-slate-500">
+                {{ __('Centro gerencial para revisar estado, historial y novedades operativas.') }}
+            </p>
+        </div>
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <a href="{{ route('reports.assignments') }}" class="rounded border border-gray-200 p-4 hover:border-indigo-200">
-                            <div class="text-sm font-semibold">{{ __('Armas por cliente') }}</div>
-                            <div class="text-xs text-gray-500">{{ __('Destino activo') }}</div>
-                        </a>
-                        <a href="{{ route('reports.no_destination') }}" class="rounded border border-gray-200 p-4 hover:border-indigo-200">
-                            <div class="text-sm font-semibold">{{ __('Armas sin destino') }}</div>
-                            <div class="text-xs text-gray-500">{{ __('Sin asignación activa') }}</div>
-                        </a>
-                        <a href="{{ route('reports.history') }}" class="rounded border border-gray-200 p-4 hover:border-indigo-200">
-                            <div class="text-sm font-semibold">{{ __('Historial por arma') }}</div>
-                            <div class="text-xs text-gray-500">{{ __('Destino + documentos') }}</div>
-                        </a>
-                        <a href="{{ route('reports.audit') }}" class="rounded border border-gray-200 p-4 hover:border-indigo-200">
-                            <div class="text-sm font-semibold">{{ __('Auditoría reciente') }}</div>
-                            <div class="text-xs text-gray-500">{{ __('Últimos 30/90 días') }}</div>
-                        </a>
-                        <a href="{{ route('alerts.documents') }}" class="rounded border border-gray-200 p-4 hover:border-indigo-200">
-                            <div class="text-sm font-semibold">{{ __('Alertas documentales') }}</div>
-                            <div class="text-xs text-gray-500">{{ __('Vencimientos y revalidaciones') }}</div>
-                        </a>
-                    </div>
-                </div>
+        <div class="max-w-7xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <a href="{{ route('reports.assignments') }}" class="sj-report-card">
+                    <span class="sj-report-card__eyebrow">{{ __('Consulta') }}</span>
+                    <div class="sj-report-card__title">{{ __('Armas por cliente') }}</div>
+                    <div class="sj-report-card__subtitle">{{ __('Destino activo y responsable asignado.') }}</div>
+                </a>
+
+                <a href="{{ route('reports.no_destination') }}" class="sj-report-card">
+                    <span class="sj-report-card__eyebrow">{{ __('Control') }}</span>
+                    <div class="sj-report-card__title">{{ __('Armas sin destino') }}</div>
+                    <div class="sj-report-card__subtitle">{{ __('Inventario que requiere seguimiento operativo.') }}</div>
+                </a>
+
+                <a href="{{ route('reports.history') }}" class="sj-report-card">
+                    <span class="sj-report-card__eyebrow">{{ __('Seguimiento') }}</span>
+                    <div class="sj-report-card__title">{{ __('Historial por arma') }}</div>
+                    <div class="sj-report-card__subtitle">{{ __('Asignaciones, documentos y lectura de novedades.') }}</div>
+                </a>
+
+                <a href="{{ route('reports.audit') }}" class="sj-report-card">
+                    <span class="sj-report-card__eyebrow">{{ __('Trazabilidad') }}</span>
+                    <div class="sj-report-card__title">{{ __('Auditoria reciente') }}</div>
+                    <div class="sj-report-card__subtitle">{{ __('Ultimos cambios y actividad del sistema.') }}</div>
+                </a>
+
+                <a href="{{ route('alerts.documents') }}" class="sj-report-card">
+                    <span class="sj-report-card__eyebrow">{{ __('Prevencion') }}</span>
+                    <div class="sj-report-card__title">{{ __('Alertas documentales') }}</div>
+                    <div class="sj-report-card__subtitle">{{ __('Vencimientos, revalidaciones y documentos vigentes.') }}</div>
+                </a>
+
+                <a href="{{ route('reports.weapon-incidents.index') }}" class="sj-report-card sj-report-card--accent">
+                    <span class="sj-report-card__eyebrow">{{ __('Novedades') }}</span>
+                    <div class="sj-report-card__title">{{ __('Panel gerencial') }}</div>
+                    <div class="sj-report-card__subtitle">{{ __('Incidentes por tipo, modalidad y arma.') }}</div>
+                    <span class="sj-report-card__footer">{{ __('Panel gerencial') }}</span>
+                </a>
             </div>
         </div>
     </div>
 </x-app-layout>
-
-
-
-

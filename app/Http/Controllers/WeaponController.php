@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
-use App\Models\File;
 use App\Models\Client;
+use App\Models\File;
+use App\Models\IncidentType;
 use App\Models\User;
 use App\Models\Weapon;
+use App\Models\WeaponIncident;
 use App\Models\WeaponPhoto;
 use App\Services\WeaponDocumentService;
 use App\Support\WeaponDocumentAlert;
@@ -20,6 +22,7 @@ use Throwable;
 
 class WeaponController extends Controller
 {
+
     public function __construct()
     {
         $this->authorizeResource(Weapon::class, 'weapon');
@@ -29,9 +32,12 @@ class WeaponController extends Controller
     {
         $search = trim((string) $request->input('q', ''));
         $filters = $this->filtersFromRequest($request);
-        $weapons = $this->buildIndexQuery($request)
-            ->with($this->indexRelationships())
-            ->orderByDesc('id')
+        $query = $this->buildIndexQuery($request)
+            ->with($this->indexRelationships());
+
+        $this->applyInventoryOrdering($query);
+
+        $weapons = $query
             ->paginate(50)
             ->withQueryString();
 
@@ -45,6 +51,8 @@ class WeaponController extends Controller
         [$clients, $responsibles] = $this->indexFilterOptions($request->user());
         $weaponTypes = $this->weaponTypeOptions();
         $destinationOptions = $this->destinationOptions();
+        $incidentTypes = IncidentType::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get();
+        $incidentStatusOptions = WeaponIncident::statusOptions();
 
         return view('weapons.index', compact(
             'weapons',
@@ -54,6 +62,8 @@ class WeaponController extends Controller
             'responsibles',
             'weaponTypes',
             'destinationOptions',
+            'incidentTypes',
+            'incidentStatusOptions',
         ));
     }
 
@@ -69,8 +79,9 @@ class WeaponController extends Controller
         $this->authorize('viewAny', Weapon::class);
 
         $query = $this->buildIndexQuery($request)
-            ->with($this->indexRelationships())
-            ->orderByDesc('id');
+            ->with($this->indexRelationships());
+
+        $this->applyInventoryOrdering($query);
 
         return $this->streamWeaponsExport(
             $query->get(),
@@ -96,11 +107,16 @@ class WeaponController extends Controller
         $query = Weapon::query()
             ->whereIn('id', $weaponIds);
 
+        $filters = $this->filtersFromRequest($request);
+
+        $this->applyInventoryScope($query, $filters['inventory_scope']);
         $this->applyRoleScope($query, $request->user());
 
+        $query->with($this->indexRelationships());
+
+        $this->applyInventoryOrdering($query);
+
         $weapons = $query
-            ->with($this->indexRelationships())
-            ->orderByDesc('id')
             ->get();
 
         if ($weapons->count() !== count($weaponIds)) {
@@ -322,7 +338,15 @@ class WeaponController extends Controller
                 ->values()
         );
 
-        return view('weapons.show', compact('weapon', 'ownershipTypes', 'responsibles', 'posts', 'workers', 'clientOptions', 'clientResponsibleMap'));
+        return view('weapons.show', compact(
+            'weapon',
+            'ownershipTypes',
+            'responsibles',
+            'posts',
+            'workers',
+            'clientOptions',
+            'clientResponsibleMap',
+        ));
     }
 
     public function permitPhoto(Weapon $weapon)
@@ -541,16 +565,16 @@ class WeaponController extends Controller
     {
         AuditLog::create([
             'user_id' => request()->user()?->id,
-            'action' => 'weapon_deleted',
+            'action' => 'weapon_delete_blocked',
             'auditable_type' => Weapon::class,
             'auditable_id' => $weapon->id,
             'before' => $weapon->only(['internal_code', 'serial_number', 'weapon_type', 'caliber', 'brand', 'capacity']),
             'after' => null,
         ]);
 
-        $weapon->delete();
-
-        return redirect()->route('weapons.index')->with('status', 'Arma eliminada.');
+        return redirect()
+            ->route('weapons.show', $weapon)
+            ->with('status', 'La eliminacion fisica de armas esta deshabilitada. Usa historial y novedades para mantener la trazabilidad.');
     }
 
     private function ownershipOptions(): array
@@ -567,7 +591,7 @@ class WeaponController extends Controller
         return [
             'Escopeta',
             'Pistola',
-            'Revólver',
+            'RevÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³lver',
             'Subametralladora',
         ];
     }
@@ -585,12 +609,29 @@ class WeaponController extends Controller
     private function buildIndexQuery(Request $request): Builder
     {
         $query = Weapon::query();
+        $filters = $this->filtersFromRequest($request);
 
+        $this->applyInventoryScope($query, $filters['inventory_scope']);
         $this->applyRoleScope($query, $request->user());
         $this->applySearch($query, trim((string) $request->input('q', '')));
-        $this->applyFilters($query, $this->filtersFromRequest($request));
+        $this->applyFilters($query, $filters);
 
         return $query;
+    }
+
+    private function applyInventoryScope(Builder $query, string $scope): void
+    {
+        switch ($scope) {
+            case 'all':
+                return;
+            case 'non_operational':
+                $query->nonOperationalInventory();
+                return;
+            case 'operational':
+            default:
+                $query->operationalInventory();
+                return;
+        }
     }
 
     private function applyRoleScope(Builder $query, User $user): void
@@ -633,6 +674,26 @@ class WeaponController extends Controller
         });
     }
 
+    private function applyInventoryOrdering(Builder $query): void
+    {
+        $activeClientName = Client::query()
+            ->select('clients.name')
+            ->join('weapon_client_assignments as active_assignment', 'active_assignment.client_id', '=', 'clients.id')
+            ->whereColumn('active_assignment.weapon_id', 'weapons.id')
+            ->where('active_assignment.is_active', true)
+            ->orderByDesc('active_assignment.start_at')
+            ->orderByDesc('active_assignment.id')
+            ->limit(1);
+
+        $query
+            ->addSelect(['active_client_name' => $activeClientName])
+            ->orderByRaw('CASE WHEN weapons.permit_expires_at IS NULL THEN 1 ELSE 0 END')
+            ->orderBy('weapons.permit_expires_at')
+            ->orderByRaw('CASE WHEN active_client_name IS NULL THEN 1 ELSE 0 END')
+            ->orderBy('active_client_name')
+            ->orderByDesc('weapons.id');
+    }
+
     private function applyFilters(Builder $query, array $filters): void
     {
         if ($filters['client_id']) {
@@ -649,6 +710,18 @@ class WeaponController extends Controller
 
         if ($filters['weapon_type']) {
             $query->where('weapon_type', $filters['weapon_type']);
+        }
+
+        if ($filters['incident_type_id']) {
+            $query->whereHas('openIncidents', function (Builder $incidentQuery) use ($filters) {
+                $incidentQuery->where('incident_type_id', $filters['incident_type_id']);
+            });
+        }
+
+        if ($filters['incident_status']) {
+            $query->whereHas('incidents', function (Builder $incidentQuery) use ($filters) {
+                $incidentQuery->where('status', $filters['incident_status']);
+            });
         }
 
         if ($filters['permit_expires_from']) {
@@ -683,10 +756,19 @@ class WeaponController extends Controller
 
     private function filtersFromRequest(Request $request): array
     {
+        $inventoryScope = trim((string) $request->input('inventory_scope', 'operational')) ?: 'operational';
+
+        if (!in_array($inventoryScope, ['operational', 'all', 'non_operational'], true)) {
+            $inventoryScope = 'operational';
+        }
+
         return [
+            'inventory_scope' => $inventoryScope,
             'client_id' => $request->filled('client_id') ? (int) $request->input('client_id') : null,
             'responsible_user_id' => $request->filled('responsible_user_id') ? (int) $request->input('responsible_user_id') : null,
             'weapon_type' => trim((string) $request->input('weapon_type', '')) ?: null,
+            'incident_type_id' => $request->filled('incident_type_id') ? (int) $request->input('incident_type_id') : null,
+            'incident_status' => trim((string) $request->input('incident_status', '')) ?: null,
             'permit_expires_from' => trim((string) $request->input('permit_expires_from', '')) ?: null,
             'permit_expires_to' => trim((string) $request->input('permit_expires_to', '')) ?: null,
             'destination' => trim((string) $request->input('destination', '')) ?: null,
@@ -701,6 +783,10 @@ class WeaponController extends Controller
             'activePostAssignment.post',
             'activeWorkerAssignment.worker',
             'documents',
+            'openIncidents.type',
+            'openIncidents.modality',
+            'operationalBlockingIncidents.type',
+            'operationalBlockingIncidents.modality',
         ];
     }
 
@@ -730,14 +816,15 @@ class WeaponController extends Controller
             'Calibre',
             'Capacidad',
             'Tipo de permiso',
-            'N° de permiso',
+            'NÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â° de permiso',
             'Vence',
             'Estado',
-            'Cant. munición',
+            'Novedad activa',
+            'Cant. municiÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n',
             'Cant. proveedor',
             'Responsable',
             'Puesto o trabajador',
-            'Cédula',
+            'CÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©dula',
             'Impronta',
         ];
 
@@ -764,12 +851,16 @@ class WeaponController extends Controller
         $manualInProcess = $weapon->documents
             ->filter(fn ($doc) => !($doc->is_permit || $doc->is_renewal))
             ->first(fn ($doc) => ($doc->status ?? '') === 'En proceso');
+        $openIncident = $weapon->openIncidents->first();
         $internalAssignment = $weapon->activePostAssignment ?? $weapon->activeWorkerAssignment;
         $statusText = $manualInProcess
             ? trim(($manualInProcess->document_name ?: 'Documento') . ': ' . ($manualInProcess->observations ?: 'En proceso'))
             : ($renewalAlert['observation'] !== '-'
                 ? $renewalAlert['observation']
                 : ($weapon->activeClientAssignment ? 'Asignada' : 'Sin destino'));
+        $incidentText = $openIncident
+            ? trim(($openIncident->type?->name ?? 'Novedad') . ($openIncident->modality ? ' / ' . $openIncident->modality->name : ''))
+            : 'Sin novedades';
 
         $destination = '-';
         if ($weapon->activePostAssignment) {
@@ -789,6 +880,7 @@ class WeaponController extends Controller
             $weapon->permit_number ?? '-',
             $weapon->permit_expires_at?->format('Y-m-d') ?? '-',
             $statusText,
+            $incidentText,
             $internalAssignment?->ammo_count ?? '-',
             $internalAssignment?->provider_count ?? '-',
             $weapon->activeClientAssignment?->responsible?->name ?? '-',

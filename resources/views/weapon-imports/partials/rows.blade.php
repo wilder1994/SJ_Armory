@@ -42,21 +42,21 @@
         @endforeach
     </div>
 
-    <div class="rounded-lg border border-gray-200 bg-white">
-        <table class="min-w-full divide-y divide-gray-200 text-sm">
+    <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+        <table class="min-w-full divide-y divide-gray-200 text-sm min-w-[1200px]">
             <thead class="bg-gray-50">
                 <tr>
                     <th class="sticky top-0 z-10 bg-gray-50 px-3 py-2 text-left font-medium text-gray-600">Fila</th>
-                    <th class="sticky top-0 z-10 bg-gray-50 px-3 py-2 text-left font-medium text-gray-600">Accion</th>
+                    <th class="sticky top-0 z-10 bg-gray-50 px-3 py-2 text-left font-medium text-gray-600">Acción</th>
                     <th class="sticky top-0 z-10 bg-gray-50 px-3 py-2 text-left font-medium text-gray-600">Tipo</th>
                     <th class="sticky top-0 z-10 bg-gray-50 px-3 py-2 text-left font-medium text-gray-600">Marca</th>
                     <th class="sticky top-0 z-10 bg-gray-50 px-3 py-2 text-left font-medium text-gray-600">Serie</th>
                     <th class="sticky top-0 z-10 bg-gray-50 px-3 py-2 text-left font-medium text-gray-600">Calibre</th>
                     <th class="sticky top-0 z-10 bg-gray-50 px-3 py-2 text-left font-medium text-gray-600">Capacidad</th>
-                    <th class="sticky top-0 z-10 bg-gray-50 px-3 py-2 text-left font-medium text-gray-600">Tipo permiso</th>
-                    <th class="sticky top-0 z-10 bg-gray-50 px-3 py-2 text-left font-medium text-gray-600">No. permiso</th>
+                    <th class="sticky top-0 z-10 bg-gray-50 px-3 py-2 text-left font-medium text-gray-600">Tipo de permiso</th>
+                    <th class="sticky top-0 z-10 bg-gray-50 px-3 py-2 text-left font-medium text-gray-600">N.º de permiso</th>
                     <th class="sticky top-0 z-10 bg-gray-50 px-3 py-2 text-left font-medium text-gray-600">Fecha vencimiento</th>
-                    <th class="sticky top-0 z-10 bg-gray-50 px-3 py-2 text-left font-medium text-gray-600">Observacion</th>
+                    <th class="sticky top-0 z-10 bg-gray-50 px-3 py-2 text-left font-medium text-gray-600">Observación</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
@@ -99,3 +99,4 @@
         </table>
     </div>
 </div>
+

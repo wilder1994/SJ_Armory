@@ -21,38 +21,26 @@ class WeaponImportController extends Controller
         });
     }
 
-    public function index(Request $request)
+    public function index()
     {
-        $selectedBatchId = $request->integer('batch');
-
-        $latestDraftIds = WeaponImportBatch::query()
-            ->selectRaw('MAX(id)')
-            ->where('status', 'draft')
-            ->groupBy('uploaded_by');
-
         $batches = WeaponImportBatch::query()
             ->with(['file', 'uploadedBy', 'executedBy'])
-            ->where(function ($query) use ($latestDraftIds) {
-                $query->where('status', 'executed')
-                    ->orWhereIn('id', $latestDraftIds);
-            })
+            ->where('status', 'executed')
             ->latest()
             ->get();
 
-        $selectedBatch = null;
-        if ($selectedBatchId) {
-            $selectedBatch = $this->loadBatch($selectedBatchId);
-        } else {
-            $executedBatch = $batches->first(fn (WeaponImportBatch $batch) => $batch->isExecuted());
-            if ($executedBatch) {
-                $selectedBatch = $this->loadBatch($executedBatch->id);
-            }
-        }
-
         return view('weapon-imports.index', [
             'batches' => $batches,
+        ]);
+    }
+
+    public function show(Request $request, WeaponImportBatch $weaponImportBatch)
+    {
+        $selectedBatch = $this->loadBatch($weaponImportBatch->id);
+
+        return view('weapon-imports.show', [
             'selectedBatch' => $selectedBatch,
-            'openPreview' => $request->boolean('preview') && ($selectedBatch?->isDraft() || $selectedBatch?->isProcessing()),
+            'openPreview' => $request->boolean('preview') && ($selectedBatch->isDraft() || $selectedBatch->isProcessing()),
         ]);
     }
 
@@ -76,13 +64,14 @@ class WeaponImportController extends Controller
                 'file_name' => $data['document']->getClientOriginalName(),
                 'exception' => $exception,
             ]);
+
             throw ValidationException::withMessages([
                 'document' => 'No se pudo procesar el archivo seleccionado.',
             ]);
         }
 
-        $redirectUrl = route('weapon-imports.index', [
-            'batch' => $batch->id,
+        $redirectUrl = route('weapon-imports.show', [
+            'weaponImportBatch' => $batch->id,
             'preview' => 1,
         ]);
 
@@ -112,7 +101,7 @@ class WeaponImportController extends Controller
             'progress' => $importService->progressData($batch),
             'status_url' => route('weapon-imports.status', $batch),
             'process_url' => route('weapon-imports.process', $batch),
-            'redirect_url' => route('weapon-imports.index', ['batch' => $batch->id]),
+            'redirect_url' => route('weapon-imports.show', $batch),
         ]);
     }
 
@@ -130,7 +119,7 @@ class WeaponImportController extends Controller
 
         return response()->json([
             'progress' => $importService->progressData($batch),
-            'redirect_url' => route('weapon-imports.index', ['batch' => $batch->id]),
+            'redirect_url' => route('weapon-imports.show', $batch),
         ]);
     }
 
@@ -147,7 +136,7 @@ class WeaponImportController extends Controller
 
         return response()->json([
             'progress' => $importService->progressData($batch),
-            'redirect_url' => route('weapon-imports.index', ['batch' => $batch->id]),
+            'redirect_url' => route('weapon-imports.show', $batch),
         ]);
     }
 
@@ -163,9 +152,9 @@ class WeaponImportController extends Controller
             ]);
         }
 
-        return redirect()->route('weapon-imports.index', [
-            'batch' => $batch->id,
-        ])->with('status', 'Carga ejecutada correctamente.');
+        return redirect()
+            ->route('weapon-imports.show', $batch)
+            ->with('status', 'Carga ejecutada correctamente.');
     }
 
     public function discard(Request $request, WeaponImportBatch $weaponImportBatch, WeaponImportService $importService)
@@ -180,7 +169,8 @@ class WeaponImportController extends Controller
             ]);
         }
 
-        return redirect()->route('weapon-imports.index')
+        return redirect()
+            ->route('weapon-imports.index')
             ->with('status', 'Carga cancelada. Puedes subir un nuevo documento.');
     }
 
@@ -198,3 +188,4 @@ class WeaponImportController extends Controller
             ->findOrFail($id);
     }
 }
+

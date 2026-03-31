@@ -32,14 +32,8 @@
                 @include('weapons.partials.assignment_internal')
             @endif
 
-
             @include('weapons.partials.photos')
-
             @include('weapons.partials.documents')
         </div>
     </div>
 </x-app-layout>
-
-
-
-

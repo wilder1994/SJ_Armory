@@ -16,6 +16,8 @@ class DatabaseSeeder extends Seeder
             PositionSeeder::class,
             ResponsibilityLevelSeeder::class,
             AdminUserSeeder::class,
+            IncidentTypeSeeder::class,
+            IncidentModalitySeeder::class,
         ]);
     }
 }

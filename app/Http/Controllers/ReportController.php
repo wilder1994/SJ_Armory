@@ -9,8 +9,10 @@ use App\Models\User;
 use App\Models\Weapon;
 use App\Models\WeaponClientAssignment;
 use App\Models\WeaponDocument;
+use App\Models\WeaponIncident;
 use App\Models\WeaponTransfer;
 use App\Models\Worker;
+use App\Services\WeaponIncidentReportService;
 use Illuminate\Http\Request;
 
 class ReportController extends Controller
@@ -56,20 +58,27 @@ class ReportController extends Controller
         return view('reports.weapons_without_destination', compact('weapons'));
     }
 
-    public function history(Request $request)
+    public function history(Request $request, WeaponIncidentReportService $weaponSearch)
     {
         $this->authorizeAdmin();
 
         $weaponId = $request->integer('weapon_id');
-        $weapons = Weapon::orderBy('internal_code')->get();
-
         $weapon = null;
+        $selectedWeapon = null;
         $assignments = collect();
         $documents = collect();
+        $incidents = collect();
 
         if ($weaponId) {
-            $weapon = Weapon::find($weaponId);
+            $weapon = Weapon::query()
+                ->with([
+                    'activeClientAssignment.client',
+                    'activeClientAssignment.responsible',
+                ])
+                ->find($weaponId);
+
             if ($weapon) {
+                $selectedWeapon = $weaponSearch->findSearchWeapon($request->user(), $weapon->id);
                 $assignments = WeaponClientAssignment::with(['client', 'assignedBy', 'responsible'])
                     ->where('weapon_id', $weaponId)
                     ->orderByDesc('start_at')
@@ -78,10 +87,21 @@ class ReportController extends Controller
                     ->where('weapon_id', $weaponId)
                     ->orderByDesc('created_at')
                     ->get();
+                $incidents = WeaponIncident::with([
+                    'type',
+                    'modality',
+                    'reporter',
+                    'latestUpdate',
+                    'attachmentFile',
+                ])
+                    ->where('weapon_id', $weaponId)
+                    ->orderByDesc('event_at')
+                    ->orderByDesc('id')
+                    ->get();
             }
         }
 
-        return view('reports.weapon_history', compact('weapons', 'weapon', 'assignments', 'documents'));
+        return view('reports.weapon_history', compact('weapon', 'selectedWeapon', 'assignments', 'documents', 'incidents'));
     }
 
     public function audit(Request $request)
@@ -148,7 +168,7 @@ class ReportController extends Controller
             ->withQueryString();
 
         $entityLabels = [
-            WeaponClientAssignment::class => 'Asignación de cliente',
+            WeaponClientAssignment::class => 'AsignaciÃ³n de cliente',
             User::class => 'Usuario',
             Client::class => 'Cliente',
             Weapon::class => 'Arma',
@@ -166,9 +186,9 @@ class ReportController extends Controller
             'client_deleted' => 'Cliente eliminado',
             'client_assigned' => 'Cliente asignado al arma',
             'client_reassigned' => 'Cliente reasignado al arma',
-            'client_assignment_closed' => 'Asignación de cliente cerrada',
-            'client_assignment_retired' => 'Asignación de cliente retirada',
-            'client_assignment_closed_for_transfer' => 'Asignación de cliente cerrada por transferencia',
+            'client_assignment_closed' => 'AsignaciÃ³n de cliente cerrada',
+            'client_assignment_retired' => 'AsignaciÃ³n de cliente retirada',
+            'client_assignment_closed_for_transfer' => 'AsignaciÃ³n de cliente cerrada por transferencia',
             'client_responsible_transferred' => 'Responsable de cliente transferido',
             'post_created' => 'Puesto creado',
             'post_updated' => 'Puesto actualizado',
@@ -180,11 +200,11 @@ class ReportController extends Controller
             'user_updated' => 'Usuario actualizado',
             'user_deleted' => 'Usuario eliminado',
             'user_status_updated' => 'Estado de usuario actualizado',
-            'user_logged_in' => 'Inicio de sesión',
-            'user_logged_out' => 'Cierre de sesión',
-            'password_updated' => 'Contraseña actualizada',
-            'password_reset_requested' => 'Solicitud de restablecimiento de contraseña',
-            'password_reset_completed' => 'Restablecimiento de contraseña completado',
+            'user_logged_in' => 'Inicio de sesiÃ³n',
+            'user_logged_out' => 'Cierre de sesiÃ³n',
+            'password_updated' => 'ContraseÃ±a actualizada',
+            'password_reset_requested' => 'Solicitud de restablecimiento de contraseÃ±a',
+            'password_reset_completed' => 'Restablecimiento de contraseÃ±a completado',
             'profile_updated' => 'Perfil actualizado',
             'profile_deleted' => 'Perfil eliminado',
             'weapon_created' => 'Arma creada',
@@ -194,7 +214,7 @@ class ReportController extends Controller
             'portfolio_transferred' => 'Asignaciones transferidas',
             'internal_assigned_post' => 'Arma asignada a puesto',
             'internal_assigned_worker' => 'Arma asignada a trabajador',
-            'internal_assignment_retired' => 'Asignación interna retirada',
+            'internal_assignment_retired' => 'AsignaciÃ³n interna retirada',
             'internal_post_closed_for_transfer' => 'Puesto cerrado por transferencia',
             'internal_worker_closed_for_transfer' => 'Trabajador cerrado por transferencia',
             'internal_post_cleared_on_client_change' => 'Puesto limpiado por cambio de cliente',
@@ -205,6 +225,10 @@ class ReportController extends Controller
             'upload_photo' => 'Foto cargada',
             'update_photo' => 'Foto actualizada',
             'upload_document' => 'Documento cargado',
+            'weapon_incident_created' => 'Novedad registrada',
+            'weapon_incident_update_added' => 'Seguimiento de novedad agregado',
+            'weapon_incident_closed' => 'Novedad cerrada',
+            'weapon_incident_reopened' => 'Novedad reabierta',
         ];
 
         return view('reports.audit', compact('logs', 'days', 'actionLabels', 'entityLabels', 'modules', 'module'));

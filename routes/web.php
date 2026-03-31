@@ -13,6 +13,8 @@ use App\Http\Controllers\WeaponClientAssignmentController;
 use App\Http\Controllers\WeaponDocumentController;
 use App\Http\Controllers\WeaponInternalAssignmentController;
 use App\Http\Controllers\WeaponImportController;
+use App\Http\Controllers\WeaponIncidentController;
+use App\Http\Controllers\WeaponIncidentReportController;
 use App\Http\Controllers\WeaponPhotoController;
 use App\Http\Controllers\WeaponTransferController;
 use App\Http\Controllers\MapController;
@@ -71,6 +73,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('weapons', WeaponController::class);
     Route::get('/subir-armas', [WeaponImportController::class, 'index'])->name('weapon-imports.index');
     Route::post('/subir-armas/preview', [WeaponImportController::class, 'preview'])->name('weapon-imports.preview');
+    Route::get('/subir-armas/{weaponImportBatch}', [WeaponImportController::class, 'show'])->name('weapon-imports.show');
     Route::post('/subir-armas/{weaponImportBatch}/execute/start', [WeaponImportController::class, 'startExecution'])->name('weapon-imports.start');
     Route::post('/subir-armas/{weaponImportBatch}/execute/process', [WeaponImportController::class, 'processExecution'])->name('weapon-imports.process');
     Route::get('/subir-armas/{weaponImportBatch}/execute/status', [WeaponImportController::class, 'executionStatus'])->name('weapon-imports.status');
@@ -96,6 +99,19 @@ Route::middleware('auth')->group(function () {
         ->name('weapons.documents.download');
     Route::delete('/weapons/{weapon}/documents/{document}', [WeaponDocumentController::class, 'destroy'])
         ->name('weapons.documents.destroy');
+
+    Route::post('/weapon-incidents', [WeaponIncidentController::class, 'store'])
+        ->name('weapon-incidents.store');
+    Route::post('/weapon-incidents/{weaponIncident}/updates', [WeaponIncidentController::class, 'storeUpdate'])
+        ->name('weapon-incidents.updates.store');
+    Route::patch('/weapon-incidents/{weaponIncident}/reopen', [WeaponIncidentController::class, 'reopen'])
+        ->name('weapon-incidents.reopen');
+    Route::patch('/weapon-incidents/{weaponIncident}/close', [WeaponIncidentController::class, 'close'])
+        ->name('weapon-incidents.close');
+    Route::get('/weapon-incidents/{weaponIncident}/attachment', [WeaponIncidentController::class, 'downloadAttachment'])
+        ->name('weapon-incidents.attachment');
+    Route::get('/weapon-incidents/{weaponIncident}/updates/{weaponIncidentUpdate}/attachment', [WeaponIncidentController::class, 'downloadUpdateAttachment'])
+        ->name('weapon-incidents.updates.attachment');
 
     Route::post('/weapons/{weapon}/internal-assignments', [WeaponInternalAssignmentController::class, 'store'])
         ->name('weapons.internal_assignments.store');
@@ -123,6 +139,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/no-destination', [ReportController::class, 'weaponsWithoutDestination'])->name('reports.no_destination');
     Route::get('/reports/history', [ReportController::class, 'history'])->name('reports.history');
     Route::get('/reports/audit', [ReportController::class, 'audit'])->name('reports.audit');
+    Route::get('/reports/weapon-incidents/weapons/search', [WeaponIncidentReportController::class, 'searchWeapons'])->name('reports.weapon-incidents.weapons.search');
+    Route::get('/reports/weapon-incidents', [WeaponIncidentReportController::class, 'index'])->name('reports.weapon-incidents.index');
+    Route::get('/reports/weapon-incidents/{incidentType}', [WeaponIncidentReportController::class, 'show'])->name('reports.weapon-incidents.show');
 
     Route::get('/alerts/documents', [AlertsController::class, 'documents'])->name('alerts.documents');
     Route::post('/alerts/documents/preview', [AlertsController::class, 'previewBatch'])->name('alerts.documents.preview');

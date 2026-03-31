@@ -50,7 +50,7 @@ class WeaponPolicy
 
     public function delete(User $user, Weapon $weapon): bool
     {
-        return $user->isAdmin();
+        return false;
     }
 }
 

@@ -25,7 +25,7 @@ class WeaponImportTest extends TestCase
         Weapon::create([
             'internal_code' => 'SJ-0001',
             'serial_number' => 'IM1509AD',
-            'weapon_type' => 'Revólver',
+            'weapon_type' => 'RevÃƒÆ’Ã‚Â³lver',
             'caliber' => '38L',
             'brand' => 'LLAMA',
             'capacity' => '6',
@@ -51,8 +51,8 @@ class WeaponImportTest extends TestCase
 
         $batch = WeaponImportBatch::query()->firstOrFail();
 
-        $response->assertRedirect(route('weapon-imports.index', [
-            'batch' => $batch->id,
+        $response->assertRedirect(route('weapon-imports.show', [
+            'weaponImportBatch' => $batch->id,
             'preview' => 1,
         ]));
 
@@ -88,7 +88,7 @@ class WeaponImportTest extends TestCase
         Weapon::create([
             'internal_code' => 'SJ-0001',
             'serial_number' => 'IM1509AD',
-            'weapon_type' => 'RevÃ³lver',
+            'weapon_type' => 'RevÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³lver',
             'caliber' => '38L',
             'brand' => 'LLAMA',
             'capacity' => '6',
@@ -145,3 +145,4 @@ class WeaponImportTest extends TestCase
         ]);
     }
 }
+

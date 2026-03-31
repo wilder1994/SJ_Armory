@@ -3,14 +3,17 @@
 namespace App\Services;
 
 use App\Models\Client;
+use App\Models\IncidentType;
 use App\Models\Post;
 use App\Models\User;
 use App\Models\Weapon;
 use App\Models\WeaponDocument;
+use App\Models\WeaponIncident;
 use App\Models\WeaponTransfer;
 use App\Models\Worker;
 use App\Support\WeaponDocumentAlert;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 class DashboardMetricsService
@@ -18,6 +21,7 @@ class DashboardMetricsService
     private const INCIDENT_ORDER = [
         'Hurtada',
         'Perdida',
+        'Incautada',
         'En Mantenimiento',
         'Para Mantenimiento',
         'En Armerillo',
@@ -32,11 +36,11 @@ class DashboardMetricsService
                 'activeClientAssignment.responsible',
                 'activePostAssignment',
                 'activeWorkerAssignment',
+                'operationalBlockingIncidents',
             ])
             ->get();
 
         $weaponIds = $weapons->pluck('id');
-        $today = now()->startOfDay();
 
         $renewalDocuments = $this->renewalDocumentsQuery($user, $weaponIds)
             ->orderByDesc('id')
@@ -72,27 +76,6 @@ class DashboardMetricsService
             $riskCounts['Vigentes']++;
         }
 
-        $latestManualDocuments = $this->manualDocumentsQuery($user, $weaponIds)
-            ->orderByDesc('id')
-            ->get()
-            ->unique('weapon_id')
-            ->values();
-
-        $incidentCounts = collect(self::INCIDENT_ORDER)
-            ->mapWithKeys(fn (string $label) => [$label => 0]);
-
-        foreach ($latestManualDocuments as $document) {
-            $observation = trim((string) $document->observations);
-
-            if (($document->status ?? '') !== 'En proceso') {
-                continue;
-            }
-
-            if ($incidentCounts->has($observation)) {
-                $incidentCounts[$observation]++;
-            }
-        }
-
         $responsibleCounts = $weapons
             ->filter(fn (Weapon $weapon) => $weapon->activeClientAssignment?->responsible?->name)
             ->groupBy(fn (Weapon $weapon) => $weapon->activeClientAssignment->responsible->name)
@@ -122,24 +105,61 @@ class DashboardMetricsService
             ->groupBy(fn (WeaponDocument $document) => $document->valid_until->format('Y-m'))
             ->sortKeys()
             ->map(function (Collection $group, string $monthKey) {
-                $month = now()->createFromFormat('Y-m', $monthKey)->startOfMonth();
+                $month = Carbon::createFromFormat('Y-m-d', $monthKey . '-01')
+                    ->locale(app()->getLocale());
 
                 return [
+                    'key' => $monthKey,
                     'label' => ucfirst($month->translatedFormat('M y')),
                     'value' => $group->count(),
                 ];
             })
             ->values();
 
+        $openIncidents = WeaponIncident::query()
+            ->with('type')
+            ->whereIn('weapon_id', $weaponIds->all())
+            ->whereIn('status', [WeaponIncident::STATUS_OPEN, WeaponIncident::STATUS_IN_PROGRESS])
+            ->get();
+
+        $incidentTypeMap = IncidentType::query()
+            ->whereIn('name', self::INCIDENT_ORDER)
+            ->get()
+            ->keyBy('name');
+
+        $incidentCounts = collect(self::INCIDENT_ORDER)
+            ->map(function (string $label) use ($incidentTypeMap, $openIncidents) {
+                $type = $incidentTypeMap->get($label);
+
+                return [
+                    'label' => $label,
+                    'type' => $type,
+                    'value' => $type ? $openIncidents->where('incident_type_id', $type->id)->count() : 0,
+                ];
+            });
+
         $transferCounts = $this->transferStatusCounts($user);
 
-        $activeDestinationWeapons = $weapons->filter(fn (Weapon $weapon) => $weapon->activeClientAssignment)->values();
+        $activeDestinationWeapons = $weapons
+            ->filter(fn (Weapon $weapon) => $weapon->activeClientAssignment)
+            ->values();
+
+        $operationalWeaponsCount = $weapons
+            ->filter(fn (Weapon $weapon) => $weapon->operationalBlockingIncidents->isEmpty())
+            ->count();
+
+        $nonOperationalWeaponsCount = $weapons->count() - $operationalWeaponsCount;
+
         $operationalDistribution = [
-            'Asignadas a puesto' => $activeDestinationWeapons->filter(fn (Weapon $weapon) => $weapon->activePostAssignment)->count(),
-            'Asignadas a trabajador' => $activeDestinationWeapons->filter(fn (Weapon $weapon) => $weapon->activeWorkerAssignment)->count(),
-            'Sin asignación interna' => $activeDestinationWeapons->filter(
-                fn (Weapon $weapon) => !$weapon->activePostAssignment && !$weapon->activeWorkerAssignment
-            )->count(),
+            'Asignadas a puesto' => $activeDestinationWeapons
+                ->filter(fn (Weapon $weapon) => $weapon->activePostAssignment)
+                ->count(),
+            'Asignadas a trabajador' => $activeDestinationWeapons
+                ->filter(fn (Weapon $weapon) => $weapon->activeWorkerAssignment)
+                ->count(),
+            'Sin asignación interna' => $activeDestinationWeapons
+                ->filter(fn (Weapon $weapon) => ! $weapon->activePostAssignment && ! $weapon->activeWorkerAssignment)
+                ->count(),
         ];
 
         $clientCount = $this->clientsQuery($user)->count();
@@ -171,9 +191,15 @@ class DashboardMetricsService
                 ],
                 [
                     'label' => 'Sin destino',
-                    'value' => $weapons->filter(fn (Weapon $weapon) => !$weapon->activeClientAssignment)->count(),
+                    'value' => $weapons->filter(fn (Weapon $weapon) => ! $weapon->activeClientAssignment)->count(),
                     'tone' => 'amber',
                     'helper' => 'Pendientes de asignación operativa',
+                ],
+                [
+                    'label' => 'Armas operativas',
+                    'value' => $operationalWeaponsCount,
+                    'tone' => 'green',
+                    'helper' => 'Disponibles para operación',
                 ],
                 [
                     'label' => 'Documentos vencidos',
@@ -192,6 +218,12 @@ class DashboardMetricsService
                     'value' => $transferCounts['Pendientes'],
                     'tone' => 'indigo',
                     'helper' => 'Solicitudes aún sin resolver',
+                ],
+                [
+                    'label' => 'Armas con novedad',
+                    'value' => $nonOperationalWeaponsCount,
+                    'tone' => 'red',
+                    'helper' => 'Fuera de operación por novedad bloqueante',
                 ],
             ],
             'meta' => [
@@ -218,10 +250,11 @@ class DashboardMetricsService
                 'donut_style' => $this->buildDonutStyle($riskItems),
             ],
             'incident_chart' => [
-                'items' => collect(self::INCIDENT_ORDER)->map(function (string $label) use ($incidentCounts) {
+                'items' => $incidentCounts->map(function (array $item) {
                     $colors = [
                         'Hurtada' => '#be123c',
                         'Perdida' => '#b91c1c',
+                        'Incautada' => '#7c2d12',
                         'En Mantenimiento' => '#0f766e',
                         'Para Mantenimiento' => '#0ea5e9',
                         'En Armerillo' => '#7c3aed',
@@ -229,13 +262,16 @@ class DashboardMetricsService
                     ];
 
                     return [
-                        'label' => $label,
-                        'value' => (int) $incidentCounts[$label],
-                        'color' => $colors[$label] ?? '#475569',
+                        'label' => $item['label'],
+                        'value' => (int) $item['value'],
+                        'color' => $colors[$item['label']] ?? '#475569',
+                        'url' => $item['type']
+                            ? route('reports.weapon-incidents.show', ['incidentType' => $item['type']->code])
+                            : route('reports.weapon-incidents.index'),
                     ];
                 })->all(),
-                'total' => (int) $incidentCounts->sum(),
-                'max' => max(1, (int) $incidentCounts->max()),
+                'total' => (int) $incidentCounts->sum('value'),
+                'max' => max(1, (int) $incidentCounts->max('value')),
             ],
             'transfer_chart' => [
                 'items' => collect($transferCounts)->map(function (int $value, string $label) {
@@ -333,19 +369,6 @@ class DashboardMetricsService
         return $query;
     }
 
-    private function manualDocumentsQuery(User $user, Collection $weaponIds): Builder
-    {
-        $query = WeaponDocument::query()
-            ->where('is_permit', false)
-            ->where('is_renewal', false);
-
-        if ($this->limitsToResponsibleScope($user)) {
-            $query->whereIn('weapon_id', $weaponIds->all());
-        }
-
-        return $query;
-    }
-
     private function transferStatusCounts(User $user): array
     {
         $query = WeaponTransfer::query();
@@ -388,7 +411,7 @@ class DashboardMetricsService
             $segments[] = sprintf('%s %sdeg %sdeg', $item['color'], $start, $end);
         }
 
-        if (empty($segments)) {
+        if ($segments === []) {
             $segments[] = '#e2e8f0 0deg 360deg';
         }
 
@@ -410,6 +433,6 @@ class DashboardMetricsService
 
     private function limitsToResponsibleScope(User $user): bool
     {
-        return $user->isResponsible() && !$user->isAdmin() && !$user->isAuditor();
+        return $user->isResponsible() && ! $user->isAdmin() && ! $user->isAuditor();
     }
 }
