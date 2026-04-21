@@ -1,144 +1,290 @@
-# SJ Armory
+# 🛡️ SJ Armory
 
-Sistema web de gestion de armamento, asignaciones operativas, transferencias, documentos, trazabilidad y auditoria.
+Sistema web para **gestión de armamento**, **asignaciones operativas**, **transferencias**, **documentación**, **trazabilidad** y **auditoría**, con foco en operación diaria (dashboard, mapa, alertas) y control de acceso por rol/nivel.
 
-## 1. Alcance funcional del sistema
+> ✅ Este `README.md` está generado a partir del análisis del codebase (Laravel 10, Reverb, policies, controllers y `.env.example`).
 
-El proyecto cubre de extremo a extremo:
+---
 
-- Gestion de armas.
-- Centro de cargas masivas con validacion previa, revision por lote y ejecucion por chunks.
-- Gestion de clientes.
-- Gestion de puestos e instalaciones del cliente.
-- Gestion de trabajadores (escoltas y supervisores).
-- Asignacion operativa de armas a cliente responsable.
-- Asignacion interna de arma a puesto o trabajador.
-- Transferencia de armas entre responsables.
-- Carga y administracion de fotos y documentos por arma.
-- Generacion automatica de documento de renovacion en `.docx`.
-- Mapa operativo con ubicacion de armas.
-- Reporteria y auditoria.
-- Dashboard operativo con metricas y graficos del sistema.
-- Alertas documentales por vencimiento.
-- Gestion de cartera de clientes por responsable.
-- Control de acceso por rol y nivel.
+## 📌 Alcance funcional
 
-## 2. Stack tecnologico
+- ✅ **Armas**: alta/edición, fotos (técnicas y permiso), documentos, exportación, inventario.
+- ✅ **Asignaciones**:
+  - **Operativa** (arma ↔ cliente/responsable)
+  - **Interna** (arma ↔ puesto / trabajador)
+- ✅ **Transferencias**: solicitudes, aceptación / rechazo.
+- ✅ **Clientes / Puestos / Trabajadores / Usuarios**
+- ✅ **Cargas masivas**: validación previa, preview, ejecución por chunks, trazabilidad por lote.
+- ✅ **Dashboard**: KPIs, métricas, gráficos y estado “as of”.
+- ✅ **Alertas**: vencimientos documentales.
+- ✅ **Mapa**: geocodificación y visualización operativa.
+- ✅ **Auditoría**: registro de cambios y acciones críticas.
+- ✅ **Realtime (Broadcasting)**: Laravel Reverb + Echo (WebSockets) para sincronización en tiempo real.
 
-Backend:
+---
 
-- PHP `^8.1`
-- Laravel `^10.10`
-- Laravel Sanctum
-- Laravel Reverb `^1.10` (servidor WebSocket propio para broadcasting)
-- Eloquent ORM
-- PHPUnit 10
-- Laravel Breeze (auth scaffold)
-- PhpOffice/PhpWord (generacion de documento de renovacion)
-- Lectura nativa de `.xlsx` y `.csv` mediante `ZipArchive` + parser interno
+## 🧱 Stack y requisitos técnicos
 
-Frontend:
+### ✅ Backend
 
-- Vite 5
-- Tailwind CSS 3 + `@tailwindcss/forms`
-- Alpine.js
-- Axios
-- Leaflet + `leaflet.markercluster`
-- Laravel Echo + pusher-js (cliente WebSocket hacia Reverb)
-- Cropper.js (editor de imagenes: recorte, rotacion y ajuste fino)
+| Componente | Versión / Uso |
+|---|---|
+| **PHP** | **8.2+** recomendado para entorno local (Laragon). En `composer.json`: `php: ^8.1`. |
+| **Laravel** | `^10.10` |
+| **Auth** | Laravel Breeze + sesiones web |
+| **API tokens** | Laravel Sanctum |
+| **Realtime** | Laravel Reverb `^1.10` (servidor WebSocket) |
+| **Docs** | `phpoffice/phpword` para `.docx` + `dompdf/dompdf` |
+| **HTTP** | `guzzlehttp/guzzle` |
 
-Servicios externos:
+### ✅ Frontend
 
-- Nominatim OpenStreetMap (geocoding y reverse geocoding)
-- ArcGIS/Esri + OSM tiles para mapas
+| Componente | Versión / Uso |
+|---|---|
+| **Vite** | `^5` |
+| **Tailwind** | `^3` + `@tailwindcss/forms` |
+| **Alpine.js** | UI reactividad |
+| **Axios** | HTTP desde frontend |
+| **Leaflet** | Mapa + clustering |
+| **Echo** | `laravel-echo` + `pusher-js` (cliente) apuntando a Reverb |
 
-## 3. Arquitectura general
+### 🧰 Entorno local recomendado
 
-- Patron MVC de Laravel.
-- Logica de negocio distribuida en:
-  - Controladores (flujo de use cases).
-  - Servicios (`WeaponAssignmentService`, `WeaponDocumentService`, `GeocodingService`).
-  - Politicas (`WeaponPolicy`, `ClientPolicy`, `PostPolicy`, `WorkerPolicy`).
-- Auditoria centralizada:
-  - Trait `Auditable` para eventos CRUD de modelos auditables.
-  - Eventos manuales para acciones de negocio (asignaciones, transferencias, fotos, documentos, login, etc.).
-- Persistencia principal en MySQL.
-- Archivos binarios en discos Laravel:
-  - `public` para fotos.
-  - `local` para documentos/permiso/renovacion/importaciones.
+- 🪟 **Windows + Laragon** (Apache + MySQL + PHP 8.2.x)
+- 🟦 **Node.js 18+** (en Laragon suele existir como `C:\laragon\bin\nodejs\node-v18\`)
 
-## 4. Roles, permisos y niveles
+---
 
-### Roles (`users.role`)
+## 🚀 Instalación y puesta en marcha (paso a paso)
 
-- `ADMIN`
+> ⚠️ En ambientes con datos reales: **PROHIBIDO** `migrate:fresh` / `db:seed` u operaciones destructivas.
+
+### 1) Clonar e instalar dependencias (PHP)
+
+```bash
+git clone <repo-url>
+cd SJ_Armory
+composer install
+```
+
+### 2) Configurar `.env`
+
+1. Copia `.env.example` a `.env`.
+2. Ajusta, como mínimo:
+   - `APP_URL` (si se accede por IP en red: `http://<IP_DEL_SERVIDOR>`)
+   - `DB_*`
+   - `SANCTUM_STATEFUL_DOMAINS` (debe incluir el host/IP por el que acceden los navegadores)
+   - Reverb: `REVERB_*` y `VITE_REVERB_*`
+
+```bash
+copy .env.example .env
+php artisan key:generate
+```
+
+### 3) Migraciones (no destructivas)
+
+```bash
+php artisan migrate
+```
+
+### 4) Instalar y compilar frontend
+
+```bash
+npm install
+npm run build
+```
+
+> 🧩 Si `npm` no está en PATH, usa la terminal integrada de Laragon o exporta la ruta a Node antes de compilar.
+
+### 5) Levantar Reverb (WebSockets)
+
+En una terminal aparte:
+
+```bash
+php artisan reverb:start
+```
+
+---
+
+## 🧭 Arquitectura de carpetas
+
+| Ruta | Propósito |
+|---|---|
+| `app/Http/Controllers` | Casos de uso (CRUD, asignaciones, transferencias, reportes) |
+| `app/Models` | Dominio / Eloquent (Weapon, Client, Assignments, Transfers, etc.) |
+| `app/Policies` | Autorización por rol/alcance (`WeaponPolicy`, `ClientPolicy`, etc.) |
+| `app/Services` | Lógica de negocio (métricas, importaciones, documentos, geocoding) |
+| `app/Events` | Eventos broadcast (Realtime) |
+| `resources/views` | UI (Blade) + componentes |
+| `resources/js` | Bootstrap (Echo), dashboard, sincronización realtime |
+| `routes/web.php` | Rutas web (auth + módulos) |
+| `routes/channels.php` | Canales de broadcasting |
+| `config/broadcasting.php` + `config/reverb.php` | Configuración broadcasting + Reverb |
+| `database/migrations` | Esquema de datos |
+| `storage/` | Archivos y cachés (con `.gitignore`) |
+
+---
+
+## 🧑‍⚖️ Roles y permisos (según lógica actual del código)
+
+> Modelo: `app/Models/User.php`  
+> Políticas: `app/Policies/*`
+
+### 👥 Roles (`users.role`)
+
+- 🟦 **ADMIN**
   - Acceso total.
-  - Puede crear/editar/eliminar armas, clientes, puestos, trabajadores, usuarios.
-  - Gestiona carteras.
-  - Gestiona reportes y alertas.
-  - Puede asignar y transferir.
+  - Gestión de cartera (asignación cliente ↔ responsable).
+  - Administración de entidades operativas, reportes y alertas.
 
-- `RESPONSABLE`
-  - Ve solo armas/clientes de su cartera.
-  - Puede operar segun su nivel.
-  - Puede recibir/aceptar transferencias dirigidas a su usuario.
+- 🟩 **RESPONSABLE**
+  - Alcance restringido a su **cartera** (`user_clients`) y a armas bajo su responsabilidad activa.
+  - Capacidades condicionadas por nivel.
 
-- `AUDITOR`
-  - Acceso de consulta.
-  - Puede ver reportes y alertas.
-  - No administra entidades operativas.
+- 🟨 **AUDITOR**
+  - Consulta (inventario/reportes/alertas), sin administración operativa.
 
-### Niveles de responsabilidad (`responsibility_levels.level`)
+### 🧩 Niveles de responsabilidad (`responsibility_levels.level`)
 
-Definidos hoy por seed:
+- **Nivel 1**: responsable operativo con gestión.
+- **Nivel 2**: responsable solo lectura.
 
-- Nivel 1: `Asignado con gestion` (operativo con gestion).
-- Nivel 2: `Asignado solo lectura`.
-
-### Reglas de policy relevantes
+### 🔐 Reglas clave (extracto)
 
 - `WeaponPolicy`
-  - `viewAny`: ADMIN, RESPONSABLE, AUDITOR.
-  - `view`: ADMIN; RESPONSABLE solo si es responsable activo del arma; AUDITOR si.
-  - `assignToClient`: ADMIN o RESPONSABLE nivel 1 del arma.
-  - `create/update/delete`: solo ADMIN.
+  - `viewAny`: ADMIN / RESPONSABLE / AUDITOR
+  - `view`:
+    - ADMIN: ✅
+    - RESPONSABLE: ✅ solo si es responsable activo del arma
+    - AUDITOR: ✅
+  - `assignToClient`: ADMIN o RESPONSABLE Nivel 1 (condicionado al arma)
+  - `delete`: **siempre false** (borrado físico deshabilitado)
 
 - `ClientPolicy`
-  - `viewAny`: ADMIN, RESPONSABLE, AUDITOR.
-  - `view`: ADMIN/AUDITOR o RESPONSABLE si cliente en su cartera.
-  - `create/update/delete`: solo ADMIN.
+  - `view` para RESPONSABLE: solo si el cliente está en su cartera (`user_clients`)
+  - `create/update/delete`: solo ADMIN
 
-- `PostPolicy` y `WorkerPolicy`
-  - Consulta para ADMIN/RESPONSABLE/AUDITOR.
-  - Alta/edicion/baja solo ADMIN.
+---
 
-## 5. Modulos y comportamientos de negocio
+## 📡 Realtime (Reverb + Broadcasting)
 
-### 5.1 Armas
+### Componentes
 
-Archivo principal: `app/Http/Controllers/WeaponController.php`
+- 🧠 Backend: `laravel/reverb` + broadcasting driver `reverb`
+- 🖥️ Frontend: `resources/js/bootstrap.js` inicializa Echo con variables `VITE_REVERB_*`
+- 🔐 Auth de canales: endpoint `/broadcasting/auth` (rutas de broadcasting)
 
-- CRUD de armas.
-- Codigo interno autogenerado (`SJ-0001`, `SJ-0002`, ...).
-- Carga inicial y actualizacion de:
-  - Foto de permiso (obligatoria al crear arma).
-  - Fotos tecnicas del arma por tipo de descripcion.
-- Los campos de imagen en crear/editar arma soportan:
-  - seleccionar archivo,
-  - arrastrar y soltar,
-  - pegar imagen desde portapapeles.
-- Antes de aceptar una imagen, el sistema abre un editor para:
-  - recortar,
-  - girar a 90° (izquierda/derecha),
-  - aplicar ajuste fino de rotacion en un rango de -10° a +10° con paso de 0.1°,
-  - restablecer la rotacion,
-  - confirmar la version final.
-- Sincronizacion automatica de documentos:
-  - Documento de permiso (`is_permit = true`).
-  - Documento de renovacion (`is_renewal = true`).
-- Toggle de impronta mensual (solo ADMIN).
-- Listado con filtro libre y paginacion.
-- Soporte de render parcial AJAX para tabla/paginacion (`expectsJson`).
+### Canales (definidos en `routes/channels.php`)
+
+- `dashboard.updates`
+- `weapons.updates`
+- `assignments.updates`
+- `clients.updates`
+- `transfers.updates`
+- `alerts.updates`
+- `incidents.updates`
+- `import-batches.updates`
+- `users.updates`
+- `workers.updates`
+- `maps.updates`
+- `posts.updates`
+
+> Nota: la autorización de estos canales está configurada como `true` (permitir suscripción) y está lista para endurecerse por rol/alcance.
+
+---
+
+## 🧾 Variables de entorno (tabla basada en `.env.example`)
+
+### 🌍 App
+
+| Variable | Ejemplo | Descripción |
+|---|---|---|
+| `APP_NAME` | `Laravel` | Nombre de la app |
+| `APP_ENV` | `local` | Entorno |
+| `APP_KEY` | `base64:...` | Clave app |
+| `APP_DEBUG` | `true` | Debug |
+| `APP_URL` | `http://localhost` | URL base (si se accede por IP, usar la IP) |
+
+### 🗄️ Base de datos
+
+| Variable | Ejemplo | Descripción |
+|---|---|---|
+| `DB_CONNECTION` | `mysql` | Driver |
+| `DB_HOST` | `127.0.0.1` | Host |
+| `DB_PORT` | `3306` | Puerto |
+| `DB_DATABASE` | `laravel` | BD |
+| `DB_USERNAME` | `root` | Usuario |
+| `DB_PASSWORD` | `` | Password |
+
+### 🔊 Broadcasting / Reverb
+
+| Variable | Ejemplo | Descripción |
+|---|---|---|
+| `BROADCAST_CONNECTION` | `reverb` | Conexión de broadcasting por defecto |
+| `REVERB_APP_ID` | `armory` | App ID (Reverb) |
+| `REVERB_APP_KEY` | `armory-key` | App Key |
+| `REVERB_APP_SECRET` | `armory-secret` | App Secret |
+| `REVERB_HOST` | `127.0.0.1` | Host al que apunta el **cliente** (navegador) |
+| `REVERB_PORT` | `8080` | Puerto cliente (WS) |
+| `REVERB_SCHEME` | `http` | `http` / `https` |
+| `REVERB_SERVER_HOST` | `0.0.0.0` | Bind del servidor Reverb |
+| `REVERB_SERVER_PORT` | `8080` | Puerto del servidor Reverb |
+
+### ⚡ Vite (variables expuestas al frontend)
+
+| Variable | Ejemplo | Descripción |
+|---|---|---|
+| `VITE_APP_NAME` | `${APP_NAME}` | Nombre app en frontend |
+| `VITE_REVERB_APP_KEY` | `${REVERB_APP_KEY}` | Key para Echo |
+| `VITE_REVERB_HOST` | `${REVERB_HOST}` | Host WS para Echo |
+| `VITE_REVERB_PORT` | `${REVERB_PORT}` | Puerto WS |
+| `VITE_REVERB_SCHEME` | `${REVERB_SCHEME}` | Esquema WS |
+
+### 🧠 Sesión / Sanctum
+
+| Variable | Ejemplo | Descripción |
+|---|---|---|
+| `SESSION_DOMAIN` | *(vacío)* | Dominio de cookie si aplica |
+| `SANCTUM_STATEFUL_DOMAINS` | *(vacío)* | Hosts/ips stateful (si se usa por IP/red, incluirlos) |
+
+---
+
+## 🧾 Módulos, paquetes y facturación (estado real del codebase)
+
+Tras escanear `app/`, `database/` y `resources/views/` **no se encontró** implementación de:
+- multiempresa (“company admin” / tenant),
+- paquetes/planes,
+- facturación/subscripciones/invoices.
+
+Lo que **sí existe** hoy es control de acceso por:
+- roles (`ADMIN`, `RESPONSABLE`, `AUDITOR`),
+- nivel de responsabilidad,
+- policies por módulo (weapons/clients/posts/workers/incidents),
+- cartera de clientes (`user_clients`) para restringir alcance.
+
+---
+
+## 🧪 Tests y calidad
+
+```bash
+php artisan test
+```
+
+Formato de código:
+
+```bash
+./vendor/bin/pint
+```
+
+---
+
+## 🧯 Troubleshooting rápido
+
+- 🧩 **No conecta Reverb**:
+  - valida que `php artisan reverb:start` esté corriendo
+  - revisa `REVERB_HOST` / `VITE_REVERB_HOST` coincidiendo con el host que usas en el navegador (IP vs dominio)
+  - confirma puerto `8080` libre y accesible en la red
+- 🧱 **Cambiaste `VITE_*` y no se refleja**: ejecuta `npm run build` o `npm run dev`.
 
 Tipos de arma permitidos en validacion actual:
 
