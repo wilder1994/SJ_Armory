@@ -119,7 +119,66 @@
     }
 </style>
 
-<nav x-data="{ open: false }" class="sj-nav">
+<nav
+    x-data="{
+        menuOpen: false,
+        notificationsOpen: false,
+        notificationItems: [],
+        notificationLoading: false,
+        notificationUnread: {{ (int) ($unreadNotificationCount ?? 0) }},
+        async loadNotifications() {
+            this.notificationLoading = true;
+            try {
+                const r = await fetch('{{ route('notifications.index') }}', {
+                    headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                });
+                if (!r.ok) { return; }
+                const d = await r.json();
+                this.notificationItems = d.notifications || [];
+                this.notificationUnread = d.unread_count ?? 0;
+            } finally {
+                this.notificationLoading = false;
+            }
+        },
+        async openNotificationsModal() {
+            this.notificationsOpen = true;
+            await this.loadNotifications();
+        },
+        async markAllNotificationsRead() {
+            const token = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || '';
+            await fetch('{{ route('notifications.read-all') }}', {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': token,
+                },
+            });
+            this.notificationUnread = 0;
+            this.notificationItems = this.notificationItems.map(i => ({ ...i, read: true }));
+        },
+        async markOneRead(id, url) {
+            const token = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || '';
+            const r = await fetch('{{ url('/notifications') }}/' + id + '/read', {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': token,
+                },
+            });
+            if (r.ok) {
+                const d = await r.json();
+                this.notificationUnread = d.unread_count ?? 0;
+                this.notificationItems = this.notificationItems.map(i => i.id === id ? { ...i, read: true } : i);
+            }
+            if (url) {
+                window.location.href = url;
+            }
+        },
+    }"
+    class="sj-nav"
+>
     <!-- Primary Navigation Menu -->
     <div class="sj-nav-inner">
         <div class="hidden sm:flex sj-nav-desktop">
@@ -190,7 +249,25 @@
                     @endif
                 </div>
 
-                <div class="sj-nav-user">
+                <div class="sj-nav-user flex items-center gap-2 shrink-0">
+                    @if ($notificationBellEnabled ?? false)
+                        <button
+                            type="button"
+                            @click="openNotificationsModal()"
+                            class="relative inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/10 text-slate-100 hover:bg-white/15 hover:text-white focus:outline-none"
+                            aria-label="{{ __('Notificaciones') }}"
+                        >
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                            </svg>
+                            <span
+                                x-show="notificationUnread > 0"
+                                x-text="notificationUnread > 99 ? '99+' : notificationUnread"
+                                class="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white"
+                                style="display: none;"
+                            ></span>
+                        </button>
+                    @endif
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
                             <button class="sj-nav-user-button inline-flex items-center border text-sm leading-4 font-medium rounded-md text-slate-100 hover:text-white focus:outline-none transition ease-in-out duration-150">
@@ -240,11 +317,29 @@
                 </a>
             </div>
 
-            <div class="me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-slate-100 hover:text-white hover:bg-white/10 focus:outline-none focus:bg-white/10 transition duration-150 ease-in-out">
+            <div class="me-2 flex items-center gap-2 sm:hidden">
+                @if ($notificationBellEnabled ?? false)
+                    <button
+                        type="button"
+                        @click="openNotificationsModal()"
+                        class="relative inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/10 text-slate-100 hover:bg-white/15"
+                        aria-label="{{ __('Notificaciones') }}"
+                    >
+                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                        </svg>
+                        <span
+                            x-show="notificationUnread > 0"
+                            x-text="notificationUnread > 99 ? '99+' : notificationUnread"
+                            class="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white"
+                            style="display: none;"
+                        ></span>
+                    </button>
+                @endif
+                <button @click="menuOpen = ! menuOpen" class="inline-flex items-center justify-center p-2 rounded-md text-slate-100 hover:text-white hover:bg-white/10 focus:outline-none focus:bg-white/10 transition duration-150 ease-in-out">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        <path :class="{'hidden': menuOpen, 'inline-flex': ! menuOpen }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        <path :class="{'hidden': ! menuOpen, 'inline-flex': menuOpen }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
@@ -252,7 +347,7 @@
     </div>
 
     <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="sj-mobile-menu hidden sm:hidden">
+    <div :class="{'block': menuOpen, 'hidden': ! menuOpen}" class="sj-mobile-menu hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Inicio') }}
@@ -340,4 +435,54 @@
             </div>
         </div>
     </div>
+
+    @if ($notificationBellEnabled ?? false)
+        <div
+            x-show="notificationsOpen"
+            x-cloak
+            class="fixed inset-0 z-[5000] flex items-center justify-center bg-black/50 p-4"
+            @keydown.escape.window="notificationsOpen = false"
+        >
+            <div
+                class="flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-lg bg-white shadow-xl"
+                @click.outside="notificationsOpen = false"
+            >
+                <div class="flex shrink-0 items-center justify-between border-b border-gray-200 px-4 py-3">
+                    <h2 class="text-base font-semibold text-gray-900">{{ __('Notificaciones') }}</h2>
+                    <div class="flex items-center gap-2">
+                        <button
+                            type="button"
+                            @click="markAllNotificationsRead()"
+                            class="text-xs font-medium text-indigo-600 hover:text-indigo-800"
+                            x-show="notificationUnread > 0"
+                            style="display: none;"
+                        >
+                            {{ __('Marcar todas leídas') }}
+                        </button>
+                        <button type="button" class="text-2xl leading-none text-gray-500 hover:text-gray-800" @click="notificationsOpen = false" aria-label="{{ __('Cerrar') }}">&times;</button>
+                    </div>
+                </div>
+                <div class="min-h-0 flex-1 overflow-y-auto">
+                    <div x-show="notificationLoading" class="p-6 text-center text-sm text-gray-500">{{ __('Cargando…') }}</div>
+                    <div x-show="!notificationLoading && notificationItems.length === 0" class="p-6 text-center text-sm text-gray-500" style="display: none;">{{ __('No hay notificaciones.') }}</div>
+                    <div x-show="!notificationLoading && notificationItems.length > 0" class="divide-y divide-gray-100" style="display: none;">
+                        <template x-for="item in notificationItems" :key="item.id">
+                            <div>
+                                <button
+                                    type="button"
+                                    class="flex w-full flex-col items-start gap-0.5 px-4 py-3 text-left text-sm hover:bg-gray-50"
+                                    :class="!item.read ? 'bg-indigo-50/80' : ''"
+                                    @click="markOneRead(item.id, item.url || null)"
+                                >
+                                    <span class="font-medium text-gray-900" x-text="item.title"></span>
+                                    <span class="text-gray-600" x-text="item.body"></span>
+                                    <span class="text-xs text-gray-400" x-text="item.created_at ? new Date(item.created_at).toLocaleString() : ''"></span>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </nav>

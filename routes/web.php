@@ -1,25 +1,26 @@
 <?php
 
+use App\Http\Controllers\AlertsController;
 use App\Http\Controllers\Auth\ForcedPasswordChangeController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GeocodingController;
+use App\Http\Controllers\MapController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
-use App\Http\Controllers\AlertsController;
-use App\Http\Controllers\PostController;
 use App\Http\Controllers\ResponsiblePortfolioController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\WeaponController;
 use App\Http\Controllers\WeaponClientAssignmentController;
+use App\Http\Controllers\WeaponController;
 use App\Http\Controllers\WeaponDocumentController;
-use App\Http\Controllers\WeaponInternalAssignmentController;
 use App\Http\Controllers\WeaponImportController;
 use App\Http\Controllers\WeaponIncidentController;
 use App\Http\Controllers\WeaponIncidentReportController;
+use App\Http\Controllers\WeaponInternalAssignmentController;
 use App\Http\Controllers\WeaponPhotoController;
 use App\Http\Controllers\WeaponTransferController;
-use App\Http\Controllers\MapController;
-use App\Http\Controllers\GeocodingController;
 use App\Http\Controllers\WorkerController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -50,7 +51,7 @@ Route::post('/locale', function (Request $request) {
     $locale = (string) $request->input('locale', 'es');
     $supportedLocales = ['es', 'en'];
 
-    if (!in_array($locale, $supportedLocales, true)) {
+    if (! in_array($locale, $supportedLocales, true)) {
         $locale = 'es';
     }
 
@@ -66,6 +67,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])
+        ->whereUuid('id')
+        ->name('notifications.read');
 
     Route::get('/posts/{post}/histories', [PostController::class, 'histories'])->name('posts.histories');
     Route::patch('/posts/{post}/restore', [PostController::class, 'restore'])->name('posts.restore');

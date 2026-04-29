@@ -2,22 +2,34 @@
 
 namespace App\Providers;
 
+use App\Events\AssignmentChanged;
+use App\Events\ClientChanged;
+use App\Events\PortfolioAssignmentsChanged;
+use App\Events\PostChanged;
+use App\Events\TransferChanged;
+use App\Events\WeaponChanged;
+use App\Events\WorkerChanged;
+use App\Listeners\DispatchDomainActivityNotifications;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Event;
 
 class EventServiceProvider extends ServiceProvider
 {
     /**
-     * The event to listener mappings for the application.
-     *
      * @var array<class-string, array<int, class-string>>
      */
     protected $listen = [
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
+        PostChanged::class => [DispatchDomainActivityNotifications::class],
+        WorkerChanged::class => [DispatchDomainActivityNotifications::class],
+        WeaponChanged::class => [DispatchDomainActivityNotifications::class],
+        ClientChanged::class => [DispatchDomainActivityNotifications::class],
+        AssignmentChanged::class => [DispatchDomainActivityNotifications::class],
+        TransferChanged::class => [DispatchDomainActivityNotifications::class],
+        PortfolioAssignmentsChanged::class => [DispatchDomainActivityNotifications::class],
     ];
 
     /**
@@ -36,4 +48,3 @@ class EventServiceProvider extends ServiceProvider
         return false;
     }
 }
-
