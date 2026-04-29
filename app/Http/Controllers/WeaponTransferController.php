@@ -12,8 +12,10 @@ use App\Models\Weapon;
 use App\Models\WeaponTransfer;
 use App\Models\Worker;
 use App\Services\WeaponAssignmentService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class WeaponTransferController extends Controller
@@ -21,14 +23,14 @@ class WeaponTransferController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             abort(403);
         }
         $canManageTransfers = $user->isAdmin() || $user->isResponsibleLevelOne();
 
         $search = trim((string) $request->input('q', ''));
         $status = $request->input('status', WeaponTransfer::STATUS_PENDING);
-        if (!in_array($status, [
+        if (! in_array($status, [
             WeaponTransfer::STATUS_PENDING,
             WeaponTransfer::STATUS_ACCEPTED,
             WeaponTransfer::STATUS_REJECTED,
@@ -37,7 +39,7 @@ class WeaponTransferController extends Controller
             $status = WeaponTransfer::STATUS_PENDING;
         }
 
-        $incomingQuery = WeaponTransfer::with(['weapon', 'fromUser', 'fromClient', 'newClient'])
+        $incomingQuery = WeaponTransfer::with(['weapon', 'fromUser', 'fromClient', 'newClient', 'toUser.clients'])
             ->where('status', $status);
 
         if ($user->isResponsible()) {
@@ -47,12 +49,12 @@ class WeaponTransferController extends Controller
         if ($search !== '') {
             $incomingQuery->where(function ($builder) use ($search) {
                 $builder->whereHas('weapon', function ($weaponQuery) use ($search) {
-                    $weaponQuery->where('internal_code', 'like', '%' . $search . '%')
-                        ->orWhere('serial_number', 'like', '%' . $search . '%');
+                    $weaponQuery->where('internal_code', 'like', '%'.$search.'%')
+                        ->orWhere('serial_number', 'like', '%'.$search.'%');
                 })->orWhereHas('fromClient', function ($clientQuery) use ($search) {
-                    $clientQuery->where('name', 'like', '%' . $search . '%');
+                    $clientQuery->where('name', 'like', '%'.$search.'%');
                 })->orWhereHas('newClient', function ($clientQuery) use ($search) {
-                    $clientQuery->where('name', 'like', '%' . $search . '%');
+                    $clientQuery->where('name', 'like', '%'.$search.'%');
                 });
             });
         }
@@ -62,19 +64,19 @@ class WeaponTransferController extends Controller
         $outgoingQuery = WeaponTransfer::with(['weapon', 'toUser', 'fromClient', 'newClient'])
             ->where('status', $status);
 
-        if (!$user->isAdmin() && !$user->isAuditor()) {
+        if (! $user->isAdmin() && ! $user->isAuditor()) {
             $outgoingQuery->where('requested_by', $user->id);
         }
 
         if ($search !== '') {
             $outgoingQuery->where(function ($builder) use ($search) {
                 $builder->whereHas('weapon', function ($weaponQuery) use ($search) {
-                    $weaponQuery->where('internal_code', 'like', '%' . $search . '%')
-                        ->orWhere('serial_number', 'like', '%' . $search . '%');
+                    $weaponQuery->where('internal_code', 'like', '%'.$search.'%')
+                        ->orWhere('serial_number', 'like', '%'.$search.'%');
                 })->orWhereHas('fromClient', function ($clientQuery) use ($search) {
-                    $clientQuery->where('name', 'like', '%' . $search . '%');
+                    $clientQuery->where('name', 'like', '%'.$search.'%');
                 })->orWhereHas('newClient', function ($clientQuery) use ($search) {
-                    $clientQuery->where('name', 'like', '%' . $search . '%');
+                    $clientQuery->where('name', 'like', '%'.$search.'%');
                 });
             });
         }
@@ -86,7 +88,7 @@ class WeaponTransferController extends Controller
             'activeClientAssignment.responsible',
         ])->orderByDesc('id');
 
-        if ($user->isResponsible() && !$user->isAdmin()) {
+        if ($user->isResponsible() && ! $user->isAdmin()) {
             $weaponsQuery->whereHas('clientAssignments', function ($assignmentQuery) use ($user) {
                 $assignmentQuery->where('responsible_user_id', $user->id)->where('is_active', true);
             });
@@ -94,11 +96,8 @@ class WeaponTransferController extends Controller
 
         $weapons = $canManageTransfers ? $weaponsQuery->get() : collect();
         $transferRecipients = User::whereIn('role', ['RESPONSABLE', 'ADMIN'])
-            ->with(['clients:id,name'])
             ->orderBy('name')
             ->get();
-        $transferClients = Client::orderBy('name')->get(['id', 'name']);
-        $transferPosts = Post::active()->orderBy('name')->get(['id', 'client_id', 'name']);
         $acceptClients = $user->isAdmin()
             ? Client::orderBy('name')->get()
             : $user->clients()->orderBy('name')->get();
@@ -106,7 +105,7 @@ class WeaponTransferController extends Controller
         $acceptPosts = Post::active()->whereIn('client_id', $acceptClients->pluck('id'))->orderBy('name')->get();
 
         $acceptWorkersQuery = Worker::active()->whereIn('client_id', $acceptClients->pluck('id'))->orderBy('name');
-        if (!$user->isAdmin()) {
+        if (! $user->isAdmin()) {
             $acceptWorkersQuery->where('responsible_user_id', $user->id);
         }
         $acceptWorkers = $acceptWorkersQuery->get();
@@ -118,8 +117,6 @@ class WeaponTransferController extends Controller
             'status',
             'weapons',
             'transferRecipients',
-            'transferClients',
-            'transferPosts',
             'acceptClients',
             'acceptPosts',
             'acceptWorkers',
@@ -130,10 +127,10 @@ class WeaponTransferController extends Controller
     public function bulkStore(Request $request)
     {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             abort(403);
         }
-        if (!$user->isAdmin() && !$user->isResponsibleLevelOne()) {
+        if (! $user->isAdmin() && ! $user->isResponsibleLevelOne()) {
             abort(403);
         }
 
@@ -141,50 +138,21 @@ class WeaponTransferController extends Controller
             'weapon_ids' => ['required', 'array', 'min:1'],
             'weapon_ids.*' => ['integer', 'exists:weapons,id'],
             'to_user_id' => ['required', 'exists:users,id'],
-            'client_id' => ['required', 'exists:clients,id'],
-            'post_id' => [
-                'nullable',
-                Rule::exists('posts', 'id')->where(fn ($q) => $q->whereNull('archived_at')),
-            ],
-            'note' => ['nullable', 'string'],
+            'note' => ['nullable', 'string', 'max:2000'],
         ]);
 
         $toUser = User::whereIn('role', ['RESPONSABLE', 'ADMIN'])->find($data['to_user_id']);
-        if (!$toUser) {
+        if (! $toUser) {
             return back()->withErrors([
                 'to_user_id' => 'El destinatario no es válido.',
             ])->withInput();
-        }
-
-        $clientId = (int) $data['client_id'];
-        $postId = isset($data['post_id']) && $data['post_id'] !== '' ? (int) $data['post_id'] : null;
-
-        $inPortfolio = $toUser->clients()->whereKey($clientId)->exists();
-        if (!$inPortfolio) {
-            return back()->withErrors([
-                'client_id' => 'El cliente no pertenece a las asignaciones del destinatario.',
-            ])->withInput();
-        }
-
-        if ($postId) {
-            $post = Post::findOrFail($postId);
-            if ($post->isArchived()) {
-                return back()->withErrors([
-                    'post_id' => 'El puesto está archivado.',
-                ])->withInput();
-            }
-            if ($post->client_id !== $clientId) {
-                return back()->withErrors([
-                    'post_id' => 'El puesto seleccionado no pertenece al cliente destino.',
-                ])->withInput();
-            }
         }
 
         $weaponsQuery = Weapon::query()
             ->with('activeClientAssignment')
             ->whereIn('id', $data['weapon_ids']);
 
-        if ($user->isResponsible() && !$user->isAdmin()) {
+        if ($user->isResponsible() && ! $user->isAdmin()) {
             $weaponsQuery->whereHas('clientAssignments', function ($assignmentQuery) use ($user) {
                 $assignmentQuery->where('responsible_user_id', $user->id)->where('is_active', true);
             });
@@ -203,7 +171,7 @@ class WeaponTransferController extends Controller
 
             if ($activeAssignment) {
                 $fromUserId = $activeAssignment->responsible_user_id;
-                if (!$user->isAdmin() && $fromUserId !== $user->id) {
+                if (! $user->isAdmin() && $fromUserId !== $user->id) {
                     abort(403);
                 }
 
@@ -216,14 +184,14 @@ class WeaponTransferController extends Controller
                 continue;
             }
 
-            if (!$user->isAdmin()) {
+            if (! $user->isAdmin()) {
                 abort(403, 'Solo el administrador puede transferir armas sin destino operativo.');
             }
         }
 
         $dispatchedTransfers = [];
 
-        DB::transaction(function () use ($weapons, $user, $toUser, $data, $clientId, $postId, &$dispatchedTransfers) {
+        DB::transaction(function () use ($weapons, $user, $toUser, $data, &$dispatchedTransfers) {
             foreach ($weapons as $weapon) {
                 $activeAssignment = $weapon->activeClientAssignment;
                 $this->closeInternalAssignments($weapon, $user);
@@ -235,7 +203,7 @@ class WeaponTransferController extends Controller
                     'to_user_id' => $toUser->id,
                     'requested_by' => $user->id,
                     'from_client_id' => $activeAssignment?->client_id,
-                    'new_client_id' => $clientId,
+                    'new_client_id' => null,
                     'status' => WeaponTransfer::STATUS_PENDING,
                     'requested_at' => now(),
                     'note' => $data['note'] ?? null,
@@ -252,8 +220,7 @@ class WeaponTransferController extends Controller
                         'from_user_id' => $activeAssignment?->responsible_user_id ?? $user->id,
                         'to_user_id' => $toUser->id,
                         'from_client_id' => $activeAssignment?->client_id,
-                        'new_client_id' => $clientId,
-                        'post_id' => $postId,
+                        'new_client_id' => null,
                     ],
                 ]);
 
@@ -274,22 +241,24 @@ class WeaponTransferController extends Controller
     public function accept(Request $request, WeaponTransfer $transfer, WeaponAssignmentService $service)
     {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             abort(403);
         }
-        if (!$user->isAdmin() && !$user->isResponsibleLevelOne()) {
+        if (! $user->isAdmin() && ! $user->isResponsibleLevelOne()) {
             abort(403);
         }
 
         if ($transfer->status !== WeaponTransfer::STATUS_PENDING) {
-            abort(422, 'La transferencia ya fue resuelta.');
+            return redirect()
+                ->route('transfers.index', $request->only(['q', 'status']))
+                ->with('transfer_flash_error', __('Esta transferencia ya no está pendiente.'));
         }
 
-        if (!$user->isAdmin() && $transfer->to_user_id !== $user->id) {
+        if (! $user->isAdmin() && $transfer->to_user_id !== $user->id) {
             abort(403);
         }
 
-        $data = $request->validate([
+        $validator = Validator::make($request->all(), [
             'client_id' => ['required', 'exists:clients,id'],
             'post_id' => [
                 'nullable',
@@ -301,44 +270,101 @@ class WeaponTransferController extends Controller
             ],
         ]);
 
+        if ($validator->fails()) {
+            return $this->redirectTransfersIndexWithAcceptModalContext($request, $transfer, $validator);
+        }
+
+        $data = $validator->validated();
+
         $postId = $data['post_id'] ?? null;
         $workerId = $data['worker_id'] ?? null;
         if ($postId && $workerId) {
-            abort(422, 'Seleccione solo un puesto o un trabajador.');
+            return redirect()
+                ->route('transfers.index', $request->only(['q', 'status']))
+                ->withErrors([
+                    'post_id' => __('Seleccione solo un puesto o un trabajador.'),
+                    'worker_id' => __('Seleccione solo un puesto o un trabajador.'),
+                ])
+                ->withInput($request->only(['client_id', 'post_id', 'worker_id']))
+                ->with('reopen_accept_transfer', $this->acceptTransferModalPayload($transfer));
         }
 
-        $transfer->load(['weapon', 'toUser']);
+        $transfer->load(['weapon', 'toUser.clients']);
         $weapon = $transfer->weapon;
         $clientId = (int) $data['client_id'];
+
+        $recipientIsActor = $transfer->to_user_id === $user->id;
+
+        $recipientClientCount = $transfer->toUser->clients()->count();
+        if ($recipientClientCount === 0) {
+            $emptyPortfolioMessage = $recipientIsActor
+                ? __('Aún no tienes clientes asignados. Solicita a un administrador que te los asocie antes de aceptar.')
+                : __('El destinatario aún no tiene clientes en cartera. Asócielos antes de aceptar.');
+
+            return redirect()
+                ->route('transfers.index', $request->only(['q', 'status']))
+                ->withErrors([
+                    'client_id' => $emptyPortfolioMessage,
+                ])
+                ->withInput($request->only(['client_id', 'post_id', 'worker_id']))
+                ->with('reopen_accept_transfer', $this->acceptTransferModalPayload($transfer));
+        }
+
         $inPortfolio = $transfer->toUser->clients()->whereKey($clientId)->exists();
-        if (!$inPortfolio) {
-            abort(422, 'El cliente no pertenece a las asignaciones del destinatario.');
+        if (! $inPortfolio) {
+            $notInPortfolioMessage = $recipientIsActor
+                ? __('Ese cliente no es de tu cartera. Elige otro cliente o cancela.')
+                : __('Ese cliente no pertenece a la cartera del destinatario. Elija otro cliente o cancele.');
+
+            return redirect()
+                ->route('transfers.index', $request->only(['q', 'status']))
+                ->withErrors([
+                    'client_id' => $notInPortfolioMessage,
+                ])
+                ->withInput($request->only(['client_id', 'post_id', 'worker_id']))
+                ->with('reopen_accept_transfer', $this->acceptTransferModalPayload($transfer));
         }
 
         if ($postId) {
             $post = Post::findOrFail($postId);
             if ($post->isArchived()) {
-                return back()->withErrors([
-                    'post_id' => 'El puesto está archivado.',
-                ])->withInput();
+                return redirect()
+                    ->route('transfers.index', $request->only(['q', 'status']))
+                    ->withErrors(['post_id' => __('El puesto está archivado.')])
+                    ->withInput($request->only(['client_id', 'post_id', 'worker_id']))
+                    ->with('reopen_accept_transfer', $this->acceptTransferModalPayload($transfer));
             }
             if ($post->client_id !== $clientId) {
-                abort(422, 'El puesto seleccionado no pertenece al cliente.');
+                return redirect()
+                    ->route('transfers.index', $request->only(['q', 'status']))
+                    ->withErrors(['post_id' => __('El puesto seleccionado no pertenece al cliente elegido.')])
+                    ->withInput($request->only(['client_id', 'post_id', 'worker_id']))
+                    ->with('reopen_accept_transfer', $this->acceptTransferModalPayload($transfer));
             }
         }
 
         if ($workerId) {
             $worker = Worker::findOrFail($workerId);
             if ($worker->isArchived()) {
-                return back()->withErrors([
-                    'worker_id' => 'El trabajador está archivado.',
-                ])->withInput();
+                return redirect()
+                    ->route('transfers.index', $request->only(['q', 'status']))
+                    ->withErrors(['worker_id' => __('El trabajador está archivado.')])
+                    ->withInput($request->only(['client_id', 'post_id', 'worker_id']))
+                    ->with('reopen_accept_transfer', $this->acceptTransferModalPayload($transfer));
             }
             if ($worker->client_id !== $clientId) {
-                abort(422, 'El trabajador seleccionado no pertenece al cliente.');
+                return redirect()
+                    ->route('transfers.index', $request->only(['q', 'status']))
+                    ->withErrors(['worker_id' => __('El trabajador seleccionado no pertenece al cliente elegido.')])
+                    ->withInput($request->only(['client_id', 'post_id', 'worker_id']))
+                    ->with('reopen_accept_transfer', $this->acceptTransferModalPayload($transfer));
             }
-            if (!$user->isAdmin() && $worker->responsible_user_id !== $user->id) {
-                abort(403, 'Solo puede asignar trabajadores a su cargo.');
+            if (! $user->isAdmin() && $worker->responsible_user_id !== $user->id) {
+                return redirect()
+                    ->route('transfers.index', $request->only(['q', 'status']))
+                    ->withErrors(['worker_id' => __('Solo puede asignar trabajadores a su cargo.')])
+                    ->withInput($request->only(['client_id', 'post_id', 'worker_id']))
+                    ->with('reopen_accept_transfer', $this->acceptTransferModalPayload($transfer));
             }
         }
 
@@ -381,10 +407,10 @@ class WeaponTransferController extends Controller
     public function reject(Request $request, WeaponTransfer $transfer)
     {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             abort(403);
         }
-        if (!$user->isAdmin() && !$user->isResponsibleLevelOne()) {
+        if (! $user->isAdmin() && ! $user->isResponsibleLevelOne()) {
             abort(403);
         }
 
@@ -392,7 +418,7 @@ class WeaponTransferController extends Controller
             abort(422, 'La transferencia ya fue resuelta.');
         }
 
-        if (!$user->isAdmin() && $transfer->to_user_id !== $user->id) {
+        if (! $user->isAdmin() && $transfer->to_user_id !== $user->id) {
             abort(403);
         }
 
@@ -416,10 +442,33 @@ class WeaponTransferController extends Controller
         return redirect()->route('transfers.index')->with('status', 'Transferencia rechazada.');
     }
 
+    /**
+     * @return array{action: string, weapon_code: string, allowed_client_ids: string}
+     */
+    private function acceptTransferModalPayload(WeaponTransfer $transfer): array
+    {
+        $transfer->loadMissing(['toUser.clients', 'weapon']);
+
+        return [
+            'action' => route('transfers.accept', $transfer),
+            'weapon_code' => (string) ($transfer->weapon?->internal_code ?? $transfer->weapon_id),
+            'allowed_client_ids' => $transfer->toUser?->clients->pluck('id')->implode(',') ?? '',
+        ];
+    }
+
+    private function redirectTransfersIndexWithAcceptModalContext(Request $request, WeaponTransfer $transfer, \Illuminate\Contracts\Validation\Validator $validator): RedirectResponse
+    {
+        return redirect()
+            ->route('transfers.index', $request->only(['q', 'status']))
+            ->withErrors($validator)
+            ->withInput($request->only(['client_id', 'post_id', 'worker_id']))
+            ->with('reopen_accept_transfer', $this->acceptTransferModalPayload($transfer));
+    }
+
     private function retireClientAssignment(Weapon $weapon, User $actor): void
     {
         $active = $weapon->activeClientAssignment()->first();
-        if (!$active) {
+        if (! $active) {
             return;
         }
 
@@ -508,7 +557,7 @@ class WeaponTransferController extends Controller
 
     private function assignInternalDestination(Weapon $weapon, User $actor, int $clientId, ?int $postId, ?int $workerId): void
     {
-        if (!$postId && !$workerId) {
+        if (! $postId && ! $workerId) {
             return;
         }
 

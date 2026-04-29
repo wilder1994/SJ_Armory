@@ -104,6 +104,12 @@ npm run build
 En **hosting compartido** (p. ej. Pusher): compile en su PC con `npm run build:deploy` y suba **todo el contenido** de `build_hosting/build/` dentro de **`public/build/`** del servidor (no sobrescriba otros archivos del proyecto salvo el manifest y los assets de Vite).
 
 > 🧩 Si `npm` no está en PATH, usa la terminal integrada de Laragon o exporta la ruta a Node antes de compilar.
+>
+> En Windows (Laragon), puedes invocar `npm` directo así:
+>
+> ```bash
+> C:\laragon\bin\nodejs\node-v18\npm.cmd run build:deploy
+> ```
 
 ### 5) Levantar Reverb (WebSockets)
 
@@ -488,9 +494,12 @@ Flujo:
   - Retira asignacion de cliente activa.
   - Crea registro de transferencia pendiente.
 - Aceptacion:
-  - Valida cartera del destinatario.
+  - El usuario que acepta solo puede asignar **clientes de su cartera** (y el sistema valida en backend que el `client_id` pertenezca a la cartera del destinatario).
+  - En el modal, **Puestos** y **Trabajadores** solo se muestran luego de seleccionar cliente y se filtran por ese cliente.
+  - Para RESPONSABLE: los **trabajadores** visibles/seleccionables son solo los que tiene a cargo.
+  - Si hay error de validacion/alcance, no se muestra pantalla de excepcion: se redirige a `transfers.index` con una alerta y opciones para reintentar la seleccion o cancelar.
   - Asigna nuevo cliente responsable.
-  - Opcionalmente asigna puesto o trabajador.
+  - Opcionalmente asigna puesto o trabajador (solo uno).
 - Rechazo:
   - Marca estado rechazado.
 
