@@ -3075,7 +3075,8 @@
         inset: 0;
         justify-content: center;
         position: fixed;
-        z-index: 3000;
+        /* Por encima del modal Lista (<x-modal> z-[3000]) al abrir expediente desde la tabla */
+        z-index: 3100;
     }
 
     .sj-incident-modal__backdrop {

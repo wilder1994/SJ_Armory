@@ -45,7 +45,7 @@ class WeaponIncidentReportController extends Controller
     {
         $filters = $this->reports->filtersFromRequest($request->all());
         $dashboard = $this->reports->dashboard($request->user(), $filters, $selectedType);
-        $incidents = $this->reports->paginated($request->user(), $filters, $selectedType);
+        $incidents = $this->reports->incidentsForReportTable($request->user(), $filters, $selectedType);
         $types = IncidentType::query()
             ->with(['modalities' => fn ($query) => $query->where('is_active', true)])
             ->where('is_active', true)

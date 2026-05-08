@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Models\Weapon;
 use App\Models\WeaponIncident;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -44,14 +43,16 @@ class WeaponIncidentReportService
             ->values();
     }
 
-    public function paginated(User $user, array $filters, ?IncidentType $selectedType = null): LengthAwarePaginator
+    /**
+     * Listado completo para la tabla del modal (mismo alcance que KPIs / dashboard).
+     */
+    public function incidentsForReportTable(User $user, array $filters, ?IncidentType $selectedType = null): Collection
     {
         return $this->baseQuery($user, $filters, $selectedType)
             ->with($this->relationships())
             ->orderByDesc('event_at')
             ->orderByDesc('id')
-            ->paginate(20)
-            ->withQueryString();
+            ->get();
     }
 
     public function dashboard(User $user, array $filters, ?IncidentType $selectedType = null): array

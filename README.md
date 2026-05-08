@@ -21,6 +21,7 @@ Sistema web para **gestión de armamento**, **asignaciones operativas**, **trans
 - ✅ **Auditoría**: registro de cambios y acciones críticas.
 - ✅ **Realtime (Broadcasting)**: Laravel Reverb + Echo (WebSockets) para sincronización en tiempo real.
 - ✅ **Notificaciones**: campana en barra superior con **solo no leídas**; menú de usuario con **Historial de notificaciones** (leídas y no leídas, mismo modal con `?history=1`); textos con actor y contexto (arma, cliente, puesto, etc.).
+- ✅ **Reportes — Novedades operativas** (`/reports/weapon-incidents`): dashboard por año y tipo; botón **Lista** abre un modal con la tabla completa (mismo alcance que los filtros); **buscador** en el modal filtra por cualquier texto visible en la fila; columna **Arma** muestra solo el **número de serie** (enlace a la ficha del arma).
 
 ---
 
@@ -707,6 +708,7 @@ Reportes:
 - Armas sin destino.
 - Historial por arma (asignaciones + documentos).
 - Auditoria filtrable por rango (30/90 dias) y modulo.
+- **Novedades operativas** (`WeaponIncidentReportController`, `WeaponIncidentReportService`): vista con KPIs, gráficos por tipo/modalidad y tendencia; el detalle tabular no ocupa el scroll principal: el botón **Lista** del encabezado abre un modal (`x-modal`) con la tabla (`resources/views/reports/weapon-incidents/partials/incidents-table.blade.php`), listado alineado al mismo criterio de consulta que el dashboard (colección completa para el periodo/tipo, sin paginación de 20); **Alpine.js** filtra filas por coincidencia en el texto visible; expediente **Gestionar** / **Ver caso** usa los modales existentes (`reports-incidents.js`), con **z-index** del modal de expediente por encima del modal Lista (`resources/css/app.css`).
 
 Alertas:
 

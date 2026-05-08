@@ -44,6 +44,15 @@
                         </button>
                     </form>
 
+                    <button
+                        type="button"
+                        class="sj-incident-header__button sj-incident-header__button--ghost"
+                        x-data=""
+                        x-on:click.prevent="$dispatch('open-modal', 'weapon-incidents-list')"
+                    >
+                        {{ __('Lista') }}
+                    </button>
+
                     @can('create', App\Models\WeaponIncident::class)
                         <button type="button" class="sj-incident-header__button sj-incident-header__button--accent" data-open-modal="weapon-incident-modal">
                             {{ __('Agregar reporte') }}
@@ -71,6 +80,49 @@
             @include('reports.weapon-incidents.base')
         </div>
     </div>
+
+    <x-modal name="weapon-incidents-list" maxWidth="7xl" focusable>
+        <div class="border-b border-gray-100 px-4 py-4 sm:px-6">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">{{ __('Detalle') }}</p>
+                    <h3 class="text-lg font-semibold text-gray-900">{{ __('Listado de reportes') }}</h3>
+                    <p class="mt-1 max-w-2xl text-sm text-gray-600">
+                        {{ __('Mismo alcance que los filtros de año y tipo. Busca por cualquier texto visible (serie, código, cliente, tipo…).') }}
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    class="inline-flex shrink-0 items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
+                    x-on:click="$dispatch('close-modal', 'weapon-incidents-list')"
+                >
+                    {{ __('Cerrar') }}
+                </button>
+            </div>
+        </div>
+
+        <div class="space-y-4 px-4 pb-6 pt-4 sm:px-6" x-data="{ q: '' }">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div class="w-full sm:max-w-xl">
+                    <label for="weapon-incidents-list-search" class="sr-only">{{ __('Buscar en la tabla') }}</label>
+                    <input
+                        id="weapon-incidents-list-search"
+                        type="search"
+                        x-model.debounce.300ms="q"
+                        autocomplete="off"
+                        spellcheck="false"
+                        placeholder="{{ __('Buscar (ej. número de serie, código arma, cliente, tipo…)') }}"
+                        class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    />
+                </div>
+                <p class="text-xs text-gray-500">
+                    {{ __('Mostrando :count registros', ['count' => $incidents->count()]) }}
+                </p>
+            </div>
+
+            @include('reports.weapon-incidents.partials.incidents-table')
+        </div>
+    </x-modal>
 
     @can('create', App\Models\WeaponIncident::class)
         @include('reports.weapon-incidents.modal')
