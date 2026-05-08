@@ -92,6 +92,26 @@
                 </div>
             @endif
 
+            @if ($pendingTransferForWeapon ?? null)
+                @php
+                    $pendingTransferForWeapon->loadMissing(['requestedBy', 'toUser']);
+                @endphp
+                <div class="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950" role="status">
+                    <p class="font-semibold">{{ __('Transferencia pendiente') }}</p>
+                    <p class="mt-2">
+                        @if (auth()->user()?->isAdmin())
+                            {{ __('Esta arma está en transferencia pendiente. Enviada por :from; debe aceptarla :to.', [
+                                'from' => $pendingTransferForWeapon->requestedBy?->name ?? __('—'),
+                                'to' => $pendingTransferForWeapon->toUser?->name ?? __('—'),
+                            ]) }}
+                        @else
+                            {{ __('Esta arma tiene una transferencia pendiente de aceptación. No puede modificar su destino ni sus asignaciones hasta que se resuelva.') }}
+                        @endif
+                    </p>
+                    <a href="{{ route('transfers.index') }}" class="mt-3 inline-block font-medium text-amber-900 underline hover:no-underline">{{ __('Ir a transferencias') }}</a>
+                </div>
+            @endif
+
             <!-- Main Container: Information and Management -->
             <div class="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-200 mb-8">
                 <div class="bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 px-6 py-5">

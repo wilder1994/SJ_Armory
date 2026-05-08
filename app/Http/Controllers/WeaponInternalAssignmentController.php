@@ -48,8 +48,12 @@ class WeaponInternalAssignmentController extends Controller
         }
 
         $activeClientAssignment = $weapon->activeClientAssignment()->first();
-        if (!$activeClientAssignment) {
+        if (! $activeClientAssignment) {
             abort(422, 'El arma no tiene destino operativo activo.');
+        }
+
+        if ($msg = $weapon->pendingTransferBlockMessage($user)) {
+            return back()->withErrors(['post_id' => $msg])->withInput();
         }
 
         $this->authorizeInternalAssignment($weapon, $user, $activeClientAssignment->responsible_user_id);
@@ -214,6 +218,10 @@ class WeaponInternalAssignmentController extends Controller
             $this->authorizeInternalAssignment($weapon, $user, $activeClientAssignment->responsible_user_id);
         } elseif (!$user->isAdmin()) {
             abort(403);
+        }
+
+        if ($msg = $weapon->pendingTransferBlockMessage($user)) {
+            return redirect()->route('weapons.show', $weapon)->withErrors(['post_id' => $msg]);
         }
 
         $before = $this->currentInternalState($weapon);

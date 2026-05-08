@@ -12,7 +12,7 @@ Sistema web para **gestión de armamento**, **asignaciones operativas**, **trans
 - ✅ **Asignaciones**:
   - **Operativa** (arma ↔ cliente/responsable)
   - **Interna** (arma ↔ puesto y/o trabajador; ubicación en mapa prioriza puesto si existe; la columna de destino en el listado refleja principalmente al trabajador cuando hay trabajador activo)
-- ✅ **Transferencias**: listado **unificado** (pendientes y enviadas en una tabla; serie en columna arma; munición/proveedores opcionales en el envío; aceptación; **cancelación** con restauración del destino previo); botón **Historial** (modal, últimas participaciones).
+- ✅ **Transferencias**: listado **unificado** (pendientes y enviadas en una tabla; serie en columna arma; munición/proveedores opcionales en el envío; aceptación; **cancelación** con restauración cuando aplica); con transferencia **pendiente**, la ficha del arma muestra un **aviso** (usuario normal: mensaje genérico; **ADMIN**: quién **envió** y quién **debe aceptar**); botón **Historial** (modal, últimas participaciones).
 - ✅ **Clientes / Puestos / Trabajadores / Usuarios** (puestos y trabajadores: archivo, historial de cambios, políticas por rol)
 - ✅ **Cargas masivas**: validación previa, preview, ejecución por chunks, trazabilidad por lote.
 - ✅ **Dashboard**: KPIs, métricas, gráficos y estado “as of”.
@@ -522,10 +522,9 @@ Flujo:
 
 - Solicitud masiva (`bulkStore`) de una o varias armas.
 - Al solicitar (opcional por lote): **munición** y/o **proveedores** con cantidad; si no se marcan los interruptores, el envío es solo el arma. Los valores quedan en `weapon_transfers.ammo_count` / `provider_count` y, al **aceptar**, se aplican a la asignación interna nueva (puesto y/o trabajador) si existe.
-- Al solicitar:
-  - Cierra asignaciones internas activas.
-  - Retira asignacion de cliente activa.
-  - Crea registro de transferencia pendiente.
+- Al solicitar: **no** se retira el destino operativo ni la asignación interna; el arma **sigue asignada** al responsable y cliente actuales hasta que el destinatario **acepte** (o se cancele la transferencia).
+- Mientras exista una transferencia **pendiente** para un arma, no se puede cambiar su destino operativo, ni su asignación interna, ni iniciar otra transferencia; el administrador ve en el mensaje **quién envió** y **quién debe aceptar**.
+- **Detalle del arma** (`weapons.show`): caja de aviso “Transferencia pendiente” con enlace a `transfers.index`; los intentos bloqueados devuelven error de validación con el mismo criterio de mensaje (detalle ampliado solo para **ADMIN** vía `Weapon::pendingTransferBlockMessage()`).
 - Aceptacion:
   - El usuario que acepta solo puede asignar **clientes de su cartera** (y el sistema valida en backend que el `client_id` pertenezca a la cartera del destinatario).
   - En el modal, **Puestos** y **Trabajadores** solo se muestran luego de seleccionar cliente y se filtran por ese cliente.
@@ -533,7 +532,7 @@ Flujo:
   - Si hay error de validacion/alcance, no se muestra pantalla de excepcion: se redirige a `transfers.index` con una alerta y opciones para reintentar la seleccion o cancelar.
   - Asigna nuevo cliente responsable.
   - Opcionalmente asigna **puesto y/o trabajador** (puede elegir ambos; el mapa prioriza el puesto cuando hay puesto). La validacion de coordenadas del puesto o del cliente (solo trabajador) es la misma que en la asignacion interna desde el detalle del arma.
-- **Cancelación** (`transfers.cancel`): remitente, destinatario o administrador pueden cancelar una pendiente; se **restaura** el destino operativo previo (cliente y responsable de origen) cuando la transferencia los tenía registrados.
+- **Cancelación** (`transfers.cancel`): remitente, destinatario o administrador pueden cancelar una pendiente; **no** altera el destino si la asignación sigue activa (flujo actual). Si la transferencia es antigua y el arma quedó sin cliente (migración de comportamiento previo), se intenta **restaurar** desde `from_client_id` / `from_user_id`.
 - Rechazo: la ruta `transfers.reject` fue sustituida por cancelación unificada (`cancelled`); registros antiguos pueden seguir en estado `rejected`.
 
 ### 5.5 Clientes
@@ -1130,6 +1129,8 @@ Con esto, `php artisan test` no debe tocar la base real del proyecto.
 Nota: actualmente no hay suite dedicada para reglas de negocio de armas/asignaciones/transferencias, aunque la logica ya esta implementada en controladores/servicios.
 
 ## 16. Operacion y despliegue (resumen)
+
+**PHP y Blade** no se “compilan” como un binario: el servidor escucha PHP y Laravel puede **cachear** rutas, configuración y vistas compiladas para rendimiento. Si solo cambió backend o plantillas Blade **sin** tocar `resources/js` / `resources/css` ni variables `VITE_*`, **no** hace falta volver a ejecutar `npm run build` / `build:deploy`. Tras actualizar vistas, si usó `view:cache` antes, conviene `php artisan view:clear` y volver a `view:cache` (o dejar que Blade recompilara en caliente si no usa caché de vistas).
 
 Checklist minimo de produccion:
 

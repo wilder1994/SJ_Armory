@@ -101,6 +101,37 @@ class Weapon extends Model
         return $this->hasMany(WeaponTransfer::class);
     }
 
+    public function pendingTransfer(): ?WeaponTransfer
+    {
+        /** @var WeaponTransfer|null $transfer */
+        $transfer = $this->transfers()
+            ->where('status', WeaponTransfer::STATUS_PENDING)
+            ->with(['requestedBy', 'toUser'])
+            ->first();
+
+        return $transfer;
+    }
+
+    /**
+     * Mensaje para bloquear destino/asignaciones internas mientras hay transferencia pendiente.
+     */
+    public function pendingTransferBlockMessage(?User $user): ?string
+    {
+        $pending = $this->pendingTransfer();
+        if ($pending === null) {
+            return null;
+        }
+        $pending->loadMissing(['requestedBy', 'toUser']);
+        if ($user !== null && $user->isAdmin()) {
+            return __('Esta arma está en transferencia pendiente. Enviada por :from; debe aceptarla :to.', [
+                'from' => $pending->requestedBy?->name ?? __('—'),
+                'to' => $pending->toUser?->name ?? __('—'),
+            ]);
+        }
+
+        return __('Esta arma tiene una transferencia pendiente de aceptación. No puede modificar su destino ni sus asignaciones hasta que se resuelva.');
+    }
+
     public function permitFile()
     {
         return $this->belongsTo(File::class, 'permit_file_id');

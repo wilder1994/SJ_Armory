@@ -22,6 +22,10 @@ class WeaponClientAssignmentController extends Controller
 
         $this->authorize('assignToClient', $weapon);
 
+        if ($msg = $weapon->pendingTransferBlockMessage($user)) {
+            return back()->withErrors(['client_id' => $msg])->withInput();
+        }
+
         $data = $request->validate([
             'client_id' => ['required', 'exists:clients,id'],
             'reason' => ['nullable', 'string'],

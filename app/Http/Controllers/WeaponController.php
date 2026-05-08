@@ -385,6 +385,8 @@ class WeaponController extends Controller
                 ->values()
         );
 
+        $pendingTransferForWeapon = $weapon->pendingTransfer();
+
         return view('weapons.show', compact(
             'weapon',
             'ownershipTypes',
@@ -393,6 +395,7 @@ class WeaponController extends Controller
             'workers',
             'clientOptions',
             'clientResponsibleMap',
+            'pendingTransferForWeapon',
         ));
     }
 

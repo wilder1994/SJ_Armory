@@ -184,6 +184,12 @@ class WeaponTransferController extends Controller
         }
 
         foreach ($weapons as $weapon) {
+            if ($weapon->pendingTransfer() !== null) {
+                return back()->withErrors([
+                    'weapon_ids' => __('Esta arma ya tiene una transferencia pendiente.'),
+                ])->withInput();
+            }
+
             $activeAssignment = $weapon->activeClientAssignment;
 
             if ($activeAssignment) {
@@ -211,8 +217,6 @@ class WeaponTransferController extends Controller
         DB::transaction(function () use ($weapons, $user, $toUser, $data, &$dispatchedTransfers, $ammoCount, $providerCount) {
             foreach ($weapons as $weapon) {
                 $activeAssignment = $weapon->activeClientAssignment;
-                $this->closeInternalAssignments($weapon, $user);
-                $this->retireClientAssignment($weapon, $user);
 
                 $transfer = WeaponTransfer::create([
                     'weapon_id' => $weapon->id,
@@ -380,6 +384,8 @@ class WeaponTransferController extends Controller
         }
 
         DB::transaction(function () use ($transfer, $weapon, $service, $clientId, $user, $postId, $workerId) {
+            $this->closeInternalAssignments($weapon, $user);
+
             $service->assignClient(
                 $weapon,
                 $clientId,
@@ -389,7 +395,6 @@ class WeaponTransferController extends Controller
                 $transfer->note
             );
 
-            $this->closeInternalAssignments($weapon, $user);
             $this->assignInternalDestination(
                 $weapon,
                 $user,
@@ -447,17 +452,23 @@ class WeaponTransferController extends Controller
         $weapon = $transfer->weapon()->first();
 
         DB::transaction(function () use ($transfer, $weapon, $user, $service) {
-            if ($weapon && $transfer->from_client_id && $transfer->from_user_id) {
-                $fromResponsible = User::find($transfer->from_user_id);
-                if ($fromResponsible) {
-                    $service->assignClient(
-                        $weapon,
-                        (int) $transfer->from_client_id,
-                        $fromResponsible,
-                        $user,
-                        now()->toDateString(),
-                        __('Reversión por cancelación de transferencia.')
-                    );
+            if ($weapon !== null) {
+                $weapon->refresh();
+                $needsLegacyRestore = ! $weapon->activeClientAssignment()->exists()
+                    && $transfer->from_client_id
+                    && $transfer->from_user_id;
+                if ($needsLegacyRestore) {
+                    $fromResponsible = User::find($transfer->from_user_id);
+                    if ($fromResponsible) {
+                        $service->assignClient(
+                            $weapon,
+                            (int) $transfer->from_client_id,
+                            $fromResponsible,
+                            $user,
+                            now()->toDateString(),
+                            __('Reversión por cancelación de transferencia.')
+                        );
+                    }
                 }
             }
 
