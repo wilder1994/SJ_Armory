@@ -88,6 +88,10 @@ php artisan key:generate
 php artisan migrate
 ```
 
+En **producción** (`APP_ENV=production`): `php artisan migrate --force`. Antes, **respaldo de la BD** y **`git pull`** en el servidor para que los archivos en `database/migrations/` coincidan con el repo; si migras con código desactualizado, una migración puede fallar o dejar el esquema incoherente.
+
+**MySQL y `2026_05_08_120000_permit_authenticated_templates`:** esta migración elimina la FK de `weapons.permit_authenticated_file_id` usando el nombre real en `information_schema` y después borra la columna. Si ves `SQLSTATE[HY000]: 1828 Cannot drop column ... foreign key`, suele ser versión vieja del archivo de migración en el servidor o FK sin eliminar; actualiza el código, vuelve a ejecutar `migrate --force`, o en último caso elimina la FK manualmente en MySQL y repite la migración.
+
 ### 4) Instalar y compilar frontend
 
 ```bash
