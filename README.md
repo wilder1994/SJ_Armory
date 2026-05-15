@@ -8,7 +8,7 @@ Sistema web para **gestión de armamento**, **asignaciones operativas**, **trans
 
 ## 📌 Alcance funcional
 
-- ✅ **Armas**: alta/edición, fotos (técnicas y permiso; reverso autenticado según plantillas globales **porte** / **tenencia**), documentos (descarga del **permiso** como PDF frente + reverso), exportación, inventario.
+- ✅ **Armas**: alta/edición, fotos (técnicas y permiso; en móvil **Tomar foto** o **Elegir de galería**; reverso autenticado según plantillas globales **porte** / **tenencia**), documentos (descarga del **permiso** como PDF frente + reverso), exportación, inventario.
 - ✅ **Asignaciones**:
   - **Operativa** (arma ↔ cliente/responsable)
   - **Interna** (arma ↔ puesto y/o trabajador; ubicación en mapa prioriza puesto si existe; la columna de destino en el listado refleja principalmente al trabajador cuando hay trabajador activo)
@@ -647,6 +647,7 @@ Controlador: `app/Http/Controllers/WeaponPhotoController.php`
 - **Autorización por `WeaponPolicy::updatePhotos`**: ADMIN siempre puede; RESPONSABLE Nivel 1 puede subir/reemplazar/eliminar fotos solo en armas donde es responsable activo. La edición de la información del arma (`update`) sigue siendo exclusiva del ADMIN.
 - La actualización de la **foto del permiso** (`WeaponController::updatePermitPhoto`) usa la misma policy `updatePhotos`, así el responsable Nivel 1 puede mantener actualizada la imagen del permiso desde la grilla de fotos.
 - UI: el toggle **Modo edición** en la tarjeta de fotos aparece para los usuarios autorizados; el switch usa estilos propios (`.sj-toggle*`) embebidos en el partial, sin dependencia de clases Tailwind dinámicas (no requiere recompilar Vite).
+- **Móvil (cámara + galería):** al subir o cambiar una imagen (ficha del arma `resources/views/weapons/partials/photos.blade.php` y formulario crear/editar `form.blade.php`), se muestra un modal **Agregar imagen** con **Tomar foto** (`input` con `capture="environment"`) y **Elegir de galería** (`accept="image/*"` sin `capture`). Tras elegir, el flujo sigue con el editor Cropper y la subida por AJAX o formulario. En escritorio se mantienen arrastrar y pegar. Requiere **HTTPS** en producción para usar la cámara desde el navegador.
 
 Descripciones tecnicas soportadas (`WeaponPhoto::DESCRIPTIONS`):
 

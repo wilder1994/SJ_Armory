@@ -110,7 +110,7 @@
                     ? Storage::disk($photo->file->disk)->url($photo->file->path)
                     : null;
             @endphp
-            <label for="photo_{{ $photoIndex }}" class="block cursor-pointer" data-drop-zone tabindex="0" title="{{ __('Selecciona, arrastra o pega una foto') }}">
+            <div class="block cursor-pointer" data-photo-picker-zone data-drop-zone tabindex="0" title="{{ __('Tomar foto, elegir de galería, arrastrar o pegar') }}">
                 <input id="photo_{{ $photoIndex }}" name="photos[]" type="file" accept="image/*" class="hidden"
                     data-photo-description="{{ $description }}"
                     data-preview-target="photo_preview_{{ $photoIndex }}"
@@ -133,7 +133,7 @@
                         @if ($photoUrl) src="{{ $photoUrl }}" @endif />
                 </div>
                 <div class="mt-1 text-xs text-gray-500">{{ $label }}</div>
-            </label>
+            </div>
             @php $photoIndex++; @endphp
         @endforeach
     </div>
@@ -172,7 +172,7 @@
 
     <div class="md:col-start-2 md:row-start-1 md:row-span-3 flex flex-col">
         <x-input-label for="permit_photo" :value="__('Imagen del permiso')" />
-        <label for="permit_photo" class="mt-1 block h-full cursor-pointer" data-drop-zone tabindex="0" title="{{ __('Selecciona, arrastra o pega una foto') }}">
+        <div class="mt-1 block h-full cursor-pointer" data-photo-picker-zone data-drop-zone tabindex="0" title="{{ __('Tomar foto, elegir de galería, arrastrar o pegar') }}">
             <input id="permit_photo" name="permit_photo" type="file" accept="image/*" class="hidden" @if (!empty($requirePermitPhoto)) required @endif
                 data-preview-target="permit_preview" data-placeholder-target="permit_placeholder" />
             <div class="relative flex h-full min-h-[12rem] w-full items-center justify-center rounded border border-dashed border-gray-300 bg-gray-50 text-xs text-gray-500 transition"
@@ -183,7 +183,7 @@
                     class="{{ $permitPhotoUrl ? '' : 'hidden' }} h-full w-full rounded bg-gray-50 object-fill"
                     @if ($permitPhotoUrl) src="{{ $permitPhotoUrl }}" @endif />
             </div>
-        </label>
+        </div>
         <x-input-error :messages="$errors->get('permit_photo')" class="mt-2" />
         @if ($errors->has('permit_photo'))
             <div class="mt-1 text-xs text-red-600">{{ __('Debe cargar la imagen del permiso.') }}</div>
@@ -208,6 +208,22 @@
         {{ $submitLabel }}
     </x-primary-button>
 </div>
+
+<div id="weapon_photo_source_modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+    <div class="w-full max-w-sm rounded bg-white shadow-lg">
+        <div class="border-b px-4 py-3 text-sm font-semibold text-gray-800">{{ __('Agregar imagen') }}</div>
+        <div class="p-4 space-y-2 text-sm text-gray-700">
+            <button id="weapon_photo_source_camera" type="button" class="w-full rounded border border-indigo-200 bg-indigo-50 px-3 py-2.5 text-sm font-medium text-indigo-900 hover:bg-indigo-100">{{ __('Tomar foto') }}</button>
+            <button id="weapon_photo_source_gallery" type="button" class="w-full rounded border border-gray-300 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100">{{ __('Elegir de galería') }}</button>
+        </div>
+        <div class="flex justify-end border-t px-4 py-2">
+            <button id="weapon_photo_source_cancel" type="button" class="text-sm text-gray-600 hover:text-gray-900">{{ __('Cancelar') }}</button>
+        </div>
+    </div>
+</div>
+
+<input id="weapon_photo_pick_gallery" type="file" accept="image/*" class="hidden">
+<input id="weapon_photo_pick_camera" type="file" accept="image/*" capture="environment" class="hidden">
 
 <div id="image_editor_modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
     <div class="w-full max-w-3xl rounded bg-white shadow-lg">
@@ -293,6 +309,59 @@
         let editorFineRotation = 0;
         const photoGuidesByType = @json($photoGuidesByType);
         const dropZones = Array.from(document.querySelectorAll('[data-drop-zone]'));
+        const photoSourceModal = document.getElementById('weapon_photo_source_modal');
+        const photoSourceCameraBtn = document.getElementById('weapon_photo_source_camera');
+        const photoSourceGalleryBtn = document.getElementById('weapon_photo_source_gallery');
+        const photoSourceCancelBtn = document.getElementById('weapon_photo_source_cancel');
+        const photoPickGallery = document.getElementById('weapon_photo_pick_gallery');
+        const photoPickCamera = document.getElementById('weapon_photo_pick_camera');
+        let pendingPhotoInput = null;
+
+        const openWeaponPhotoSourcePicker = (targetInput) => {
+            if (!targetInput || !photoSourceModal) {
+                return;
+            }
+
+            pendingPhotoInput = targetInput;
+            photoSourceModal.classList.remove('hidden');
+            photoSourceModal.classList.add('flex');
+        };
+
+        const closeWeaponPhotoSourcePicker = () => {
+            photoSourceModal?.classList.add('hidden');
+            photoSourceModal?.classList.remove('flex');
+        };
+
+        const triggerWeaponPhotoPick = (useCamera) => {
+            const picker = useCamera ? photoPickCamera : photoPickGallery;
+            if (!picker) {
+                return;
+            }
+
+            closeWeaponPhotoSourcePicker();
+            picker.value = '';
+            picker.click();
+        };
+
+        const handleWeaponPhotoPickChange = (event) => {
+            const file = event.target?.files?.[0];
+            if (!file || !pendingPhotoInput) {
+                return;
+            }
+
+            handleImageSelection(pendingPhotoInput, file);
+            event.target.value = '';
+            pendingPhotoInput = null;
+        };
+
+        photoSourceCameraBtn?.addEventListener('click', () => triggerWeaponPhotoPick(true));
+        photoSourceGalleryBtn?.addEventListener('click', () => triggerWeaponPhotoPick(false));
+        photoSourceCancelBtn?.addEventListener('click', () => {
+            closeWeaponPhotoSourcePicker();
+            pendingPhotoInput = null;
+        });
+        photoPickGallery?.addEventListener('change', handleWeaponPhotoPickChange);
+        photoPickCamera?.addEventListener('change', handleWeaponPhotoPickChange);
         const normalizeText = (value) => {
             if (!value) {
                 return '';
@@ -708,7 +777,7 @@
                 zone.addEventListener('keydown', (event) => {
                     if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();
-                        input.click();
+                        openWeaponPhotoSourcePicker(input);
                     }
                 });
 
@@ -726,9 +795,22 @@
                     pasteProxy.addEventListener('mousedown', (event) => {
                         if (event.button === 0) {
                             event.preventDefault();
-                            input.click();
+                            pasteProxy.focus({ preventScroll: true });
                         }
                     });
+
+                zone.addEventListener('click', (event) => {
+                    if (!zone.hasAttribute('data-photo-picker-zone')) {
+                        return;
+                    }
+
+                    if (event.target.closest('button, a')) {
+                        return;
+                    }
+
+                    event.preventDefault();
+                    openWeaponPhotoSourcePicker(input);
+                });
 
                     pasteProxy.addEventListener('focus', () => {
                         hoveredPasteZone = zone;

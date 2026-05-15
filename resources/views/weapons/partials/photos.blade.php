@@ -61,7 +61,7 @@
                         data-drop-zone
                         tabindex="0"
                     @endcan
-                    title="{{ __('Haz clic, arrastra o pega una imagen') }}"
+                    title="{{ __('Haz clic para tomar foto o elegir de galería; también arrastra o pega') }}"
                 >
                     @can('updatePhotos', $weapon)
                         <div class="sj-paste-proxy" data-paste-proxy contenteditable="true" spellcheck="false"></div>
@@ -110,7 +110,7 @@
                     data-drop-zone
                     tabindex="0"
                 @endcan
-                title="{{ __('Haz clic, arrastra o pega una imagen') }}"
+                title="{{ __('Haz clic para tomar foto o elegir de galería; también arrastra o pega') }}"
             >
                 @can('updatePhotos', $weapon)
                     <div class="sj-paste-proxy" data-paste-proxy contenteditable="true" spellcheck="false"></div>
@@ -151,6 +151,19 @@
                 @endif
                 <div class="mt-2 text-sm text-gray-600">
                     <span>{{ __('Permiso autenticado') }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="photo_source_modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+            <div class="w-full max-w-sm rounded bg-white shadow-lg">
+                <div class="border-b px-4 py-3 text-sm font-semibold text-gray-800">{{ __('Agregar imagen') }}</div>
+                <div class="p-4 space-y-2 text-sm text-gray-700">
+                    <button id="photo_source_camera" type="button" class="w-full rounded border border-indigo-200 bg-indigo-50 px-3 py-2.5 text-sm font-medium text-indigo-900 hover:bg-indigo-100">{{ __('Tomar foto') }}</button>
+                    <button id="photo_source_gallery" type="button" class="w-full rounded border border-gray-300 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100">{{ __('Elegir de galería') }}</button>
+                </div>
+                <div class="flex justify-end border-t px-4 py-2">
+                    <button id="photo_source_cancel" type="button" class="text-sm text-gray-600 hover:text-gray-900">{{ __('Cancelar') }}</button>
                 </div>
             </div>
         </div>
@@ -220,7 +233,8 @@
             </div>
         </div>
 
-        <input id="photo_replace_input" type="file" accept="image/*" class="hidden">
+        <input id="photo_pick_gallery" type="file" accept="image/*" class="hidden">
+        <input id="photo_pick_camera" type="file" accept="image/*" capture="environment" class="hidden">
 
         @once
             @push('styles')
@@ -364,7 +378,12 @@
             const actionCrop = document.getElementById('photo_action_crop');
             const actionChange = document.getElementById('photo_action_change');
             const actionCancel = document.getElementById('photo_action_cancel');
-            const replaceInput = document.getElementById('photo_replace_input');
+            const pickGallery = document.getElementById('photo_pick_gallery');
+            const pickCamera = document.getElementById('photo_pick_camera');
+            const sourceModal = document.getElementById('photo_source_modal');
+            const sourceCameraBtn = document.getElementById('photo_source_camera');
+            const sourceGalleryBtn = document.getElementById('photo_source_gallery');
+            const sourceCancelBtn = document.getElementById('photo_source_cancel');
 
             const editorModal = document.getElementById('image_editor_modal');
             const editorImage = document.getElementById('image_editor_image');
@@ -438,10 +457,44 @@
                 }
 
                 setActivePhotoFromCard(card);
+                activePhotoCard = card;
                 closeActionModal();
 
                 const url = URL.createObjectURL(file);
                 openEditor(url, true);
+            };
+
+            let activePhotoCard = null;
+
+            const openSourceModal = () => {
+                sourceModal?.classList.remove('hidden');
+                sourceModal?.classList.add('flex');
+            };
+
+            const closeSourceModal = () => {
+                sourceModal?.classList.add('hidden');
+                sourceModal?.classList.remove('flex');
+            };
+
+            const triggerPhotoPick = (useCamera) => {
+                const input = useCamera ? pickCamera : pickGallery;
+                if (!input) {
+                    return;
+                }
+
+                closeSourceModal();
+                input.value = '';
+                input.click();
+            };
+
+            const handlePhotoPickChange = (event) => {
+                const file = event.target?.files?.[0];
+                if (!file || !activePhotoCard) {
+                    return;
+                }
+
+                openEditorFromFile(activePhotoCard, file);
+                event.target.value = '';
             };
 
             const activateCard = (card) => {
@@ -450,9 +503,10 @@
                 }
 
                 setActivePhotoFromCard(card);
+                activePhotoCard = card;
 
                 if (card.dataset.photoEmpty === '1') {
-                    replaceInput?.click();
+                    openSourceModal();
                     return;
                 }
 
@@ -761,18 +815,14 @@
 
             actionChange?.addEventListener('click', () => {
                 closeActionModal();
-                replaceInput?.click();
+                openSourceModal();
             });
 
-            replaceInput?.addEventListener('change', () => {
-                const file = replaceInput.files && replaceInput.files[0];
-                if (!file) {
-                    return;
-                }
-                const url = URL.createObjectURL(file);
-                openEditor(url, true);
-                replaceInput.value = '';
-            });
+            sourceCameraBtn?.addEventListener('click', () => triggerPhotoPick(true));
+            sourceGalleryBtn?.addEventListener('click', () => triggerPhotoPick(false));
+            sourceCancelBtn?.addEventListener('click', closeSourceModal);
+            pickGallery?.addEventListener('change', handlePhotoPickChange);
+            pickCamera?.addEventListener('change', handlePhotoPickChange);
 
             closeButton?.addEventListener('click', closeEditor);
             cancelButton?.addEventListener('click', closeEditor);
