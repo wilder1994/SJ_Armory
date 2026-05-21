@@ -24,6 +24,7 @@ final class EnsurePasswordChangedIfRequired
             'verification.notice',
             'verification.verify',
             'verification.send',
+            'revista-armas.guest.*',
         )) {
             return $next($request);
         }

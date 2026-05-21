@@ -47,6 +47,7 @@ La empresa contaba con el registro del armamento en **hojas de cálculo (Excel)*
 | **Cargas masivas** | Importación de armas por lotes (admin); plantillas de reverso autenticado de permiso (porte/tenencia) para PDF y ficha. |
 | **Reportes** | Armas por cliente, sin destino, historial por arma, auditoría, **novedades operativas** (hurtos, pérdidas, etc.). |
 | **Alertas** | Documentos vencidos, por vencer y armas sin alertas; filtro por **uno o varios meses** (panel con checkboxes y años distintos); modales con búsqueda, selección y exportación `.docx` / vista previa PDF (`Revalidacion_{mes}_{año}`). |
+| **Revista armas** | Acceso temporal (12 h) para tomar **4 fotos técnicas** en campo; usuarios temporales; selección de armas por asignación; revisión y aprobación del responsable antes de actualizar fotos oficiales. |
 | **Mapa** | Visualización de ubicación operativa según reglas de prioridad (puesto / cliente / trabajador). |
 | **Dashboard** | Indicadores y gráficos en tiempo casi real (actualización por eventos cuando broadcasting está activo). |
 | **Notificaciones** | Campana con no leídas; historial en menú de usuario. |

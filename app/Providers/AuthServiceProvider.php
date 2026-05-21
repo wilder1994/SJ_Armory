@@ -3,11 +3,13 @@
 namespace App\Providers;
 
 use App\Models\Client;
+use App\Models\TemporaryPhotoUser;
 use App\Models\WeaponIncident;
 use App\Models\Post;
 use App\Models\Weapon;
 use App\Models\Worker;
 use App\Policies\ClientPolicy;
+use App\Policies\TemporaryPhotoUserPolicy;
 use App\Policies\PostPolicy;
 use App\Policies\WeaponIncidentPolicy;
 use App\Policies\WeaponPolicy;
@@ -23,6 +25,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         Client::class => ClientPolicy::class,
+        TemporaryPhotoUser::class => TemporaryPhotoUserPolicy::class,
         Post::class => PostPolicy::class,
         Weapon::class => WeaponPolicy::class,
         WeaponIncident::class => WeaponIncidentPolicy::class,

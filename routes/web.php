@@ -1,6 +1,13 @@
 <?php
 
 use App\Http\Controllers\AlertsController;
+use App\Http\Controllers\RevistaArmasController;
+use App\Http\Controllers\RevistaGuestAuthController;
+use App\Http\Controllers\RevistaGuestWeaponController;
+use App\Http\Controllers\RevistaPhotoReviewController;
+use App\Http\Controllers\RevistaPhotoStagingController;
+use App\Http\Controllers\TemporaryPhotoAccessController;
+use App\Http\Controllers\TemporaryPhotoUserController;
 use App\Http\Controllers\AuthenticatedPermitImageController;
 use App\Http\Controllers\Auth\ForcedPasswordChangeController;
 use App\Http\Controllers\ClientController;
@@ -47,6 +54,20 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 Route::get('/dashboard/metrics', [DashboardController::class, 'metrics'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard.metrics');
+
+Route::prefix('revista-armas')->name('revista-armas.')->group(function () {
+    Route::middleware('revista.guest.guest')->group(function () {
+        Route::get('/ingreso', [RevistaGuestAuthController::class, 'showLogin'])->name('guest.login');
+        Route::post('/ingreso', [RevistaGuestAuthController::class, 'login'])->name('guest.login.store');
+    });
+
+    Route::middleware('revista.guest')->group(function () {
+        Route::post('/salir', [RevistaGuestAuthController::class, 'logout'])->name('guest.logout');
+        Route::get('/mis-armas', [RevistaGuestWeaponController::class, 'index'])->name('guest.weapons.index');
+        Route::get('/mis-armas/{weapon}/estado', [RevistaGuestWeaponController::class, 'stagingState'])->name('guest.weapons.staging-state');
+        Route::post('/mis-armas/{weapon}/fotos', [RevistaPhotoStagingController::class, 'storeGuest'])->name('guest.weapons.photos.store');
+    });
+});
 
 Route::post('/locale', function (Request $request) {
     $locale = (string) $request->input('locale', 'es');
@@ -168,6 +189,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/weapon-incidents/weapons/search', [WeaponIncidentReportController::class, 'searchWeapons'])->name('reports.weapon-incidents.weapons.search');
     Route::get('/reports/weapon-incidents', [WeaponIncidentReportController::class, 'index'])->name('reports.weapon-incidents.index');
     Route::get('/reports/weapon-incidents/{incidentType}', [WeaponIncidentReportController::class, 'show'])->name('reports.weapon-incidents.show');
+
+    Route::middleware('revista.staff')->prefix('revista-armas')->name('revista-armas.')->group(function () {
+        Route::get('/', [RevistaArmasController::class, 'index'])->name('index');
+        Route::get('/armas/{weapon}/revision/{temporary_photo_user}', [RevistaArmasController::class, 'review'])->name('review');
+        Route::post('/accesos', [TemporaryPhotoAccessController::class, 'store'])->name('access.store');
+        Route::post('/accesos/{grant}/revocar', [TemporaryPhotoAccessController::class, 'revoke'])->name('access.revoke');
+        Route::post('/armas/{weapon}/revision/{temporary_photo_user}/aprobar', [RevistaPhotoReviewController::class, 'approve'])->name('review.approve');
+        Route::post('/armas/{weapon}/revision/{temporary_photo_user}/rechazar', [RevistaPhotoReviewController::class, 'reject'])->name('review.reject');
+        Route::resource('usuarios-temporales', TemporaryPhotoUserController::class)
+            ->parameters(['usuarios-temporales' => 'temporary_photo_user']);
+    });
 
     Route::get('/alerts/documents', [AlertsController::class, 'documents'])->name('alerts.documents');
     Route::post('/alerts/documents/preview', [AlertsController::class, 'previewBatch'])->name('alerts.documents.preview');

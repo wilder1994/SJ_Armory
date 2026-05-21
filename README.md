@@ -17,6 +17,7 @@ Sistema web para **gestión de armamento**, **asignaciones operativas**, **trans
 - ✅ **Cargas masivas**: validación previa, preview, ejecución por chunks, trazabilidad por lote; en la vista **Subir armas**, el **ADMIN** gestiona las plantillas globales de reverso autenticado (porte y tenencia) usadas en el PDF y en la ficha.
 - ✅ **Dashboard**: KPIs, métricas, gráficos y estado “as of”.
 - ✅ **Alertas documentales** (`/alerts/documents`): tarjetas vencidos / por vencer / sin alertas; filtro **multi-mes** con panel de checkboxes (varios meses y años); exportación `.docx` y vista previa PDF con nombre `Revalidacion_{mes}_{año}`.
+- ✅ **Revista armas** (`/revista-armas`): acceso temporal (12 h) para colaboradores de campo; usuarios temporales reutilizables; selección de armas visibles; subida de **4 fotos técnicas** a staging; revisión del responsable (aprobar → fotos oficiales / rechazar); **ADMIN** con gestión global.
 - ✅ **Mapa**: geocodificación y visualización operativa.
 - ✅ **Auditoría**: registro de cambios y acciones críticas.
 - ✅ **Realtime (Broadcasting)**: Laravel Reverb + Echo (WebSockets) para sincronización en tiempo real.
@@ -742,7 +743,19 @@ Alertas:
   - un toggle `Excluir armas con novedad` que oculta las armas con incidentes bloqueantes activos y las retira automaticamente de la seleccion, vista previa y descarga.
 - La ventana de alerta preventiva opera sobre 120 dias.
 
-### 5.14 Dashboard operativo
+### 5.14 Revista armas (fotos en campo)
+
+Rutas staff (ADMIN o RESPONSABLE nivel 1): prefijo `revista-armas.*`  
+Rutas invitado: `revista-armas/ingreso`, `revista-armas/mis-armas` (sesión `revista_grant_id`, sin usuario del sistema).
+
+- **Usuarios temporales** (`temporary_photo_users`): CRUD reutilizable; desactivar no borra `weapon_photo_staging`.
+- **Asignación de acceso** (`temporary_photo_access_grants` + `temporary_photo_access_weapons`): código 12 h, correo (`RevistaTemporaryAccessMail`), revocación sin borrar staging.
+- **Staging** (`weapon_photo_staging`): solo slots `lado_derecho`, `lado_izquierdo`, `canon_disparador_marca`, `serie` (`App\Support\RevistaWeaponPhotoSlots`).
+- **Realizado**: 4/4 fotos en staging para el usuario temporal filtrado.
+- **Revisión**: aprobar copia a `weapon_photos` + `syncRenewalDocument`; rechazar elimina staging.
+- Migración: `2026_05_19_140000_create_revista_armas_tables.php` (índices/FK con nombres cortos para MySQL).
+
+### 5.15 Dashboard operativo
 
 Controlador: `app/Http/Controllers/DashboardController.php`  
 Servicio: `app/Services/DashboardMetricsService.php`

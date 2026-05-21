@@ -234,6 +234,11 @@
                             {{ __('Armamento') }}
                         </x-nav-link>
                     @endcan
+                    @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsibleLevelOne())
+                        <x-nav-link :href="route('revista-armas.index')" :active="request()->routeIs('revista-armas.*')">
+                            {{ __('Revista armas') }}
+                        </x-nav-link>
+                    @endif
                     @if (Auth::user()?->isAdmin())
                         <x-nav-link :href="route('weapon-imports.index')" :active="request()->routeIs('weapon-imports.*')">
                             {{ __('Cargas masivas') }}
@@ -396,6 +401,11 @@
                     {{ __('Armamento') }}
                 </x-responsive-nav-link>
             @endcan
+            @if (Auth::user()?->isAdmin() || Auth::user()?->isResponsibleLevelOne())
+                <x-responsive-nav-link :href="route('revista-armas.index')" :active="request()->routeIs('revista-armas.*')">
+                    {{ __('Revista armas') }}
+                </x-responsive-nav-link>
+            @endif
             @if (Auth::user()?->isAdmin())
                 <x-responsive-nav-link :href="route('weapon-imports.index')" :active="request()->routeIs('weapon-imports.*')">
                     {{ __('Cargas masivas') }}
