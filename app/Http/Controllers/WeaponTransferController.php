@@ -12,6 +12,7 @@ use App\Models\Weapon;
 use App\Models\WeaponTransfer;
 use App\Models\Worker;
 use App\Services\WeaponAssignmentService;
+use App\Services\WeaponHistoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,10 @@ use Illuminate\Validation\Rule;
 
 class WeaponTransferController extends Controller
 {
+    public function __construct(
+        private readonly WeaponHistoryService $weaponHistory,
+    ) {}
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -217,6 +222,7 @@ class WeaponTransferController extends Controller
         DB::transaction(function () use ($weapons, $user, $toUser, $data, &$dispatchedTransfers, $ammoCount, $providerCount) {
             foreach ($weapons as $weapon) {
                 $activeAssignment = $weapon->activeClientAssignment;
+                $weapon->loadMissing('activeClientAssignment.client');
 
                 $transfer = WeaponTransfer::create([
                     'weapon_id' => $weapon->id,
@@ -248,6 +254,19 @@ class WeaponTransferController extends Controller
                         'provider_count' => $providerCount,
                     ],
                 ]);
+
+                $detail = __('Destinatario: :name', ['name' => $toUser->name]);
+                if ($activeAssignment?->client) {
+                    $detail .= "\n".__('Cliente actual: :name', ['name' => $activeAssignment->client->name]);
+                }
+
+                $this->weaponHistory->recordTransfer(
+                    $weapon,
+                    $user,
+                    __('Transferencia solicitada.'),
+                    $data['note'] ?? null,
+                    $detail,
+                );
 
                 $dispatchedTransfers[] = [
                     'transfer_id' => $transfer->id,
@@ -420,6 +439,20 @@ class WeaponTransferController extends Controller
                 'before' => ['status' => WeaponTransfer::STATUS_PENDING],
                 'after' => ['status' => WeaponTransfer::STATUS_ACCEPTED, 'client_id' => $clientId],
             ]);
+
+            $client = Client::query()->find($clientId);
+            $detail = __('Aceptada por: :name', ['name' => $user->name]);
+            if ($client) {
+                $detail .= "\n".__('Nuevo cliente: :name', ['name' => $client->name]);
+            }
+
+            $this->weaponHistory->recordTransfer(
+                $weapon,
+                $user,
+                __('Transferencia aceptada.'),
+                $transfer->note,
+                $detail,
+            );
         });
 
         event(new TransferChanged('accepted', $transfer->id, ['weapon_id' => $weapon->id]));
@@ -486,6 +519,16 @@ class WeaponTransferController extends Controller
                 'before' => ['status' => WeaponTransfer::STATUS_PENDING],
                 'after' => ['status' => WeaponTransfer::STATUS_CANCELLED],
             ]);
+
+            if ($weapon) {
+                $this->weaponHistory->recordTransfer(
+                    $weapon,
+                    $user,
+                    __('Transferencia cancelada.'),
+                    $transfer->note,
+                    __('Cancelada por: :name', ['name' => $user->name]),
+                );
+            }
         });
 
         if ($weapon) {

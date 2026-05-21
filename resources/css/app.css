@@ -10,6 +10,13 @@
         --sj-gold: #f2c200;
         --sj-ice: #f4f7fb;
         --sj-ink: #0f172a;
+        --sj-table-header-bg: #003060;
+        --sj-table-header-text: #e8f4fc;
+        --sj-table-bg-start: #c5e4f4;
+        --sj-table-bg-end: #f6fbfe;
+        --sj-table-cell-border: rgba(148, 196, 223, 0.45);
+        --sj-table-perimeter-line: rgba(224, 247, 255, 0.95);
+        --sj-table-perimeter-glow: rgba(0, 123, 255, 0.38);
     }
 
     html {
@@ -383,6 +390,85 @@
 
     .sj-btn-secondary:hover {
         background: #f4f7fb;
+    }
+
+    /* Tablas unificadas: encabezado azul marino, fondo degradado claro, neón solo en perímetro */
+    .sj-table-wrap {
+        position: relative;
+        overflow: auto;
+        background:
+            radial-gradient(ellipse 120% 80% at 0% 0%, rgba(255, 255, 255, 0.55), transparent 55%),
+            linear-gradient(135deg, var(--sj-table-bg-start) 0%, var(--sj-table-bg-end) 72%);
+        border: 1px solid var(--sj-table-perimeter-line);
+        border-radius: 0.5rem;
+        box-shadow:
+            0 0 1px rgba(224, 247, 255, 0.98),
+            0 0 5px var(--sj-table-perimeter-glow),
+            0 0 12px rgba(0, 180, 255, 0.22);
+    }
+
+    .sj-table {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+        min-width: 100%;
+        background: transparent;
+        font-size: 0.875rem;
+        line-height: 1.4;
+    }
+
+    .sj-table thead th {
+        background: var(--sj-table-header-bg) !important;
+        color: var(--sj-table-header-text) !important;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        padding: 0.75rem 0.85rem;
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        text-transform: uppercase;
+    }
+
+    .sj-table tbody td {
+        padding: 0.65rem 0.85rem;
+        color: #334155;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--sj-table-cell-border);
+        background: transparent;
+    }
+
+    .sj-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .sj-table tbody tr:hover td {
+        background: rgba(255, 255, 255, 0.38);
+    }
+
+    .sj-table--sticky-head thead th {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+    }
+
+    .sj-table--align-left thead th,
+    .sj-table--align-left tbody td {
+        text-align: left;
+    }
+
+    .sj-table--align-left thead th:last-child,
+    .sj-table--align-left tbody td:last-child {
+        text-align: right;
+    }
+
+    .sj-table--compact thead th {
+        padding: 0.6rem 0.75rem;
+    }
+
+    .sj-table--compact tbody td {
+        padding: 0.5rem 0.75rem;
     }
 
     .sj-map-cluster {
@@ -2224,39 +2310,21 @@
 
     .sj-client-table-wrap {
         display: none;
-        border: 1px solid #dbe5f0;
         border-radius: 0;
-        overflow: auto;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
-        background: #ffffff;
     }
 
-    .sj-client-table {
-        border-collapse: separate;
-        border-spacing: 0;
-        min-width: 100%;
-        width: 100%;
+    .sj-client-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        padding: 0.85rem 1rem;
+        font-weight: 800;
+        letter-spacing: 0.09em;
+        text-shadow: 0 1px 1px rgba(8, 15, 37, 0.18);
     }
 
     .sj-client-row {
         transition: background-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
-    }
-
-    .sj-client-table thead th {
-        background: linear-gradient(180deg, #24396f 0%, #162757 100%);
-        color: #e7eefb;
-        font-size: 0.72rem;
-        font-weight: 800;
-        letter-spacing: 0.09em;
-        padding: 0.85rem 1rem;
-        position: sticky;
-        text-align: center;
-        text-shadow: 0 1px 1px rgba(8, 15, 37, 0.18);
-        text-transform: uppercase;
-        top: 0;
-        z-index: 1;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.06);
     }
 
     .sj-client-col-actions {
@@ -2273,7 +2341,7 @@
     }
 
     .sj-client-table tbody tr + tr td {
-        border-top: 1px solid #edf2f7;
+        border-top: none;
     }
 
     .sj-client-row--summary {

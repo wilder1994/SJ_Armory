@@ -198,7 +198,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/armas/{weapon}/revision/{temporary_photo_user}/aprobar', [RevistaPhotoReviewController::class, 'approve'])->name('review.approve');
         Route::post('/armas/{weapon}/revision/{temporary_photo_user}/rechazar', [RevistaPhotoReviewController::class, 'reject'])->name('review.reject');
         Route::resource('usuarios-temporales', TemporaryPhotoUserController::class)
-            ->parameters(['usuarios-temporales' => 'temporary_photo_user']);
+            ->parameters(['usuarios-temporales' => 'temporary_photo_user'])
+            ->names('temporary-users');
     });
 
     Route::get('/alerts/documents', [AlertsController::class, 'documents'])->name('alerts.documents');

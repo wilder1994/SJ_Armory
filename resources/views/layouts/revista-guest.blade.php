@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? __('Revista armas') }} — {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('styles')
 </head>
 <body class="min-h-screen bg-slate-100 text-slate-900 antialiased">
     <header class="border-b border-slate-200 bg-white shadow-sm">
@@ -39,5 +40,6 @@
         @endif
         {{ $slot ?? '' }}
     </main>
+    @stack('scripts')
 </body>
 </html>

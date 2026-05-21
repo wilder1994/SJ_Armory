@@ -86,21 +86,21 @@
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 text-sm">
-                            <thead class="bg-gray-50">
+                    <div class="overflow-x-auto sj-table-wrap">
+                        <table class="sj-table sj-table--align-left min-w-full text-sm">
+                            <thead>
                                 <tr>
-                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Nombre') }}</th>
-                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Correo electrónico') }}</th>
-                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Responsable') }}</th>
-                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Cargo') }}</th>
-                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Nivel de responsabilidad') }}</th>
-                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Clientes asignados') }}</th>
-                                    <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Estado activo') }}</th>
-                                    <th class="px-3 py-2 text-right font-medium text-gray-600">{{ __('Acciones') }}</th>
+                                    <th>{{ __('Nombre') }}</th>
+                                    <th>{{ __('Correo electrónico') }}</th>
+                                    <th>{{ __('Responsable') }}</th>
+                                    <th>{{ __('Cargo') }}</th>
+                                    <th>{{ __('Nivel de responsabilidad') }}</th>
+                                    <th>{{ __('Clientes asignados') }}</th>
+                                    <th>{{ __('Estado activo') }}</th>
+                                    <th>{{ __('Acciones') }}</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200">
+                            <tbody>
                                 @forelse ($users as $user)
                                     <tr>
                                         <td class="px-3 py-2">{{ $user->name }}</td>

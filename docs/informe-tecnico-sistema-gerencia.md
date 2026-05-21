@@ -39,7 +39,7 @@ La empresa contaba con el registro del armamento en **hojas de cálculo (Excel)*
 
 | Área | Descripción breve |
 |------|-------------------|
-| **Armas** | Alta, consulta, edición de datos; fotos técnicas y de permiso; documentos; exportación; sin borrado físico de armas. |
+| **Armas** | Alta, consulta, edición de datos; fotos técnicas y de permiso; documentos; exportación; sin borrado físico de armas; **historial de notas** en la ficha (cronológico: asignaciones, novedades, documentos, transferencias, cambios de datos y actualización de fotos vía Revista armas). |
 | **Asignaciones** | Operativa (arma–cliente–responsable) e interna (arma–puesto y/o trabajador). |
 | **Transferencias** | Envío, aceptación, cancelación; historial; campos opcionales de munición/proveedores según reglas del sistema. |
 | **Clientes, puestos, trabajadores** | Gestión con archivo/historial donde aplica; políticas por rol. |
@@ -47,7 +47,7 @@ La empresa contaba con el registro del armamento en **hojas de cálculo (Excel)*
 | **Cargas masivas** | Importación de armas por lotes (admin); plantillas de reverso autenticado de permiso (porte/tenencia) para PDF y ficha. |
 | **Reportes** | Armas por cliente, sin destino, historial por arma, auditoría, **novedades operativas** (hurtos, pérdidas, etc.). |
 | **Alertas** | Documentos vencidos, por vencer y armas sin alertas; filtro por **uno o varios meses** (panel con checkboxes y años distintos); modales con búsqueda, selección y exportación `.docx` / vista previa PDF (`Revalidacion_{mes}_{año}`). |
-| **Revista armas** | Acceso temporal (12 h) para tomar **4 fotos técnicas** en campo; usuarios temporales; selección de armas por asignación; revisión y aprobación del responsable antes de actualizar fotos oficiales. |
+| **Revista armas** | Colaboradores de campo con acceso temporal (12 h) suben **4 fotos técnicas** por arma; staff (**ADMIN** o responsable nivel 1) filtra por usuario temporal, revisa (✓/✕, **Ver**); confirmaciones en **modales** de la aplicación; al aprobar las 4 fotos actualiza el inventario oficial y deja **registro fechado** en el historial de notas del arma. |
 | **Mapa** | Visualización de ubicación operativa según reglas de prioridad (puesto / cliente / trabajador). |
 | **Dashboard** | Indicadores y gráficos en tiempo casi real (actualización por eventos cuando broadcasting está activo). |
 | **Notificaciones** | Campana con no leídas; historial en menú de usuario. |
@@ -160,6 +160,76 @@ Módulo **Alertas documentales**: tres tarjetas resumen (vencidos, por vencer en
 > **Figura 18 — [Insertar imagen]**  
 > ***Campana** de notificaciones desplegada o menú de **historial de notificaciones**.*
 
+### 7.10 Revista armas (fotos en campo)
+
+Módulo para digitalizar la **revista fotográfica** del armamento sin dar acceso completo al sistema a personal externo.
+
+**Quién participa**
+
+| Participante | Acceso |
+|--------------|--------|
+| **Colaborador de campo** | Enlace de ingreso + código (válido 12 h); solo ve las armas asignadas en ese acceso. |
+| **Responsable nivel 1** | Pantalla **Revista armas**: asigna acceso, revisa fotos de sus usuarios temporales (dueño). |
+| **Administrador** | Misma pantalla con alcance global; gestiona todos los usuarios temporales y responsables dueños. |
+
+**Flujo resumido**
+
+1. El staff crea un **usuario temporal** (nombre y correo del colaborador; el administrador indica el **responsable dueño** entre los responsables del sistema).
+2. Desde **Asignar acceso temporal** se eligen el usuario temporal y las armas visibles; el sistema genera código, envía correo (si el servidor de correo está configurado) y muestra datos copiables.
+3. El colaborador entra por **Revista armas → ingreso**, sube las cuatro fotos obligatorias por arma (lado derecho, lado izquierdo, cañón/disparador/marca, serie) con recorte en pantalla.
+4. El responsable o administrador, en **Revista armas**, selecciona el **usuario temporal** en el filtro y pulsa **Filtrar**: entonces aparecen los iconos **Realizado** (✓ si las cuatro fotos están completas, ✕ si falta alguna) y el botón **Ver** para revisar.
+5. En la revisión puede **Actualizar** (las fotos pasan al inventario oficial del arma) o **Rechazar** (se descartan las fotos en revisión).
+6. Tras **Actualizar** con las cuatro fotos completas, en la **ficha del arma** (tarjeta **Notas**) queda un registro del tipo **Fotografías** con fecha/hora, cantidad de fotos y nombre del colaborador temporal.
+
+**Puntos importantes para gerencia**
+
+- Sin elegir **usuario temporal** en el filtro, la tabla de staff muestra guiones en **Realizado** y no muestra **Ver**: es el comportamiento esperado, porque el avance es por colaborador, no por arma sola.
+- **Actualizar** solo procede con las **4 fotos** en revisión; si falta alguna, el sistema muestra un **aviso en pantalla** (modal centrado) indicando cuántas fotos faltan — no usa el cuadro de confirmación del navegador.
+- Las confirmaciones de **Actualizar** y **Rechazar** usan **modales propios** del sistema (centrados), alineados al resto de la interfaz.
+- Desactivar un usuario temporal o revocar un acceso **no borra** las fotos ya subidas en revisión (se conservan para auditoría y decisión del responsable).
+- El colaborador puede subir varias fotos seguidas sin que se cierre el formulario de captura; solo cierra cuando él lo decide.
+- El historial de **Notas** en la ficha también registra destino operativo, asignación interna, novedades, documentos, transferencias y ediciones de datos del arma (además de Revista armas).
+
+> **Figura 19 — [Insertar imagen]**  
+> *Pantalla staff **Revista armas** con filtro de **usuario temporal** aplicado y columnas **Realizado** / **Ver** visibles.*
+
+> **Figura 20 — [Insertar imagen]**  
+> *Modal de **asignar acceso temporal** (usuario temporal + armas seleccionadas).*
+
+> **Figura 21 — [Insertar imagen]**  
+> *Vista del colaborador (**mis armas**) o modal de captura de las cuatro fotos.*
+
+> **Figura 22 — [Insertar imagen]**  
+> *Modal de **revisión** con las cuatro imágenes y acciones Actualizar / Rechazar (opcional).*
+
+> **Figura 23 — [Insertar imagen]**  
+> *Modal de **confirmación** o **aviso** al pulsar Actualizar (cuatro fotos completas vs. fotos pendientes).*
+
+> **Figura 24 — [Insertar imagen]**  
+> *Ficha del arma — tarjeta **Notas** con entrada **Fotografías** tras aprobar en Revista armas (fecha y detalle).*
+
+### 7.11 Historial de notas en la ficha del arma
+
+La tarjeta **Notas** del detalle del arma (`/weapons/{id}`) es un **historial cronológico** de eventos relevantes para operación y trazabilidad gerencial, distinto del campo único `weapons.notes` usado en formularios de alta/edición.
+
+**Contenido típico del historial**
+
+| Tipo en pantalla | Origen |
+|------------------|--------|
+| Creación | Alta del arma |
+| Actualización | Edición de datos (resumen de cambios + notas del formulario si aplica) |
+| Destino operativo | Asignación o retiro de cliente/responsable (observaciones del formulario) |
+| Asignación interna | Puesto/trabajador, munición/proveedor |
+| Novedad | Expedientes de novedades operativas |
+| Transferencia | Solicitud, aceptación o cancelación |
+| Documento | Carga manual de documentos |
+| Fotografías | Aprobación de las 4 fotos de **Revista armas** (fecha, cantidad, colaborador temporal) |
+
+El listado tiene **desplazamiento vertical** cuando hay muchas entradas. Si existía texto antiguo en `weapons.notes` antes del historial, puede mostrarse como **nota heredada** hasta que haya registros nuevos.
+
+> **Figura 25 — [Insertar imagen]**  
+> *Tarjeta **Notas** en ficha de arma con varias entradas del historial (etiqueta de tipo, fecha, usuario, texto).*
+
 ---
 
 ## 8. Implementación y costos (resumen)
@@ -171,7 +241,7 @@ Módulo **Alertas documentales**: tres tarjetas resumen (vencidos, por vencer en
 | **Despliegue** | Con acompañamiento de **Carlos Andrés Gutiérrez**, Analista TIC (según registro interno). |
 | **Capacitación** | Convocatoria nacional por **correo**; evidencia de sesión (p. ej. **Teams**). |
 
-> **Figura 19 — [Insertar imagen]**  
+> **Figura 26 — [Insertar imagen]**  
 > *Captura del **panel de Hostinger** o pantalla de dominio/hosting **sin mostrar contraseñas** (solo zona pública segura).*
 
 ---
@@ -208,6 +278,8 @@ Módulo **Alertas documentales**: tres tarjetas resumen (vencidos, por vencer en
 | Versión | Fecha | Autor | Cambios |
 |---------|--------|--------|---------|
 | 0.1 | [fecha] | [nombre] | Borrador inicial |
+| 0.2 | [fecha] | [nombre] | Revista armas: alcance, flujo y capturas §7.10 |
+| 0.3 | mayo 2026 | Wilder Rivera | Historial de notas en ficha de arma (§7.11); Revista armas: modales de confirmación/aviso y registro en Notas; README alineado |
 
 ---
 

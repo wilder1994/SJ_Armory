@@ -87,18 +87,18 @@
                         </div>
                     </form>
 
-                    <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead class="bg-gray-50">
+                    <div class="overflow-x-auto sj-table-wrap">
+                    <table class="sj-table sj-table--align-left min-w-full text-sm">
+                        <thead>
                             <tr>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Puesto') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Cliente') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Dirección') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Estado') }}</th>
-                                <th class="px-3 py-2 text-right font-medium text-gray-600">{{ __('Acciones') }}</th>
+                                <th>{{ __('Puesto') }}</th>
+                                <th>{{ __('Cliente') }}</th>
+                                <th>{{ __('Dirección') }}</th>
+                                <th>{{ __('Estado') }}</th>
+                                <th>{{ __('Acciones') }}</th>
                             </tr>
                         </thead>
-                        <tbody id="posts-tbody" class="divide-y divide-gray-200">
+                        <tbody id="posts-tbody">
                             @include('posts.partials.index_rows', ['posts' => $posts])
                         </tbody>
                     </table>

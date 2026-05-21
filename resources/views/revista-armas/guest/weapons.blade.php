@@ -4,30 +4,30 @@
         <p class="mt-1 text-xs text-slate-500">{{ __('Acceso vigente hasta :date', ['date' => $expiresAt->timezone(config('app.timezone'))->format('d/m/Y H:i')]) }}</p>
     </div>
 
-    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 text-sm">
-                <thead class="bg-slate-50">
+    <div class="overflow-hidden rounded-xl shadow-sm">
+        <div class="overflow-x-auto sj-table-wrap">
+            <table class="sj-table min-w-full text-sm">
+                <thead>
                     <tr>
-                        <th class="px-3 py-2 text-left font-semibold">{{ __('Tipo') }}</th>
-                        <th class="px-3 py-2 text-left font-semibold">{{ __('Marca') }}</th>
-                        <th class="px-3 py-2 text-left font-semibold">{{ __('Serie') }}</th>
-                        <th class="px-3 py-2 text-left font-semibold">{{ __('Calibre') }}</th>
-                        <th class="px-3 py-2 text-left font-semibold">{{ __('Permiso') }}</th>
-                        <th class="px-3 py-2 text-center font-semibold">{{ __('Realizado') }}</th>
-                        <th class="px-3 py-2 text-right font-semibold">{{ __('Acciones') }}</th>
+                        <th>{{ __('Tipo') }}</th>
+                        <th>{{ __('Marca') }}</th>
+                        <th>{{ __('Serie') }}</th>
+                        <th>{{ __('Calibre') }}</th>
+                        <th>{{ __('Permiso') }}</th>
+                        <th>{{ __('Realizado') }}</th>
+                        <th>{{ __('Acciones') }}</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody>
                     @foreach ($rows as $row)
                         @php($weapon = $row['weapon'])
-                        <tr>
+                        <tr data-revista-weapon-id="{{ $weapon->id }}">
                             <td class="px-3 py-2">{{ $weapon->weapon_type ?? '—' }}</td>
                             <td class="px-3 py-2">{{ $weapon->brand ?? '—' }}</td>
                             <td class="px-3 py-2 font-medium">{{ $weapon->serial_number ?? '—' }}</td>
                             <td class="px-3 py-2">{{ $weapon->caliber ?? '—' }}</td>
                             <td class="px-3 py-2">{{ $weapon->permit_type ?? '—' }} {{ $weapon->permit_number }}</td>
-                            <td class="px-3 py-2 text-center">
+                            <td class="px-3 py-2 text-center" data-revista-guest-status>
                                 @if ($row['is_complete'])
                                     <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.55)]">✓</span>
                                 @else
@@ -70,13 +70,25 @@
             const slotGrid = document.getElementById('revista-guest-slot-grid');
             let stateUrl = '';
             let activeStoreUrl = '';
+            let activeWeaponId = '';
+
+            const updateRowStatus = (weaponId, isComplete) => {
+                const row = document.querySelector(`tr[data-revista-weapon-id="${weaponId}"]`);
+                const cell = row?.querySelector('[data-revista-guest-status]');
+                if (!cell) return;
+                cell.innerHTML = isComplete
+                    ? '<span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.55)]">✓</span>'
+                    : '<span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-red-500/15 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.45)]">✕</span>';
+            };
 
             const reloadGuestGrid = async () => {
                 if (!stateUrl) return;
                 const res = await fetch(stateUrl, { headers: { 'Accept': 'application/json' } });
                 const data = await res.json();
                 renderSlots(data);
-                window.location.reload();
+                if (activeWeaponId) {
+                    updateRowStatus(activeWeaponId, data.is_complete);
+                }
             };
 
             const capture = window.initRevistaPhotoCapture({
@@ -106,6 +118,7 @@
                 btn.addEventListener('click', async () => {
                     stateUrl = btn.dataset.stateUrl;
                     activeStoreUrl = btn.dataset.storeUrl;
+                    activeWeaponId = btn.dataset.weaponId || '';
                     document.getElementById('revista-guest-serial').textContent = btn.dataset.serial || '';
                     const res = await fetch(stateUrl, { headers: { 'Accept': 'application/json' } });
                     renderSlots(await res.json());

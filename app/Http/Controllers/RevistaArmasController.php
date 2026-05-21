@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\TemporaryPhotoUser;
 use App\Models\Weapon;
+use App\Support\RevistaWeaponPhotoSlots;
 use App\Services\RevistaArmasScopeService;
 use App\Services\WeaponPhotoStagingService;
 use Illuminate\Http\Request;
@@ -68,6 +69,9 @@ class RevistaArmasController extends Controller
         }
 
         $staging = $this->stagingService->stagingByDescription($temporaryPhotoUser, $weapon);
+        $requiredCount = RevistaWeaponPhotoSlots::requiredCount();
+        $uploadedCount = collect($staging)->filter(fn ($row) => $row->file !== null)->count();
+        $pendingCount = max(0, $requiredCount - $uploadedCount);
 
         return response()->json([
             'weapon' => [
@@ -78,18 +82,22 @@ class RevistaArmasController extends Controller
                 'id' => $temporaryPhotoUser->id,
                 'name' => $temporaryPhotoUser->name,
             ],
-            'slots' => collect($staging)->map(function ($row, $description) {
-                $url = $row->file
+            'slots' => collect(RevistaWeaponPhotoSlots::DESCRIPTIONS)->map(function ($label, $description) use ($staging) {
+                $row = $staging[$description] ?? null;
+                $url = $row?->file
                     ? \Illuminate\Support\Facades\Storage::disk($row->file->disk)->url($row->file->path)
                     : null;
 
                 return [
                     'description' => $description,
-                    'label' => \App\Support\RevistaWeaponPhotoSlots::DESCRIPTIONS[$description] ?? $description,
+                    'label' => $label,
                     'url' => $url,
                 ];
             })->values(),
-            'is_complete' => $this->stagingService->isStagingComplete($temporaryPhotoUser, $weapon),
+            'required_count' => $requiredCount,
+            'uploaded_count' => $uploadedCount,
+            'pending_count' => $pendingCount,
+            'is_complete' => $pendingCount === 0,
         ]);
     }
 }

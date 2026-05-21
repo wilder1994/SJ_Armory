@@ -241,19 +241,19 @@
                                 </div>
                             </div>
                             <div class="alerts-modal-panel__body">
-                                <div class="overflow-x-auto">
-                                    <table class="min-w-full divide-y divide-gray-200 text-sm">
-                                        <thead class="bg-gray-50">
+                                <div class="overflow-x-auto sj-table-wrap">
+                                    <table class="sj-table sj-table--align-left min-w-full text-sm">
+                                        <thead>
                                             <tr>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Cliente') }}</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Tipo') }}</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Serie') }}</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Vence') }}</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Estado') }}</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Observación') }}</th>
+                                                <th>{{ __('Cliente') }}</th>
+                                                <th>{{ __('Tipo') }}</th>
+                                                <th>{{ __('Serie') }}</th>
+                                                <th>{{ __('Vence') }}</th>
+                                                <th>{{ __('Estado') }}</th>
+                                                <th>{{ __('Observación') }}</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="expired-alerts-body" class="divide-y divide-gray-200">
+                                        <tbody id="expired-alerts-body">
                                             @forelse ($expired as $doc)
                                                 @php($alert = \App\Support\WeaponDocumentAlert::forComplianceDocument($doc))
                                                 @php($hasBlockingNovedad = $doc->weapon?->operationalBlockingIncidents?->isNotEmpty() ?? false)
@@ -302,19 +302,19 @@
                                 </div>
                             </div>
                             <div class="alerts-modal-panel__body">
-                                <div class="overflow-x-auto">
-                                    <table class="min-w-full divide-y divide-gray-200 text-sm">
-                                        <thead class="bg-gray-50">
+                                <div class="overflow-x-auto sj-table-wrap">
+                                    <table class="sj-table sj-table--align-left min-w-full text-sm">
+                                        <thead>
                                             <tr>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Cliente') }}</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Tipo') }}</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Serie') }}</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Vence') }}</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Estado') }}</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Observación') }}</th>
+                                                <th>{{ __('Cliente') }}</th>
+                                                <th>{{ __('Tipo') }}</th>
+                                                <th>{{ __('Serie') }}</th>
+                                                <th>{{ __('Vence') }}</th>
+                                                <th>{{ __('Estado') }}</th>
+                                                <th>{{ __('Observación') }}</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="expiring-alerts-body" class="divide-y divide-gray-200">
+                                        <tbody id="expiring-alerts-body">
                                             @forelse ($expiring as $doc)
                                                 @php($alert = \App\Support\WeaponDocumentAlert::forComplianceDocument($doc))
                                                 @php($hasBlockingNovedad = $doc->weapon?->operationalBlockingIncidents?->isNotEmpty() ?? false)
@@ -363,19 +363,19 @@
                                 </div>
                             </div>
                             <div class="alerts-modal-panel__body">
-                                <div class="overflow-x-auto">
-                                    <table class="min-w-full divide-y divide-gray-200 text-sm">
-                                        <thead class="bg-gray-50">
+                                <div class="overflow-x-auto sj-table-wrap">
+                                    <table class="sj-table sj-table--align-left min-w-full text-sm">
+                                        <thead>
                                             <tr>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Cliente') }}</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Tipo') }}</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Serie') }}</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Vence') }}</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Estado') }}</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Observación') }}</th>
+                                                <th>{{ __('Cliente') }}</th>
+                                                <th>{{ __('Tipo') }}</th>
+                                                <th>{{ __('Serie') }}</th>
+                                                <th>{{ __('Vence') }}</th>
+                                                <th>{{ __('Estado') }}</th>
+                                                <th>{{ __('Observación') }}</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="no-alerts-body" class="divide-y divide-gray-200">
+                                        <tbody id="no-alerts-body">
                                             @forelse ($noAlerts as $doc)
                                                 @php($hasBlockingNovedad = $doc->weapon?->operationalBlockingIncidents?->isNotEmpty() ?? false)
                                                 @php($searchText = strtolower(trim(($doc->weapon?->activeClientAssignment?->client?->name ?? 'Sin cliente') . ' ' . ($doc->weapon?->weapon_type ?? '') . ' ' . ($doc->weapon?->serial_number ?? '') . ' ' . ($doc->valid_until?->format('Y-m-d') ?? '') . ' sin alerta fuera de la ventana de 120 días')))

@@ -34,17 +34,17 @@
         <div class="sj-page-shell sj-page-shell--wide">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
-                    <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead class="bg-gray-50">
+                    <div class="overflow-x-auto sj-table-wrap">
+                    <table class="sj-table sj-table--align-left min-w-full text-sm">
+                        <thead>
                             <tr>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Fecha') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Usuario') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Acción') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Entidad') }}</th>
+                                <th>{{ __('Fecha') }}</th>
+                                <th>{{ __('Usuario') }}</th>
+                                <th>{{ __('Acción') }}</th>
+                                <th>{{ __('Entidad') }}</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200">
+                        <tbody>
                             @forelse ($logs as $log)
                                 <tr>
                                     <td class="px-3 py-2">{{ $log->created_at?->format('Y-m-d H:i') }}</td>

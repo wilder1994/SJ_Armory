@@ -46,6 +46,11 @@ class Weapon extends Model
         return $this->hasMany(WeaponDocument::class);
     }
 
+    public function histories()
+    {
+        return $this->hasMany(WeaponHistory::class)->orderByDesc('created_at')->orderByDesc('id');
+    }
+
     public function incidents()
     {
         return $this->hasMany(WeaponIncident::class)->orderByDesc('event_at')->orderByDesc('id');

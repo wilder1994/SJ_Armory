@@ -108,20 +108,20 @@
                         </div>
                     </form>
 
-                    <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead class="bg-gray-50">
+                    <div class="overflow-x-auto sj-table-wrap">
+                    <table class="sj-table sj-table--align-left min-w-full text-sm">
+                        <thead>
                             <tr>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Nombre') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Cédula') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Rol') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Cliente') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Responsable') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Estado') }}</th>
-                                <th class="px-3 py-2 text-right font-medium text-gray-600">{{ __('Acciones') }}</th>
+                                <th>{{ __('Nombre') }}</th>
+                                <th>{{ __('Cédula') }}</th>
+                                <th>{{ __('Rol') }}</th>
+                                <th>{{ __('Cliente') }}</th>
+                                <th>{{ __('Responsable') }}</th>
+                                <th>{{ __('Estado') }}</th>
+                                <th>{{ __('Acciones') }}</th>
                             </tr>
                         </thead>
-                        <tbody id="workers-tbody" class="divide-y divide-gray-200">
+                        <tbody id="workers-tbody">
                             @include('workers.partials.index_rows', ['workers' => $workers, 'roles' => $roles])
                         </tbody>
                     </table>

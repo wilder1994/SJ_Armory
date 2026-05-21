@@ -107,24 +107,24 @@
                     <h3 class="text-lg font-semibold">
                         {{ $status === 'pending' ? __('Pendientes por aceptar') : __('Transferencias') . ' — ' . $statusLabel }}
                     </h3>
-                    <div class="overflow-x-auto">
-                    <table class="mt-3 min-w-full divide-y divide-gray-200 text-sm">
-                        <thead class="bg-gray-50">
+                    <div class="overflow-x-auto sj-table-wrap mt-3">
+                    <table class="sj-table sj-table--align-left min-w-full text-sm">
+                        <thead>
                             @php
                                 $authUser = auth()->user();
                             @endphp
                             <tr>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Arma') }} ({{ __('Serie') }})</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Munición') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Proveedores') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Cliente origen') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Remitente') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Destinatario') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Cliente destino') }}</th>
-                                <th class="px-3 py-2 text-right font-medium text-gray-600">{{ __('Acciones') }}</th>
+                                <th>{{ __('Arma') }} ({{ __('Serie') }})</th>
+                                <th>{{ __('Munición') }}</th>
+                                <th>{{ __('Proveedores') }}</th>
+                                <th>{{ __('Cliente origen') }}</th>
+                                <th>{{ __('Remitente') }}</th>
+                                <th>{{ __('Destinatario') }}</th>
+                                <th>{{ __('Cliente destino') }}</th>
+                                <th>{{ __('Acciones') }}</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200">
+                        <tbody>
                             @forelse ($transfers as $transfer)
                                 @php
                                     $isRowReceiver = $transfer->to_user_id === $authUser->id;
@@ -265,22 +265,22 @@
             @if ($historyTransfers->isEmpty())
                 <p class="py-10 text-center text-gray-500">{{ __('Sin registros de historial.') }}</p>
             @else
-                <div class="mt-4 overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead class="bg-gray-50">
+                <div class="mt-4 overflow-x-auto sj-table-wrap">
+                    <table class="sj-table sj-table--align-left min-w-full text-sm">
+                        <thead>
                             <tr>
-                                <th class="px-2 py-2 text-left font-medium text-gray-600">{{ __('Fecha') }}</th>
-                                <th class="px-2 py-2 text-left font-medium text-gray-600">{{ __('Estado') }}</th>
-                                <th class="px-2 py-2 text-left font-medium text-gray-600">{{ __('Serie') }}</th>
-                                <th class="px-2 py-2 text-left font-medium text-gray-600">{{ __('Munición') }}</th>
-                                <th class="px-2 py-2 text-left font-medium text-gray-600">{{ __('Prov.') }}</th>
-                                <th class="px-2 py-2 text-left font-medium text-gray-600">{{ __('Origen') }}</th>
-                                <th class="px-2 py-2 text-left font-medium text-gray-600">{{ __('Remitente') }}</th>
-                                <th class="px-2 py-2 text-left font-medium text-gray-600">{{ __('Destinatario') }}</th>
-                                <th class="px-2 py-2 text-left font-medium text-gray-600">{{ __('Cliente destino') }}</th>
+                                <th>{{ __('Fecha') }}</th>
+                                <th>{{ __('Estado') }}</th>
+                                <th>{{ __('Serie') }}</th>
+                                <th>{{ __('Munición') }}</th>
+                                <th>{{ __('Prov.') }}</th>
+                                <th>{{ __('Origen') }}</th>
+                                <th>{{ __('Remitente') }}</th>
+                                <th>{{ __('Destinatario') }}</th>
+                                <th>{{ __('Cliente destino') }}</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200">
+                        <tbody>
                             @foreach ($historyTransfers as $h)
                                 <tr>
                                     <td class="whitespace-nowrap px-2 py-2">{{ $h->requested_at?->format('Y-m-d H:i') }}</td>
@@ -349,19 +349,19 @@
                         placeholder="{{ __('Filtrar armas...') }}">
                 </div>
 
-                <div class="max-h-72 overflow-auto rounded border border-gray-200">
-                    <table class="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead class="bg-gray-50 sticky top-0 z-10">
+                <div class="sj-table-wrap max-h-72 overflow-auto">
+                    <table class="sj-table sj-table--align-left sj-table--sticky-head min-w-full text-sm">
+                        <thead>
                             <tr>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Seleccionar') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Código interno') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Cliente') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Responsable') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Serie') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Tipo') }}</th>
+                                <th>{{ __('Seleccionar') }}</th>
+                                <th>{{ __('Código interno') }}</th>
+                                <th>{{ __('Cliente') }}</th>
+                                <th>{{ __('Responsable') }}</th>
+                                <th>{{ __('Serie') }}</th>
+                                <th>{{ __('Tipo') }}</th>
                             </tr>
                         </thead>
-                        <tbody id="weapons-list" class="divide-y divide-gray-200">
+                        <tbody id="weapons-list">
                             @forelse ($weapons as $weapon)
                                 <tr data-search="{{ strtolower(($weapon->internal_code ?? '') . ' ' . ($weapon->serial_number ?? '') . ' ' . ($weapon->weapon_type ?? '') . ' ' . ($weapon->activeClientAssignment?->client?->name ?? '') . ' ' . ($weapon->activeClientAssignment?->responsible?->name ?? '')) }}"
                                     data-responsible-id="{{ $weapon->activeClientAssignment?->responsible_user_id }}">

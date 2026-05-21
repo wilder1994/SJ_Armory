@@ -23,8 +23,8 @@ class WeaponPhotoStagingService
 {
     public function __construct(
         private readonly WeaponDocumentService $documentService,
-    ) {
-    }
+        private readonly WeaponHistoryService $weaponHistory,
+    ) {}
 
     public function stagingCount(TemporaryPhotoUser $temporaryUser, Weapon $weapon): int
     {
@@ -160,6 +160,13 @@ class WeaponPhotoStagingService
                     'count' => $stagingRows->count(),
                 ],
             ]);
+
+            $this->weaponHistory->recordRevistaPhotosApproved(
+                $weapon,
+                $reviewer,
+                $temporaryUser,
+                $stagingRows->count(),
+            );
         });
 
         $this->documentService->syncRenewalDocument($weapon);

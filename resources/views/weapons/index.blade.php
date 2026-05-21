@@ -200,38 +200,38 @@
 
             <div class="bg-white shadow-sm sm:rounded-2xl w-full border border-slate-200">
                 <div class="p-6 text-gray-900">
-                    <div id="weapons-table-scroll" class="w-full overflow-auto weapons-table-scroll relative" style="max-height: calc(100vh - 340px);">
-                        <table class="min-w-full divide-y divide-gray-200 text-sm min-w-[2200px]">
-                            <thead class="bg-gray-50 sticky top-0 z-20">
+                    <div id="weapons-table-scroll" class="sj-table-wrap w-full overflow-auto weapons-table-scroll relative" style="max-height: calc(100vh - 340px);">
+                        <table class="sj-table sj-table--sticky-head min-w-full text-sm min-w-[2200px]">
+                            <thead>
                                 <tr>
-                                    <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">
+                                    <th class="whitespace-nowrap">
                                         <span class="sr-only">{{ __('Seleccionar') }}</span>
                                     </th>
-                                    <th class="px-3 py-2 text-center font-medium text-gray-600 min-w-[200px] whitespace-nowrap bg-gray-50">{{ __('Cliente') }}</th>
-                                    <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Tipo') }}</th>
-                                    <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Marca') }}</th>
-                                    <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Serie') }}</th>
-                                    <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Calibre') }}</th>
-                                    <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Capacidad') }}</th>
-                                    <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Tipo de permiso') }}</th>
-                                    <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('N° de permiso') }}</th>
-                                    <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Vence') }}</th>
-                                    <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Estado') }}</th>
-                                    <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">
+                                    <th class="min-w-[200px] whitespace-nowrap">{{ __('Cliente') }}</th>
+                                    <th class="whitespace-nowrap">{{ __('Tipo') }}</th>
+                                    <th class="whitespace-nowrap">{{ __('Marca') }}</th>
+                                    <th class="whitespace-nowrap">{{ __('Serie') }}</th>
+                                    <th class="whitespace-nowrap">{{ __('Calibre') }}</th>
+                                    <th class="whitespace-nowrap">{{ __('Capacidad') }}</th>
+                                    <th class="whitespace-nowrap">{{ __('Tipo de permiso') }}</th>
+                                    <th class="whitespace-nowrap">{{ __('N° de permiso') }}</th>
+                                    <th class="whitespace-nowrap">{{ __('Vence') }}</th>
+                                    <th class="whitespace-nowrap">{{ __('Estado') }}</th>
+                                    <th class="whitespace-nowrap">
                                         <span class="block leading-tight">{{ __('Cant.') }}</span>
                                         <span class="block leading-tight">{{ __('Munición') }}</span>
                                     </th>
-                                    <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">
+                                    <th class="whitespace-nowrap">
                                         <span class="block leading-tight">{{ __('Cant.') }}</span>
                                         <span class="block leading-tight">{{ __('Proveedor') }}</span>
                                     </th>
-                                    <th class="px-3 py-2 text-center font-medium text-gray-600 min-w-[200px] whitespace-nowrap bg-gray-50">{{ __('Responsable') }}</th>
-                                    <th class="px-3 py-2 text-center font-medium text-gray-600 min-w-[220px] whitespace-nowrap bg-gray-50">{{ __('Puesto o trabajador') }}</th>
-                                    <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Cédula') }}</th>
-                                    <th class="px-3 py-2 text-center font-medium text-gray-600 whitespace-nowrap bg-gray-50">{{ __('Impronta') }}</th>
+                                    <th class="min-w-[200px] whitespace-nowrap">{{ __('Responsable') }}</th>
+                                    <th class="min-w-[220px] whitespace-nowrap">{{ __('Puesto o trabajador') }}</th>
+                                    <th class="whitespace-nowrap">{{ __('Cédula') }}</th>
+                                    <th class="whitespace-nowrap">{{ __('Impronta') }}</th>
                                 </tr>
                             </thead>
-                            <tbody id="weapons-tbody" class="divide-y divide-gray-200">
+                            <tbody id="weapons-tbody">
                                 @include('weapons.partials.index_rows', ['weapons' => $weapons])
                             </tbody>
                         </table>
@@ -280,8 +280,8 @@
                         </label>
                     </div>
 
-                    <div id="weapons-export-modal-table-shell" class="weapon-export-modal__table-shell hidden">
-                        <table class="weapon-export-modal__table">
+                    <div id="weapons-export-modal-table-shell" class="weapon-export-modal__table-shell sj-table-wrap hidden">
+                        <table class="sj-table sj-table--align-left sj-table--compact weapon-export-modal__table">
                             <thead>
                                 <tr>
                                     <th>{{ __('Cliente') }}</th>
@@ -604,38 +604,14 @@
         overflow: auto;
     }
 
-    .weapon-export-modal__table {
-        border-collapse: separate;
-        border-spacing: 0;
-        min-width: 100%;
-        width: 100%;
-    }
-
     .weapon-export-modal__table thead th {
-        background: linear-gradient(180deg, #223469 0%, #162457 100%);
-        color: rgb(239 246 255);
-        font-size: 0.72rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        padding: 0.85rem 1rem;
         position: sticky;
-        text-align: left;
-        text-transform: uppercase;
         top: 0;
-        white-space: nowrap;
         z-index: 1;
     }
 
-    .weapon-export-modal__table tbody td {
-        border-bottom: 1px solid rgb(226 232 240);
-        color: rgb(30 41 59);
-        font-size: 0.9rem;
-        padding: 0.85rem 1rem;
-        vertical-align: top;
-    }
-
     .weapon-export-modal__table tbody tr:nth-child(even) td {
-        background: rgb(248 250 252);
+        background: rgba(255, 255, 255, 0.28);
     }
 
     .weapon-export-modal__footer {

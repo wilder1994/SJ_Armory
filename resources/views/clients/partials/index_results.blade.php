@@ -1,6 +1,6 @@
 @if ($clients->count() > 0)
-    <div class="sj-client-table-wrap hidden md:block">
-        <table class="sj-client-table">
+    <div class="sj-client-table-wrap sj-table-wrap hidden md:block">
+        <table class="sj-table sj-client-table">
             <thead>
                 <tr>
                     <th>{{ __('Cliente') }}</th>

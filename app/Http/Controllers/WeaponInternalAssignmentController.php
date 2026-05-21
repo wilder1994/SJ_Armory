@@ -10,6 +10,7 @@ use App\Models\Weapon;
 use App\Models\WeaponPostAssignment;
 use App\Models\WeaponWorkerAssignment;
 use App\Models\Worker;
+use App\Services\WeaponHistoryService;
 use App\Support\MapCoordinates;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,10 @@ use Illuminate\Validation\Rule;
 
 class WeaponInternalAssignmentController extends Controller
 {
+    public function __construct(
+        private readonly WeaponHistoryService $weaponHistory,
+    ) {}
+
     public function store(Request $request, Weapon $weapon)
     {
         $user = $request->user();
@@ -122,7 +127,12 @@ class WeaponInternalAssignmentController extends Controller
             }
         }
 
-        DB::transaction(function () use ($weapon, $user, $postId, $workerId, $startAt, $reason, $ammoCount, $providerCount, $activeClientAssignment) {
+        $hadActiveInternal = $weapon->activePostAssignment()->exists() || $weapon->activeWorkerAssignment()->exists();
+
+        $historyPost = null;
+        $historyWorker = null;
+
+        DB::transaction(function () use ($weapon, $user, $postId, $workerId, $startAt, $reason, $ammoCount, $providerCount, $activeClientAssignment, &$historyPost, &$historyWorker) {
             $before = $this->currentInternalState($weapon);
             $this->closeActiveAssignments($weapon);
 
@@ -130,6 +140,7 @@ class WeaponInternalAssignmentController extends Controller
             $postAssignment = null;
             if ($postId) {
                 $post = Post::findOrFail($postId);
+                $historyPost = $post;
                 if ($post->isArchived()) {
                     abort(422, 'El puesto está archivado.');
                 }
@@ -151,6 +162,7 @@ class WeaponInternalAssignmentController extends Controller
             $workerAssignment = null;
             if ($workerId) {
                 $worker = Worker::findOrFail($workerId);
+                $historyWorker = $worker;
                 if ($worker->isArchived()) {
                     abort(422, 'El trabajador está archivado.');
                 }
@@ -195,6 +207,17 @@ class WeaponInternalAssignmentController extends Controller
             }
         });
 
+        $this->weaponHistory->recordInternalAssignment(
+            $weapon,
+            $user,
+            $historyPost,
+            $historyWorker,
+            $reason,
+            $ammoCount,
+            $providerCount,
+            $hadActiveInternal,
+        );
+
         app()->terminating(function () use ($weapon, $activeClientAssignment, $postId, $workerId): void {
             event(new AssignmentChanged('assigned', $weapon->id, [
                 'client_id' => $activeClientAssignment->client_id,
@@ -235,6 +258,8 @@ class WeaponInternalAssignmentController extends Controller
             'post_id' => null,
             'worker_id' => null,
         ]);
+
+        $this->weaponHistory->recordInternalRetired($weapon, $user);
 
         app()->terminating(function () use ($weapon, $activeClientAssignment): void {
             event(new AssignmentChanged('unassigned', $weapon->id, [

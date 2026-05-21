@@ -7,6 +7,7 @@ use App\Models\File;
 use App\Models\Weapon;
 use App\Models\WeaponDocument;
 use App\Services\WeaponDocumentService;
+use App\Services\WeaponHistoryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -15,6 +16,10 @@ use Throwable;
 
 class WeaponDocumentController extends Controller
 {
+    public function __construct(
+        private readonly WeaponHistoryService $weaponHistory,
+    ) {}
+
     public function store(Request $request, Weapon $weapon)
     {
         $this->authorize('update', $weapon);
@@ -34,8 +39,10 @@ class WeaponDocumentController extends Controller
         $file = $data['document'];
         $path = $file->store('weapons/' . $weapon->id . '/documents', 'local');
 
+        $documentName = $file->getClientOriginalName();
+
         try {
-            DB::transaction(function () use ($data, $file, $path, $request, $weapon) {
+            DB::transaction(function () use ($data, $file, $path, $request, $weapon, $documentName) {
                 $storedFile = File::create([
                     'disk' => 'local',
                     'path' => $path,
@@ -74,6 +81,15 @@ class WeaponDocumentController extends Controller
             Storage::disk('local')->delete($path);
             throw $e;
         }
+
+        $this->weaponHistory->recordDocument(
+            $weapon,
+            $request->user(),
+            $documentName,
+            $data['observations'] ?? null,
+            $data['status'] ?? null,
+            isset($data['valid_until']) ? (string) $data['valid_until'] : null,
+        );
 
         return redirect()->route('weapons.show', $weapon)->with('status', 'Documento cargado.');
     }

@@ -13,6 +13,7 @@ use App\Models\Weapon;
 use App\Models\WeaponIncident;
 use App\Models\WeaponPhoto;
 use App\Services\WeaponDocumentService;
+use App\Services\WeaponHistoryService;
 use App\Support\WeaponDocumentAlert;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -25,8 +26,9 @@ use Throwable;
 
 class WeaponController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        private readonly WeaponHistoryService $weaponHistory,
+    ) {
         $this->authorizeResource(Weapon::class, 'weapon');
     }
 
@@ -298,6 +300,8 @@ class WeaponController extends Controller
             'after' => $weapon->only(['internal_code', 'serial_number', 'weapon_type', 'caliber', 'brand', 'capacity']),
         ]);
 
+        $this->weaponHistory->recordCreated($weapon, $request->user(), $data['notes'] ?? null);
+
         event(new WeaponChanged('created', $weapon->id));
 
         return redirect()->route('weapons.show', $weapon)->with('status', 'Arma creada.');
@@ -321,6 +325,10 @@ class WeaponController extends Controller
             'activeClientAssignment.responsible',
             'activePostAssignment.post',
             'activeWorkerAssignment.worker',
+            'histories' => function ($query) {
+                $query->orderByDesc('created_at')->orderByDesc('id');
+            },
+            'histories.user',
         ]);
         $ownershipTypes = $this->ownershipOptions();
         $responsibles = collect();
@@ -496,17 +504,7 @@ class WeaponController extends Controller
             'permit_photo' => ['nullable', 'file', 'image', 'max:5120'],
         ]);
 
-        $before = $weapon->only([
-            'internal_code',
-            'serial_number',
-            'weapon_type',
-            'caliber',
-            'brand',
-            'capacity',
-            'permit_type',
-            'permit_number',
-            'permit_expires_at',
-        ]);
+        $beforeSnapshot = $this->weaponHistory->weaponSnapshot($weapon);
 
         $photos = $request->file('photos', []);
         $photoOrder = array_keys(WeaponPhoto::DESCRIPTIONS);
@@ -606,7 +604,17 @@ class WeaponController extends Controller
             'action' => 'weapon_updated',
             'auditable_type' => Weapon::class,
             'auditable_id' => $weapon->id,
-            'before' => $before,
+            'before' => collect($beforeSnapshot)->only([
+                'internal_code',
+                'serial_number',
+                'weapon_type',
+                'caliber',
+                'brand',
+                'capacity',
+                'permit_type',
+                'permit_number',
+                'permit_expires_at',
+            ])->all(),
             'after' => $weapon->only([
                 'internal_code',
                 'serial_number',
@@ -619,6 +627,15 @@ class WeaponController extends Controller
                 'permit_expires_at',
             ]),
         ]);
+
+        $weapon->refresh();
+        $this->weaponHistory->recordWeaponUpdate(
+            $weapon,
+            $request->user(),
+            $beforeSnapshot,
+            $this->weaponHistory->weaponSnapshot($weapon),
+            $data['notes'] ?? null,
+        );
 
         event(new WeaponChanged('updated', $weapon->id));
 

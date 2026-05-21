@@ -10,10 +10,17 @@ use Illuminate\Support\Facades\DB;
 
 class WeaponAssignmentService
 {
+    public function __construct(
+        private readonly WeaponHistoryService $weaponHistory,
+    ) {}
+
     public function assignClient(Weapon $weapon, int $clientId, User $responsible, User $actor, string $startAt, ?string $reason = null): void
     {
         DB::transaction(function () use ($weapon, $clientId, $responsible, $actor, $startAt, $reason) {
             $active = $weapon->clientAssignments()->where('is_active', true)->first();
+            $previousClient = $active
+                ? \App\Models\Client::query()->find($active->client_id)
+                : null;
 
             if ($active) {
                 $active->update([
@@ -63,6 +70,19 @@ class WeaponAssignmentService
                     'start_at' => $startAt,
                 ],
             ]);
+
+            $client = \App\Models\Client::query()->find($clientId);
+            if ($client) {
+                $this->weaponHistory->recordDestinationAssignment(
+                    $weapon,
+                    $actor,
+                    $client,
+                    $responsible,
+                    $reason,
+                    $active !== null,
+                    $previousClient,
+                );
+            }
         });
     }
 
@@ -96,6 +116,11 @@ class WeaponAssignmentService
                 'is_active' => null,
             ],
         ]);
+
+        $active->loadMissing('client');
+        if ($active->client) {
+            $this->weaponHistory->recordDestinationRetired($weapon, $actor, $active->client);
+        }
     }
 }
 

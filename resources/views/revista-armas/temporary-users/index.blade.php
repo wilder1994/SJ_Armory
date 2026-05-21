@@ -18,20 +18,20 @@
                 <div class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">{{ session('status') }}</div>
             @endif
 
-            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                <table class="min-w-full divide-y divide-slate-200 text-sm">
-                    <thead class="bg-slate-50">
+            <div class="overflow-hidden rounded-xl shadow-sm sj-table-wrap">
+                <table class="sj-table sj-table--align-left min-w-full text-sm">
+                    <thead>
                         <tr>
-                            <th class="px-3 py-2 text-left font-semibold">{{ __('Nombre') }}</th>
-                            <th class="px-3 py-2 text-left font-semibold">{{ __('Correo') }}</th>
+                            <th>{{ __('Nombre') }}</th>
+                            <th>{{ __('Correo') }}</th>
                             @if ($isAdmin)
-                                <th class="px-3 py-2 text-left font-semibold">{{ __('Responsable') }}</th>
+                                <th>{{ __('Responsable') }}</th>
                             @endif
-                            <th class="px-3 py-2 text-center font-semibold">{{ __('Accesos activos') }}</th>
-                            <th class="px-3 py-2 text-right font-semibold">{{ __('Acciones') }}</th>
+                            <th>{{ __('Accesos activos') }}</th>
+                            <th>{{ __('Acciones') }}</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
+                    <tbody>
                         @forelse ($users as $user)
                             <tr>
                                 <td class="px-3 py-2 font-medium">{{ $user->name }}</td>

@@ -19,6 +19,10 @@ use Throwable;
 
 class WeaponIncidentService
 {
+    public function __construct(
+        private readonly WeaponHistoryService $weaponHistory,
+    ) {}
+
     public function create(Weapon $weapon, array $data, User $actor): WeaponIncident
     {
         $type = IncidentType::query()->findOrFail($data['incident_type_id']);
@@ -104,7 +108,16 @@ class WeaponIncidentService
             throw $e;
         }
 
-        return $incident->loadMissing($this->incidentRelationships());
+        $incident->loadMissing($this->incidentRelationships());
+        $this->weaponHistory->recordIncident(
+            $weapon,
+            $actor,
+            __('Novedad registrada: :type', ['type' => $type->name]),
+            Arr::get($data, 'observation'),
+            $this->formatIncidentContext($incident, $modality),
+        );
+
+        return $incident;
     }
 
     public function addUpdate(WeaponIncident $incident, array $data, User $actor): WeaponIncidentUpdate
@@ -113,6 +126,7 @@ class WeaponIncidentService
         $storedPath = null;
         $storedFile = null;
         $update = null;
+        $eventType = (string) ($data['event_type'] ?? WeaponIncidentUpdate::EVENT_NOTE);
 
         try {
             DB::transaction(function () use (
@@ -120,6 +134,7 @@ class WeaponIncidentService
                 $data,
                 $actor,
                 $attachment,
+                $eventType,
                 &$storedPath,
                 &$storedFile,
                 &$update
@@ -130,7 +145,6 @@ class WeaponIncidentService
 
                 $statusFrom = $incident->status;
                 $statusTo = Arr::get($data, 'status') ?: null;
-                $eventType = (string) ($data['event_type'] ?? WeaponIncidentUpdate::EVENT_NOTE);
                 $happenedAt = Arr::get($data, 'happened_at', now());
 
                 if (!$incident->isOpen() && $eventType !== WeaponIncidentUpdate::EVENT_REOPEN) {
@@ -197,6 +211,32 @@ class WeaponIncidentService
 
             throw $e;
         }
+
+        $incident->refresh()->loadMissing(['type', 'weapon']);
+        $note = trim((string) (Arr::get($data, 'note') ?: ($update->note ?? '')));
+        $headline = match ($eventType) {
+            WeaponIncidentUpdate::EVENT_REOPEN => __('Novedad reabierta: :type', ['type' => $incident->type?->name ?? '—']),
+            WeaponIncidentUpdate::EVENT_CLOSURE => __('Novedad cerrada: :type', ['type' => $incident->type?->name ?? '—']),
+            default => __('Seguimiento de novedad: :type', ['type' => $incident->type?->name ?? '—']),
+        };
+        $detailParts = [];
+        if ($update->status_to && $update->status_to !== $update->status_from) {
+            $detailParts[] = __('Estado: :from → :to', [
+                'from' => WeaponIncident::statusOptions()[$update->status_from] ?? ($update->status_from ?? '—'),
+                'to' => WeaponIncident::statusOptions()[$update->status_to] ?? $update->status_to,
+            ]);
+        }
+        if ($note !== '') {
+            $detailParts[] = $note;
+        }
+
+        $this->weaponHistory->recordIncident(
+            $incident->weapon,
+            $actor,
+            $headline,
+            null,
+            $detailParts !== [] ? implode("\n", $detailParts) : null,
+        );
 
         return $update->loadMissing(['creator', 'attachmentFile']);
     }
@@ -361,5 +401,26 @@ class WeaponIncidentService
             'latestUpdate.creator',
             'latestUpdate.attachmentFile',
         ];
+    }
+
+    private function formatIncidentContext(WeaponIncident $incident, ?IncidentModality $modality): ?string
+    {
+        $lines = [];
+
+        if ($modality) {
+            $lines[] = __('Modalidad: :name', ['name' => $modality->name]);
+        }
+
+        $status = WeaponIncident::statusOptions()[$incident->status] ?? $incident->status;
+        $lines[] = __('Estado inicial: :status', ['status' => $status]);
+
+        $note = trim((string) ($incident->note ?? ''));
+        if ($note !== '') {
+            $lines[] = __('Nota inicial: :note', ['note' => $note]);
+        }
+
+        $body = implode("\n", $lines);
+
+        return $body !== '' ? $body : null;
     }
 }

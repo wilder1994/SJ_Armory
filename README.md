@@ -8,7 +8,7 @@ Sistema web para **gestión de armamento**, **asignaciones operativas**, **trans
 
 ## 📌 Alcance funcional
 
-- ✅ **Armas**: alta/edición, fotos (técnicas y permiso; en móvil **Tomar foto** o **Elegir de galería**; reverso autenticado según plantillas globales **porte** / **tenencia**), documentos (descarga del **permiso** como PDF frente + reverso), exportación, inventario.
+- ✅ **Armas**: alta/edición, fotos (técnicas y permiso; en móvil **Tomar foto** o **Elegir de galería**; reverso autenticado según plantillas globales **porte** / **tenencia**), documentos (descarga del **permiso** como PDF frente + reverso), exportación, inventario; **historial cronológico de notas** en la ficha (asignaciones, novedades, documentos, transferencias, actualización de datos y fotos desde Revista armas).
 - ✅ **Asignaciones**:
   - **Operativa** (arma ↔ cliente/responsable)
   - **Interna** (arma ↔ puesto y/o trabajador; ubicación en mapa prioriza puesto si existe; la columna de destino en el listado refleja principalmente al trabajador cuando hay trabajador activo)
@@ -17,7 +17,7 @@ Sistema web para **gestión de armamento**, **asignaciones operativas**, **trans
 - ✅ **Cargas masivas**: validación previa, preview, ejecución por chunks, trazabilidad por lote; en la vista **Subir armas**, el **ADMIN** gestiona las plantillas globales de reverso autenticado (porte y tenencia) usadas en el PDF y en la ficha.
 - ✅ **Dashboard**: KPIs, métricas, gráficos y estado “as of”.
 - ✅ **Alertas documentales** (`/alerts/documents`): tarjetas vencidos / por vencer / sin alertas; filtro **multi-mes** con panel de checkboxes (varios meses y años); exportación `.docx` y vista previa PDF con nombre `Revalidacion_{mes}_{año}`.
-- ✅ **Revista armas** (`/revista-armas`): acceso temporal (12 h) para colaboradores de campo; usuarios temporales reutilizables; selección de armas visibles; subida de **4 fotos técnicas** a staging; revisión del responsable (aprobar → fotos oficiales / rechazar); **ADMIN** con gestión global.
+- ✅ **Revista armas** (`/revista-armas`): acceso temporal (12 h) para colaboradores de campo; usuarios temporales reutilizables; selección de armas visibles; subida de **4 fotos técnicas** a staging; revisión staff con filtro por usuario temporal (✓/✕ y **Ver**); confirmaciones en **modales** (no `confirm` del navegador); al **Actualizar** registra entrada en el historial de notas del arma; **ADMIN** con gestión global.
 - ✅ **Mapa**: geocodificación y visualización operativa.
 - ✅ **Auditoría**: registro de cambios y acciones críticas.
 - ✅ **Realtime (Broadcasting)**: Laravel Reverb + Echo (WebSockets) para sincronización en tiempo real.
@@ -657,7 +657,37 @@ Descripciones tecnicas soportadas (`WeaponPhoto::DESCRIPTIONS`):
 - `lado_izquierdo`
 - `canon_disparador_marca`
 - `serie`
-- `aseo` (impronta)
+- `impronta`
+
+### 5.9.1 Historial de notas (ficha del arma)
+
+La tarjeta **Notas** en `weapons/show` (`resources/views/weapons/partials/history-panel.blade.php`) muestra un **historial cronológico append-only** (`weapon_histories`), no el texto único de `weapons.notes` como panel principal.
+
+| Componente | Ubicación |
+|------------|-----------|
+| Tabla | `weapon_histories` — migración `2026_05_19_180000_create_weapon_histories_table.php` |
+| Modelo | `App\Models\WeaponHistory` — tipos: `created`, `note`, `update`, `destination`, `internal`, `incident`, `transfer`, `document`, `photos` |
+| Servicio | `App\Services\WeaponHistoryService` |
+| Relación | `Weapon::histories()` |
+| Vista | `resources/views/weapons/partials/history-panel.blade.php` (scroll `max-h-96`) |
+
+**Qué genera entradas automáticamente**
+
+- Alta del arma (`recordCreated`) y edición de datos (`recordWeaponUpdate`: resumen de cambios en campos rastreados + texto del textarea **Notas** si tiene contenido).
+- Asignación / retiro de **destino operativo** (incluye `reason` del formulario).
+- Asignación / retiro de **asignación interna** (observaciones, puesto, trabajador).
+- **Novedades** operativas (alta, seguimiento, cierre, reapertura).
+- Carga de **documentos** manuales.
+- **Transferencias** (solicitud, aceptación, cancelación).
+- Aprobación de fotos en **Revista armas** (`recordRevistaPhotosApproved`: fecha, cantidad de fotos, colaborador temporal).
+
+Si no hay filas en `weapon_histories` pero sí texto en `weapons.notes` heredado, el panel muestra una **nota heredada**; si no hay nada, el estado vacío con mensaje explicativo.
+
+`WeaponController::show` carga `histories` y `histories.user`. El partial también hace `load` si la relación no venía eager-loaded (evita panel vacío por omisión de carga).
+
+Tests: `tests/Feature/WeaponHistoryTest.php`, `RevistaArmasTest::test_approve_staging_photos_records_weapon_history`.
+
+> La auditoría técnica (`audit_logs`) sigue existiendo; el panel **Notas** de la ficha no la sustituye.
 
 ### 5.10 Mapa operativo
 
@@ -745,15 +775,62 @@ Alertas:
 
 ### 5.14 Revista armas (fotos en campo)
 
-Rutas staff (ADMIN o RESPONSABLE nivel 1): prefijo `revista-armas.*`  
-Rutas invitado: `revista-armas/ingreso`, `revista-armas/mis-armas` (sesión `revista_grant_id`, sin usuario del sistema).
+Módulo para que colaboradores de campo suban **4 fotos técnicas** por arma (staging) y el staff las revise antes de pasarlas a las fotos oficiales del inventario.
 
-- **Usuarios temporales** (`temporary_photo_users`): CRUD reutilizable; desactivar no borra `weapon_photo_staging`.
-- **Asignación de acceso** (`temporary_photo_access_grants` + `temporary_photo_access_weapons`): código 12 h, correo (`RevistaTemporaryAccessMail`), revocación sin borrar staging.
-- **Staging** (`weapon_photo_staging`): solo slots `lado_derecho`, `lado_izquierdo`, `canon_disparador_marca`, `serie` (`App\Support\RevistaWeaponPhotoSlots`).
-- **Realizado**: 4/4 fotos en staging para el usuario temporal filtrado.
-- **Revisión**: aprobar copia a `weapon_photos` + `syncRenewalDocument`; rechazar elimina staging.
-- Migración: `2026_05_19_140000_create_revista_armas_tables.php` (índices/FK con nombres cortos para MySQL).
+#### Acceso
+
+| Actor | Requisito | Rutas principales |
+|--------|-----------|-------------------|
+| **Staff** | `ADMIN` o `RESPONSABLE` **nivel 1** (`EnsureRevistaStaff`) | `/revista-armas`, `/revista-armas/usuarios-temporales` |
+| **Invitado** | Código de acceso 12 h (sin fila en `users`) | `/revista-armas/ingreso`, `/revista-armas/mis-armas` |
+
+Sesión invitado: `revista_grant_id` (grant activo en `temporary_photo_access_grants`).
+
+Nombres de ruta staff relevantes: prefijo `revista-armas.*`; CRUD de temporales con nombres `revista-armas.temporary-users.*` (URL `/revista-armas/usuarios-temporales`).
+
+#### Usuarios temporales (`temporary_photo_users`)
+
+- CRUD reutilizable en `/revista-armas/usuarios-temporales`.
+- Campo **Responsable dueño** (`owner_responsible_user_id`): solo usuarios del sistema con rol `RESPONSABLE` (el **ADMIN** elige en el formulario; el responsable nivel 1 queda asignado a sí mismo).
+- Desactivar usuario temporal o revocar acceso **no borra** filas en `weapon_photo_staging`.
+- **ADMIN**: ve y gestiona todos los temporales activos. **RESPONSABLE nivel 1**: solo los que tiene como dueño.
+
+#### Asignación de acceso
+
+- Tablas: `temporary_photo_access_grants` + `temporary_photo_access_weapons`.
+- Modal **Asignar acceso temporal** en el listado staff: elige usuario temporal + armas (checkboxes).
+- Código válido **12 h**, correo `RevistaTemporaryAccessMail`; modal de éxito con enlace, correo y código copiable.
+- Revocar acceso no elimina staging ya subido.
+
+#### Vista staff (`/revista-armas`)
+
+- Lista armas según alcance (`RevistaArmasScopeService`: global para **ADMIN**, cartera/responsable activo para **RESPONSABLE** nivel 1).
+- Filtro **Usuario temporal (columna Realizado)** + botón **Filtrar** (`?temporary_photo_user_id=`).
+  - Sin usuario temporal seleccionado: columna **Realizado** muestra `—` y **Acciones** va vacía (comportamiento esperado).
+  - Con filtro aplicado: **Realizado** = ✓ si 4/4 fotos en staging de **ese** colaborador; ✕ si falta alguna; botón **Ver** abre modal de revisión.
+  - El filtro es necesario porque el progreso y la revisión son por par **(arma, usuario temporal)**, no por arma sola.
+- Modal **Ver**: muestra las **4 casillas** (con o sin imagen); API `revista-armas.review` devuelve `slots`, `uploaded_count`, `pending_count`, `is_complete`.
+- **Actualizar**:
+  - Si faltan fotos (`is_complete === false`): modal de **aviso** centrado — *«No se pueden actualizar las imágenes oficiales porque faltan N foto(s) pendiente(s).»* (sin `confirm` del navegador).
+  - Si están las 4: modal de **confirmación** centrado; al aceptar, `POST` `revista-armas.review.approve` → copia a `weapon_photos` + `syncRenewalDocument` + entrada en `weapon_histories` (tipo **Fotografías**, con fecha y colaborador temporal).
+  - Errores del servidor (p. ej. 422): modal de aviso; no recarga la página a ciegas.
+- **Rechazar**: modal de confirmación; elimina staging de ese temporal en esa arma.
+- UI: modales `#revista-confirm-modal`, `#revista-alert-modal` en `resources/views/revista-armas/index.blade.php` (misma familia visual que el modal de revisión).
+
+#### Vista invitado (`/revista-armas/mis-armas`)
+
+- Tabla de armas asignadas al grant vigente; **Realizado** ✓/✕ según 4/4 en staging.
+- **Ver** abre modal de captura (Cropper: cámara o galería) vía `revista-armas.partials.photo-capture-kit`.
+- Tras cada foto guardada: el modal de fotos **permanece abierto**; se refrescan las miniaturas y la columna **Realizado** de la fila sin recargar la página.
+- Layout invitado: `layouts/revista-guest.blade.php` incluye `@stack('styles')` y `@stack('scripts')` (requerido para el JS del modal).
+
+#### Staging y slots
+
+- Tabla `weapon_photo_staging`; descripciones fijas en `App\Support\RevistaWeaponPhotoSlots`: `lado_derecho`, `lado_izquierdo`, `canon_disparador_marca`, `serie`.
+- Servicios: `WeaponPhotoStagingService` (inyecta `WeaponHistoryService` al aprobar), `TemporaryPhotoAccessService`, `RevistaArmasScopeService`.
+- Controladores: `RevistaArmasController`, `RevistaPhotoReviewController` (`approve` / `reject`).
+- Migraciones: `2026_05_19_140000_create_revista_armas_tables.php` (índices/FK cortos para MySQL ≤ 64 caracteres); `2026_05_19_180000_create_weapon_histories_table.php`.
+- Tests: `tests/Feature/RevistaArmasTest.php`, `tests/Feature/WeaponHistoryTest.php`.
 
 ### 5.15 Dashboard operativo
 

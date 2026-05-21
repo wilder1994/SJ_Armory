@@ -34,70 +34,74 @@
 @endphp
 
 @if (!empty($showInternalCode))
-    <div>
+    <div class="md:col-span-2">
         <x-input-label for="internal_code" :value="__('Código interno')" />
         <x-text-input id="internal_code" name="internal_code" type="text" class="mt-1 block w-full" value="{{ old('internal_code', $weapon?->internal_code) }}" required />
         <x-input-error :messages="$errors->get('internal_code')" class="mt-2" />
     </div>
 @endif
 
-<div>
-    <x-input-label for="serial_number" :value="__('Número de serie')" />
-    <x-text-input id="serial_number" name="serial_number" type="text" class="mt-1 block w-full" value="{{ old('serial_number', $weapon?->serial_number) }}" required />
-    <x-input-error :messages="$errors->get('serial_number')" class="mt-2" />
-</div>
+<div class="md:col-span-2 grid grid-cols-1 gap-4 md:grid-cols-2 md:items-start">
+    <p class="md:col-span-2 text-sm font-medium text-gray-700">{{ __('Datos del arma') }}</p>
 
-<div>
-    <x-input-label for="weapon_type" :value="__('Tipo de arma')" />
-    @php
-        $selectedWeaponType = old('weapon_type', $weapon?->weapon_type);
-    @endphp
-    <select id="weapon_type" name="weapon_type" class="mt-1 block w-full rounded-md border-gray-300 text-sm" required>
-        <option value="">{{ __('Seleccione') }}</option>
-        @foreach ($weaponTypes as $weaponTypeOption)
-            <option value="{{ $weaponTypeOption }}" @selected($selectedWeaponType === $weaponTypeOption)>
-                {{ __($weaponTypeOption) }}
-            </option>
-        @endforeach
-        @if ($selectedWeaponType && !in_array($selectedWeaponType, $weaponTypes, true))
-            <option value="{{ $selectedWeaponType }}" selected>{{ $selectedWeaponType }}</option>
-        @endif
-    </select>
-    <x-input-error :messages="$errors->get('weapon_type')" class="mt-2" />
-</div>
+    <div>
+        <x-input-label for="weapon_type" :value="__('Tipo de arma')" />
+        @php
+            $selectedWeaponType = old('weapon_type', $weapon?->weapon_type);
+        @endphp
+        <select id="weapon_type" name="weapon_type" class="mt-1 block w-full rounded-md border-gray-300 text-sm" required>
+            <option value="">{{ __('Seleccione') }}</option>
+            @foreach ($weaponTypes as $weaponTypeOption)
+                <option value="{{ $weaponTypeOption }}" @selected($selectedWeaponType === $weaponTypeOption)>
+                    {{ __($weaponTypeOption) }}
+                </option>
+            @endforeach
+            @if ($selectedWeaponType && !in_array($selectedWeaponType, $weaponTypes, true))
+                <option value="{{ $selectedWeaponType }}" selected>{{ $selectedWeaponType }}</option>
+            @endif
+        </select>
+        <x-input-error :messages="$errors->get('weapon_type')" class="mt-2" />
+    </div>
 
-<div>
-    <x-input-label for="caliber" :value="__('Calibre')" />
-    <x-text-input id="caliber" name="caliber" type="text" class="mt-1 block w-full" value="{{ old('caliber', $weapon?->caliber) }}" required />
-    <x-input-error :messages="$errors->get('caliber')" class="mt-2" />
-</div>
+    <div>
+        <x-input-label for="serial_number" :value="__('Número de serie')" />
+        <x-text-input id="serial_number" name="serial_number" type="text" class="mt-1 block w-full" value="{{ old('serial_number', $weapon?->serial_number) }}" required />
+        <x-input-error :messages="$errors->get('serial_number')" class="mt-2" />
+    </div>
 
-<div>
-    <x-input-label for="brand" :value="__('Marca')" />
-    <x-text-input id="brand" name="brand" type="text" class="mt-1 block w-full" value="{{ old('brand', $weapon?->brand) }}" required />
-    <x-input-error :messages="$errors->get('brand')" class="mt-2" />
-</div>
+    <div>
+        <x-input-label for="brand" :value="__('Marca')" />
+        <x-text-input id="brand" name="brand" type="text" class="mt-1 block w-full" value="{{ old('brand', $weapon?->brand) }}" required />
+        <x-input-error :messages="$errors->get('brand')" class="mt-2" />
+    </div>
 
-<div>
-    <x-input-label for="capacity" :value="__('Capacidad')" />
-    <x-text-input id="capacity" name="capacity" type="text" class="mt-1 block w-full" value="{{ old('capacity', $weapon?->capacity) }}" required />
-    <x-input-error :messages="$errors->get('capacity')" class="mt-2" />
-</div>
+    <div>
+        <x-input-label for="caliber" :value="__('Calibre')" />
+        <x-text-input id="caliber" name="caliber" type="text" class="mt-1 block w-full" value="{{ old('caliber', $weapon?->caliber) }}" required />
+        <x-input-error :messages="$errors->get('caliber')" class="mt-2" />
+    </div>
 
-<div>
-    <x-input-label for="ownership_type" :value="__('Tipo de propiedad')" />
-    <select id="ownership_type" name="ownership_type" class="mt-1 block w-full rounded-md border-gray-300">
-        @foreach ($ownershipTypes as $value => $label)
-            <option value="{{ $value }}" @selected(old('ownership_type', $weapon?->ownership_type) === $value)>{{ $label }}</option>
-        @endforeach
-    </select>
-    <x-input-error :messages="$errors->get('ownership_type')" class="mt-2" />
-</div>
+    <div>
+        <x-input-label for="capacity" :value="__('Capacidad')" />
+        <x-text-input id="capacity" name="capacity" type="text" class="mt-1 block w-full" value="{{ old('capacity', $weapon?->capacity) }}" required />
+        <x-input-error :messages="$errors->get('capacity')" class="mt-2" />
+    </div>
 
-<div>
-    <x-input-label for="ownership_entity" :value="__('Entidad propietaria (si aplica)')" />
-    <x-text-input id="ownership_entity" name="ownership_entity" type="text" class="mt-1 block w-full" value="{{ old('ownership_entity', $weapon?->ownership_entity) }}" />
-    <x-input-error :messages="$errors->get('ownership_entity')" class="mt-2" />
+    <div>
+        <x-input-label for="ownership_type" :value="__('Tipo de propiedad')" />
+        <select id="ownership_type" name="ownership_type" class="mt-1 block w-full rounded-md border-gray-300">
+            @foreach ($ownershipTypes as $value => $label)
+                <option value="{{ $value }}" @selected(old('ownership_type', $weapon?->ownership_type) === $value)>{{ $label }}</option>
+            @endforeach
+        </select>
+        <x-input-error :messages="$errors->get('ownership_type')" class="mt-2" />
+    </div>
+
+    <div class="md:col-span-2">
+        <x-input-label for="ownership_entity" :value="__('Entidad propietaria (si aplica)')" />
+        <x-text-input id="ownership_entity" name="ownership_entity" type="text" class="mt-1 block w-full" value="{{ old('ownership_entity', $weapon?->ownership_entity) }}" />
+        <x-input-error :messages="$errors->get('ownership_entity')" class="mt-2" />
+    </div>
 </div>
 
 <div class="md:col-span-2">
@@ -196,6 +200,7 @@
 
 <div class="md:col-span-2">
     <x-input-label for="notes" :value="__('Notas')" />
+    <p class="mt-1 text-xs text-gray-500">{{ __('Al guardar, el texto se añade al historial de la ficha del arma (junto con el resumen de cambios al editar).') }}</p>
     <textarea id="notes" name="notes" spellcheck="true" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ old('notes', $weapon?->notes) }}</textarea>
     <x-input-error :messages="$errors->get('notes')" class="mt-2" />
 </div>

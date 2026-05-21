@@ -32,18 +32,18 @@
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
-                    <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead class="bg-gray-50">
+                    <div class="overflow-x-auto sj-table-wrap">
+                    <table class="sj-table sj-table--align-left min-w-full text-sm">
+                        <thead>
                             <tr>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Código') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Serie') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Responsable') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Cliente') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Desde') }}</th>
+                                <th>{{ __('Código') }}</th>
+                                <th>{{ __('Serie') }}</th>
+                                <th>{{ __('Responsable') }}</th>
+                                <th>{{ __('Cliente') }}</th>
+                                <th>{{ __('Desde') }}</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200">
+                        <tbody>
                             @forelse ($weapons as $weapon)
                                 <tr>
                                     <td class="px-3 py-2">{{ $weapon->internal_code }}</td>

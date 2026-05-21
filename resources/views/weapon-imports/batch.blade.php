@@ -75,22 +75,22 @@
                 @endif
 
                 @if ($openPreview || $selectedBatch->isExecuted() || $selectedBatch->isFailed() || $selectedBatch->isDraft())
-                    <div class="mt-6 overflow-x-auto rounded-lg border border-gray-200 bg-white">
+                    <div class="sj-table-wrap mt-6 overflow-x-auto">
                         @if ($selectedBatch->isClientImport())
-                            <table class="min-w-full divide-y divide-gray-200 text-sm min-w-[980px]">
-                                <thead class="bg-gray-50">
+                            <table class="sj-table sj-table--align-left min-w-full text-sm min-w-[980px]">
+                                <thead>
                                     <tr>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Fila</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Accion</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">NIT./CC</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Razon social</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Representante legal</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Direccion principal</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Ciudad</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Observacion</th>
+                                        <th>Fila</th>
+                                        <th>Accion</th>
+                                        <th>NIT./CC</th>
+                                        <th>Razon social</th>
+                                        <th>Representante legal</th>
+                                        <th>Direccion principal</th>
+                                        <th>Ciudad</th>
+                                        <th>Observacion</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-200">
+                                <tbody>
                                     @foreach ($selectedBatch->rows as $row)
                                         @php
                                             $raw = $row->raw_payload ?? [];
@@ -115,23 +115,23 @@
                                 </tbody>
                             </table>
                         @else
-                            <table class="min-w-full divide-y divide-gray-200 text-sm min-w-[1200px]">
-                                <thead class="bg-gray-50">
+                            <table class="sj-table sj-table--align-left min-w-full text-sm min-w-[1200px]">
+                                <thead>
                                     <tr>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Fila</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Accion</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Tipo</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Marca</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Serie</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Calibre</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Capacidad</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Tipo de permiso</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">No. de permiso</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Fecha de vencimiento</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-600">Observacion</th>
+                                        <th>Fila</th>
+                                        <th>Accion</th>
+                                        <th>Tipo</th>
+                                        <th>Marca</th>
+                                        <th>Serie</th>
+                                        <th>Calibre</th>
+                                        <th>Capacidad</th>
+                                        <th>Tipo de permiso</th>
+                                        <th>No. de permiso</th>
+                                        <th>Fecha de vencimiento</th>
+                                        <th>Observacion</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-200">
+                                <tbody>
                                     @foreach ($selectedBatch->rows as $row)
                                         @php
                                             $raw = $row->raw_payload ?? [];

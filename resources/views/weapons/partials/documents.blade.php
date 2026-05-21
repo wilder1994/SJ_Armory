@@ -61,19 +61,19 @@
             <div class="mt-2 text-sm text-red-600">{{ $errors->first('document') }}</div>
         @endif
 
-        <div class="mt-4 overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 text-sm">
-                <thead class="bg-gray-50">
+        <div class="mt-4 overflow-x-auto sj-table-wrap">
+            <table class="sj-table sj-table--align-left min-w-full text-sm">
+                <thead>
                     <tr>
-                        <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Documento') }}</th>
-                        <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Fecha de vencimiento') }}</th>
-                        <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Tipo de permiso') }}</th>
-                        <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Estado') }}</th>
-                        <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Observaciones') }}</th>
-                        <th class="px-3 py-2 text-right font-medium text-gray-600">{{ __('Descargar') }}</th>
+                        <th>{{ __('Documento') }}</th>
+                        <th>{{ __('Fecha de vencimiento') }}</th>
+                        <th>{{ __('Tipo de permiso') }}</th>
+                        <th>{{ __('Estado') }}</th>
+                        <th>{{ __('Observaciones') }}</th>
+                        <th>{{ __('Descargar') }}</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200">
+                <tbody>
                     @php($isAdmin = Auth::user()?->isAdmin())
                     @php($visibleDocuments = $weapon->documents->reject(fn ($document) => $document->is_renewal && !$isAdmin))
                     @forelse ($visibleDocuments as $document)

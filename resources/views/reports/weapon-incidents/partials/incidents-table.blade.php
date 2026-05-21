@@ -1,20 +1,20 @@
-<div class="max-h-[min(65vh,620px)] overflow-auto rounded-lg border border-gray-100">
-    <table class="min-w-full divide-y divide-gray-200 text-sm">
-        <thead class="sticky top-0 z-10 bg-gray-50 shadow-sm">
+<div class="sj-table-wrap max-h-[min(65vh,620px)] overflow-auto">
+    <table class="sj-table sj-table--align-left sj-table--sticky-head min-w-full text-sm">
+        <thead>
             <tr>
-                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Fecha') }}</th>
-                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Arma') }}</th>
-                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Tipo') }}</th>
-                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Modalidad') }}</th>
-                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Estado') }}</th>
-                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Cliente') }}</th>
-                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Resumen') }}</th>
-                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Seguimiento') }}</th>
-                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Adjunto') }}</th>
-                <th class="px-3 py-2 text-left font-medium text-gray-600">{{ __('Expediente') }}</th>
+                <th>{{ __('Fecha') }}</th>
+                <th>{{ __('Arma') }}</th>
+                <th>{{ __('Tipo') }}</th>
+                <th>{{ __('Modalidad') }}</th>
+                <th>{{ __('Estado') }}</th>
+                <th>{{ __('Cliente') }}</th>
+                <th>{{ __('Resumen') }}</th>
+                <th>{{ __('Seguimiento') }}</th>
+                <th>{{ __('Adjunto') }}</th>
+                <th>{{ __('Expediente') }}</th>
             </tr>
         </thead>
-        <tbody class="divide-y divide-gray-200 bg-white">
+        <tbody>
             @forelse ($incidents as $incident)
                 @php
                     $updateCount = $incident->updates->reject(

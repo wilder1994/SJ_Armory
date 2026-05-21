@@ -9,6 +9,7 @@ use App\Models\TemporaryPhotoUser;
 use App\Models\User;
 use App\Models\Weapon;
 use App\Models\WeaponClientAssignment;
+use App\Models\WeaponHistory;
 use App\Models\WeaponPhotoStaging;
 use App\Support\RevistaWeaponPhotoSlots;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -166,5 +167,57 @@ class RevistaArmasTest extends TestCase
             'temporary_photo_user_id' => $temporaryUser->id,
             'weapon_id' => $weapon->id,
         ]);
+    }
+
+    public function test_approve_staging_photos_records_weapon_history(): void
+    {
+        Storage::fake('public');
+
+        [$responsible, $weapon] = $this->createResponsibleWithWeapon();
+
+        $temporaryUser = TemporaryPhotoUser::create([
+            'owner_responsible_user_id' => $responsible->id,
+            'created_by_user_id' => $responsible->id,
+            'name' => 'Temporal Historial',
+            'email' => 'hist@example.com',
+            'is_active' => true,
+        ]);
+
+        foreach (RevistaWeaponPhotoSlots::keys() as $description) {
+            $path = 'weapons/'.$weapon->id.'/staging/'.$temporaryUser->id.'/'.$description.'.jpg';
+            Storage::disk('public')->put($path, 'fake-image');
+
+            $file = File::create([
+                'disk' => 'public',
+                'path' => $path,
+                'original_name' => $description.'.jpg',
+                'mime_type' => 'image/jpeg',
+                'size' => 100,
+            ]);
+
+            WeaponPhotoStaging::create([
+                'temporary_photo_user_id' => $temporaryUser->id,
+                'weapon_id' => $weapon->id,
+                'description' => $description,
+                'file_id' => $file->id,
+            ]);
+        }
+
+        $this->actingAs($responsible)
+            ->post(route('revista-armas.review.approve', [$weapon, $temporaryUser]), [], [
+                'Accept' => 'application/json',
+            ])
+            ->assertOk()
+            ->assertJson(['ok' => true]);
+
+        $entry = WeaponHistory::query()
+            ->where('weapon_id', $weapon->id)
+            ->where('kind', WeaponHistory::KIND_PHOTOS)
+            ->first();
+
+        $this->assertNotNull($entry);
+        $this->assertStringContainsString('actualizadas', strtolower($entry->body));
+        $this->assertStringContainsString('Temporal Historial', $entry->body);
+        $this->assertStringContainsString('Fecha:', $entry->body);
     }
 }

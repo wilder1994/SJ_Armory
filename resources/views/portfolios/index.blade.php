@@ -35,8 +35,8 @@
             @endif
 
             <section class="portfolio-panel">
-                <div class="portfolio-table-shell">
-                    <table class="portfolio-table">
+                <div class="sj-table-wrap portfolio-table-shell">
+                    <table class="sj-table sj-table--align-left portfolio-table">
                         <thead>
                             <tr>
                                 <th>{{ __('Usuario') }}</th>
@@ -133,43 +133,18 @@
     }
 
     .portfolio-table-shell {
-        overflow-x: auto;
         padding: 0;
     }
 
-    .portfolio-table {
-        border-collapse: separate;
-        border-spacing: 0;
-        min-width: 100%;
-        width: 100%;
-    }
-
     .portfolio-table thead th {
-        background: linear-gradient(180deg, #223469 0%, #162457 100%);
-        color: rgb(239 246 255);
         font-size: 0.76rem;
-        font-weight: 800;
         letter-spacing: 0.12em;
         padding: 0.95rem 1rem;
-        text-align: left;
-        text-transform: uppercase;
-        white-space: nowrap;
-    }
-
-    .portfolio-table thead th:last-child {
-        text-align: right;
     }
 
     .portfolio-table tbody td {
-        border-bottom: 1px solid rgb(226 232 240);
-        color: rgb(30 41 59);
         font-size: 0.95rem;
         padding: 1rem;
-        vertical-align: middle;
-    }
-
-    .portfolio-table tbody tr:hover td {
-        background: rgb(248 250 252);
     }
 
     .portfolio-user {
@@ -252,7 +227,7 @@
             justify-content: flex-start;
         }
 
-        .portfolio-table thead th:last-child,
+        .sj-table--align-left thead th:last-child,
         .portfolio-table__actions {
             text-align: left;
         }

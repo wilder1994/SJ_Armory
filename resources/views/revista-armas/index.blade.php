@@ -35,23 +35,23 @@
                 <button type="submit" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700">{{ __('Filtrar') }}</button>
             </form>
 
-            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200 text-sm">
-                        <thead class="bg-slate-50">
+            <div class="overflow-hidden rounded-xl shadow-sm">
+                <div class="overflow-x-auto sj-table-wrap">
+                    <table class="sj-table min-w-full text-sm">
+                        <thead>
                             <tr>
-                                <th class="px-3 py-2 text-left font-semibold text-slate-600">{{ __('Tipo') }}</th>
-                                <th class="px-3 py-2 text-left font-semibold text-slate-600">{{ __('Marca') }}</th>
-                                <th class="px-3 py-2 text-left font-semibold text-slate-600">{{ __('Serie') }}</th>
-                                <th class="px-3 py-2 text-left font-semibold text-slate-600">{{ __('Calibre') }}</th>
-                                <th class="px-3 py-2 text-left font-semibold text-slate-600">{{ __('Tipo permiso') }}</th>
-                                <th class="px-3 py-2 text-left font-semibold text-slate-600">{{ __('Nº permiso') }}</th>
-                                <th class="px-3 py-2 text-left font-semibold text-slate-600">{{ __('Vencimiento') }}</th>
-                                <th class="px-3 py-2 text-center font-semibold text-slate-600">{{ __('Realizado') }}</th>
-                                <th class="px-3 py-2 text-right font-semibold text-slate-600">{{ __('Acciones') }}</th>
+                                <th>{{ __('Tipo') }}</th>
+                                <th>{{ __('Marca') }}</th>
+                                <th>{{ __('Serie') }}</th>
+                                <th>{{ __('Calibre') }}</th>
+                                <th>{{ __('Tipo permiso') }}</th>
+                                <th>{{ __('Nº permiso') }}</th>
+                                <th>{{ __('Vencimiento') }}</th>
+                                <th>{{ __('Realizado') }}</th>
+                                <th>{{ __('Acciones') }}</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100">
+                        <tbody>
                             @forelse ($rows as $row)
                                 @php($weapon = $row['weapon'])
                                 @php($done = $selectedTemporaryUserId ? ($row['completions'][$selectedTemporaryUserId] ?? false) : false)
@@ -162,6 +162,29 @@
         </div>
     @endif
 
+    {{-- Alerta (fotos incompletas u otros avisos) --}}
+    <div id="revista-alert-modal" class="fixed inset-0 z-[1070] hidden items-center justify-center bg-black/40 p-4">
+        <div class="w-full max-w-md rounded-xl bg-white p-5 shadow-xl" role="alertdialog" aria-modal="true" aria-labelledby="revista-alert-title">
+            <h3 id="revista-alert-title" class="text-lg font-bold text-slate-900">{{ __('Aviso') }}</h3>
+            <p id="revista-alert-message" class="mt-3 text-sm text-slate-600"></p>
+            <div class="mt-5 flex justify-end">
+                <button type="button" id="revista-alert-ok" class="rounded-lg bg-[#0b6fb6] px-4 py-2 text-sm font-bold text-white">{{ __('Entendido') }}</button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Confirmación --}}
+    <div id="revista-confirm-modal" class="fixed inset-0 z-[1070] hidden items-center justify-center bg-black/40 p-4">
+        <div class="w-full max-w-md rounded-xl bg-white p-5 shadow-xl" role="dialog" aria-modal="true" aria-labelledby="revista-confirm-title">
+            <h3 id="revista-confirm-title" class="text-lg font-bold text-slate-900">{{ __('Confirmar') }}</h3>
+            <p id="revista-confirm-message" class="mt-3 text-sm text-slate-600"></p>
+            <div class="mt-5 flex justify-end gap-2">
+                <button type="button" id="revista-confirm-cancel" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">{{ __('Cancelar') }}</button>
+                <button type="button" id="revista-confirm-accept" class="rounded-lg bg-[#0b6fb6] px-4 py-2 text-sm font-bold text-white">{{ __('Aceptar') }}</button>
+            </div>
+        </div>
+    </div>
+
     {{-- Revisión --}}
     <div id="revista-review-modal" class="fixed inset-0 z-[1050] hidden items-center justify-center bg-black/40 p-4">
         <div class="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl bg-white shadow-xl">
@@ -180,6 +203,8 @@
     @push('scripts')
     <script>
         (() => {
+            const requiredPhotoCount = @json(\App\Support\RevistaWeaponPhotoSlots::requiredCount());
+
             const assignModal = document.getElementById('revista-assign-modal');
             document.getElementById('revista-open-assign')?.addEventListener('click', () => {
                 assignModal?.classList.remove('hidden');
@@ -200,11 +225,80 @@
 
             const reviewModal = document.getElementById('revista-review-modal');
             const reviewGrid = document.getElementById('revista-review-grid');
+            const alertModal = document.getElementById('revista-alert-modal');
+            const alertMessage = document.getElementById('revista-alert-message');
+            const confirmModal = document.getElementById('revista-confirm-modal');
+            const confirmMessage = document.getElementById('revista-confirm-message');
+            const confirmAccept = document.getElementById('revista-confirm-accept');
+            const confirmCancel = document.getElementById('revista-confirm-cancel');
+
             let approveUrl = '';
             let rejectUrl = '';
+            let reviewIsComplete = false;
+            let reviewPendingCount = requiredPhotoCount;
+            let confirmOnAccept = null;
 
-            const closeReview = () => { reviewModal?.classList.add('hidden'); reviewModal?.classList.remove('flex'); };
+            const openOverlay = (el) => {
+                el?.classList.remove('hidden');
+                el?.classList.add('flex');
+            };
+            const closeOverlay = (el) => {
+                el?.classList.add('hidden');
+                el?.classList.remove('flex');
+            };
+
+            const showAlert = (message) => {
+                if (alertMessage) alertMessage.textContent = message;
+                openOverlay(alertModal);
+            };
+
+            document.getElementById('revista-alert-ok')?.addEventListener('click', () => closeOverlay(alertModal));
+
+            const showConfirm = (message, onAccept) => {
+                confirmOnAccept = onAccept;
+                if (confirmMessage) confirmMessage.textContent = message;
+                openOverlay(confirmModal);
+            };
+
+            confirmCancel?.addEventListener('click', () => {
+                confirmOnAccept = null;
+                closeOverlay(confirmModal);
+            });
+
+            confirmAccept?.addEventListener('click', async () => {
+                const action = confirmOnAccept;
+                confirmOnAccept = null;
+                closeOverlay(confirmModal);
+                if (typeof action === 'function') {
+                    await action();
+                }
+            });
+
+            const closeReview = () => closeOverlay(reviewModal);
             document.querySelectorAll('[data-revista-review-close]').forEach((b) => b.addEventListener('click', closeReview));
+
+            const postAction = async (url) => {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': @json(csrf_token()),
+                        'Accept': 'application/json',
+                    },
+                });
+
+                if (!res.ok) {
+                    let message = @json(__('No se pudo completar la acción.'));
+                    try {
+                        const payload = await res.json();
+                        if (payload?.message) message = payload.message;
+                        if (payload?.errors?.photos?.[0]) message = payload.errors.photos[0];
+                    } catch (_) {}
+                    showAlert(message);
+                    return;
+                }
+
+                window.location.reload();
+            };
 
             document.querySelectorAll('.revista-review-btn').forEach((btn) => {
                 btn.addEventListener('click', async () => {
@@ -212,34 +306,48 @@
                     rejectUrl = btn.dataset.rejectUrl;
                     document.getElementById('revista-review-serial').textContent = btn.dataset.serial || '';
                     const res = await fetch(btn.dataset.reviewUrl, { headers: { 'Accept': 'application/json' } });
+                    if (!res.ok) {
+                        showAlert(@json(__('No se pudo cargar la revisión de fotos.')));
+                        return;
+                    }
                     const data = await res.json();
+                    reviewIsComplete = Boolean(data.is_complete);
+                    reviewPendingCount = Number(data.pending_count ?? (requiredPhotoCount - (data.uploaded_count ?? 0)));
                     reviewGrid.innerHTML = '';
                     (data.slots || []).forEach((slot) => {
                         const cell = document.createElement('div');
                         cell.className = 'rounded-lg border border-slate-200 p-2';
                         cell.innerHTML = slot.url
-                            ? `<img src="${slot.url}" class="h-36 w-full rounded object-contain bg-slate-50"><div class="mt-1 text-xs font-medium text-slate-600">${slot.label}</div>`
+                            ? `<img src="${slot.url}" alt="" class="h-36 w-full rounded object-contain bg-slate-50"><div class="mt-1 text-xs font-medium text-slate-600">${slot.label}</div>`
                             : `<div class="flex h-36 items-center justify-center rounded border border-dashed border-slate-300 text-xs text-slate-400">${slot.label}<br>{{ __('Sin imagen') }}</div>`;
                         reviewGrid.appendChild(cell);
                     });
-                    reviewModal?.classList.remove('hidden');
-                    reviewModal?.classList.add('flex');
+                    openOverlay(reviewModal);
                 });
             });
 
-            const postAction = (url) => fetch(url, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': @json(csrf_token()),
-                    'Accept': 'application/json',
-                },
-            }).then(() => window.location.reload());
-
             document.getElementById('revista-review-approve')?.addEventListener('click', () => {
-                if (approveUrl && confirm(@json(__('¿Actualizar las imágenes oficiales del arma con estas fotos?')))) postAction(approveUrl);
+                if (!approveUrl) return;
+
+                if (!reviewIsComplete) {
+                    const pending = Math.max(1, reviewPendingCount);
+                    showAlert(@json(__('No se pueden actualizar las imágenes oficiales porque faltan :count foto(s) pendiente(s).')).replace(':count', String(pending)));
+                    return;
+                }
+
+                showConfirm(
+                    @json(__('¿Actualizar las imágenes oficiales del arma con estas fotos?')),
+                    () => postAction(approveUrl),
+                );
             });
+
             document.getElementById('revista-review-reject')?.addEventListener('click', () => {
-                if (rejectUrl && confirm(@json(__('¿Rechazar y eliminar las fotos en revisión?')))) postAction(rejectUrl);
+                if (!rejectUrl) return;
+
+                showConfirm(
+                    @json(__('¿Rechazar y eliminar las fotos en revisión?')),
+                    () => postAction(rejectUrl),
+                );
             });
         })();
     </script>
