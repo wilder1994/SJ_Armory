@@ -32,19 +32,21 @@ class RevistaArmasController extends Controller
             ->get();
 
         $activeGrantMissing = false;
+        $noGrantHistory = false;
         $weaponsQuery = $this->scopeService->weaponsQueryForStaff($user);
 
         if ($temporaryPhotoUserId) {
             $temporaryUser = $temporaryUsers->firstWhere('id', $temporaryPhotoUserId);
 
             if ($temporaryUser) {
-                $grant = $this->accessService->activeGrantFor($temporaryUser);
+                $activeGrantMissing = $this->accessService->activeGrantFor($temporaryUser) === null;
+                $grantForList = $this->accessService->latestGrantFor($temporaryUser);
 
-                if ($grant) {
-                    $weaponIds = $this->accessService->grantWeaponIds($grant);
+                if ($grantForList) {
+                    $weaponIds = $this->accessService->grantWeaponIds($grantForList);
                     $weaponsQuery->whereIn('weapons.id', $weaponIds);
                 } else {
-                    $activeGrantMissing = true;
+                    $noGrantHistory = true;
                     $weaponsQuery->whereRaw('0 = 1');
                 }
             }
@@ -77,6 +79,7 @@ class RevistaArmasController extends Controller
             'temporaryUsers' => $temporaryUsers,
             'selectedTemporaryUserId' => $temporaryPhotoUserId,
             'activeGrantMissing' => $activeGrantMissing,
+            'noGrantHistory' => $noGrantHistory,
             'isAdmin' => $user->isAdmin(),
         ]);
     }

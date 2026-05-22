@@ -177,14 +177,14 @@ Módulo para digitalizar la **revista fotográfica** del armamento sin dar acces
 1. El staff crea un **usuario temporal** (nombre y correo del colaborador; el administrador indica el **responsable dueño** entre los responsables del sistema).
 2. Desde **Asignar acceso temporal** se eligen el usuario temporal y las armas visibles; el sistema genera código, envía correo (si el servidor de correo está configurado) y muestra datos copiables.
 3. El colaborador entra por **Revista armas → ingreso**, abre cada arma y sube las cuatro fotos (lado derecho, lado izquierdo, cañón/disparador/marca, serie) con recorte en pantalla; en móvil el sistema comprime la imagen, muestra **Guardando…** y un aviso verde **Imagen guardada** al terminar.
-4. El responsable o administrador, en **Revista armas**, elige el **usuario temporal**, opcionalmente busca por serie/marca en la tabla y pulsa **Filtrar**: la lista muestra **solo las armas asignadas en el acceso vigente** de ese colaborador; aparecen **Realizado** (✓ si las cuatro fotos están completas, ✕ si falta alguna) y **Ver** para revisar.
+4. El responsable o administrador, en **Revista armas**, elige el **usuario temporal**, opcionalmente busca por serie/marca en la tabla y pulsa **Filtrar**: la lista muestra las armas del **último acceso asignado** (aunque el código haya vencido); aparecen **Realizado** (✓/✕) y **Ver** para revisar las fotos en staging.
 5. En la revisión puede **Actualizar** (las fotos pasan al inventario oficial del arma) o **Rechazar** (se descartan las fotos en revisión).
 6. Tras **Actualizar** con las cuatro fotos completas, en la **ficha del arma** (tarjeta **Notas**) queda un registro del tipo **Fotografías** con fecha/hora, cantidad de fotos y nombre del colaborador temporal.
 
 **Puntos importantes para gerencia**
 
 - Sin elegir **usuario temporal**, la tabla lista el alcance del responsable pero **Realizado** y **Ver** quedan vacíos: el avance es por colaborador, no por arma sola.
-- Con usuario temporal sin acceso vigente (código expirado o no asignado), el sistema avisa y no muestra armas hasta **Asignar acceso temporal** de nuevo.
+- Con usuario temporal sin acceso vigente (código expirado), el sistema muestra un **aviso ámbar** pero sigue listando las armas del último acceso para **revisar y aprobar** fotos ya subidas; un **nuevo acceso** solo hace falta si el colaborador debe volver a entrar y capturar más fotos.
 - El buscador **Buscar armas** en la tabla staff filtra en pantalla (no recarga la página); el modal de asignación incluye el mismo tipo de búsqueda local sobre las armas seleccionables.
 - **Actualizar** solo procede con las **4 fotos** en revisión; si falta alguna, el sistema muestra un **aviso en pantalla** (modal centrado) indicando cuántas fotos faltan — no usa el cuadro de confirmación del navegador.
 - Las confirmaciones de **Actualizar** y **Rechazar** usan **modales propios** del sistema (centrados), alineados al resto de la interfaz.
@@ -302,6 +302,7 @@ En el detalle del arma (`/weapons/{id}`), la tarjeta **Fotos** permite a usuario
 | 0.2 | [fecha] | [nombre] | Revista armas: alcance, flujo y capturas §7.10 |
 | 0.3 | mayo 2026 | Wilder Rivera | Historial de notas en ficha de arma (§7.11); Revista armas: modales de confirmación/aviso y registro en Notas; README alineado |
 | 0.4 | mayo 2026 | Wilder Rivera | Revista armas: filtro por acceso vigente, búsqueda local y captura móvil robusta (§7.10); ficha de arma: recorte sin pérdida de foto (§7.12); README técnico actualizado |
+| 0.5 | mayo 2026 | Wilder Rivera | Revista staff: listado por último acceso aunque el código haya vencido; revisión de fotos en staging sin reasignar obligatoria |
 
 ---
 

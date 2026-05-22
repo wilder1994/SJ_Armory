@@ -132,6 +132,14 @@ class TemporaryPhotoAccessService
             ->first();
     }
 
+    public function latestGrantFor(TemporaryPhotoUser $temporaryUser): ?TemporaryPhotoAccessGrant
+    {
+        return TemporaryPhotoAccessGrant::query()
+            ->where('temporary_photo_user_id', $temporaryUser->id)
+            ->latest('id')
+            ->first();
+    }
+
     private function revokeActiveGrants(TemporaryPhotoUser $temporaryUser): void
     {
         TemporaryPhotoAccessGrant::query()

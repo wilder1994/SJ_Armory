@@ -17,7 +17,7 @@ Sistema web para **gestión de armamento**, **asignaciones operativas**, **trans
 - ✅ **Cargas masivas**: validación previa, preview, ejecución por chunks, trazabilidad por lote; en la vista **Subir armas**, el **ADMIN** gestiona las plantillas globales de reverso autenticado (porte y tenencia) usadas en el PDF y en la ficha.
 - ✅ **Dashboard**: KPIs, métricas, gráficos y estado “as of”.
 - ✅ **Alertas documentales** (`/alerts/documents`): tarjetas vencidos / por vencer / sin alertas; filtro **multi-mes** con panel de checkboxes (varios meses y años); exportación `.docx` y vista previa PDF con nombre `Revalidacion_{mes}_{año}`.
-- ✅ **Revista armas** (`/revista-armas`): acceso temporal (12 h) para colaboradores de campo; usuarios temporales reutilizables; selección de armas visibles; subida de **4 fotos técnicas** a staging; revisión staff con filtro por usuario temporal (✓/✕ y **Ver**); confirmaciones en **modales** (no `confirm` del navegador); al **Actualizar** registra entrada en el historial de notas del arma; **ADMIN** con gestión global.
+- ✅ **Revista armas** (`/revista-armas`): acceso temporal (12 h) para colaboradores de campo; usuarios temporales reutilizables; subida de **4 fotos técnicas** a staging; el invitado solo entra con código vigente; staff al filtrar ve armas del **último acceso** (aunque haya vencido) para revisar fotos en staging (✓/✕, **Ver**, **Actualizar**); confirmaciones en **modales**; historial de notas en la ficha del arma; **ADMIN** con gestión global.
 - ✅ **Mapa**: geocodificación y visualización operativa.
 - ✅ **Auditoría**: registro de cambios y acciones críticas.
 - ✅ **Realtime (Broadcasting)**: Laravel Reverb + Echo (WebSockets) para sincronización en tiempo real.
@@ -809,7 +809,7 @@ Nombres de ruta staff relevantes: prefijo `revista-armas.*`; CRUD de temporales 
 - Lista armas según alcance (`RevistaArmasScopeService`: global para **ADMIN**, cartera/responsable activo para **RESPONSABLE** nivel 1).
 - Barra de filtro en **una fila horizontal**: **Usuario temporal** | **Buscar armas** (filtro local en la tabla, sin recargar) | **Filtrar** (`?temporary_photo_user_id=`).
   - Sin usuario temporal seleccionado: todas las armas del alcance del responsable; columna **Realizado** muestra `—` y **Acciones** vacía.
-  - Con usuario temporal seleccionado: solo armas del **acceso vigente** (`TemporaryPhotoAccessService::activeGrantFor` + `grantWeaponIds`); si no hay grant activo, aviso y tabla vacía.
+  - Con usuario temporal seleccionado: armas del **último acceso asignado** (`latestGrantFor` + `grantWeaponIds`), aunque el código haya vencido; aviso ámbar si no hay acceso vigente (`activeGrantFor`); el invitado solo entra con acceso vigente.
   - Con filtro aplicado: **Realizado** = ✓ si 4/4 fotos en staging de **ese** colaborador; ✕ si falta alguna; botón **Ver** abre modal de revisión.
   - El filtro de usuario temporal es necesario porque el progreso y la revisión son por par **(arma, usuario temporal)**, no por arma sola.
 - Modal **Ver**: muestra las **4 casillas** (con o sin imagen); API `revista-armas.review` devuelve `slots`, `uploaded_count`, `pending_count`, `is_complete`.
@@ -831,10 +831,11 @@ Nombres de ruta staff relevantes: prefijo `revista-armas.*`; CRUD de temporales 
 #### Staging y slots
 
 - Tabla `weapon_photo_staging`; descripciones fijas en `App\Support\RevistaWeaponPhotoSlots`: `lado_derecho`, `lado_izquierdo`, `canon_disparador_marca`, `serie`.
-- Servicios: `WeaponPhotoStagingService` (inyecta `WeaponHistoryService` al aprobar), `TemporaryPhotoAccessService`, `RevistaArmasScopeService`.
+- Servicios: `WeaponPhotoStagingService` (inyecta `WeaponHistoryService` al aprobar), `TemporaryPhotoAccessService` (`activeGrantFor`, `latestGrantFor`, asignación 12 h), `RevistaArmasScopeService`.
+- Reasignar o vencer acceso **no borra** staging; revocar acceso tampoco.
 - Controladores: `RevistaArmasController`, `RevistaPhotoReviewController` (`approve` / `reject`).
 - Migraciones: `2026_05_19_140000_create_revista_armas_tables.php` (índices/FK cortos para MySQL ≤ 64 caracteres); `2026_05_19_180000_create_weapon_histories_table.php`.
-- Tests: `tests/Feature/RevistaArmasTest.php` (incl. filtro index por grant activo), `tests/Feature/WeaponHistoryTest.php`, `tests/Feature/WeaponPhotoTest.php` (actualización por recorte sin borrar `weapon_photos`).
+- Tests: `tests/Feature/RevistaArmasTest.php` (incl. listado con último grant aunque el acceso haya vencido), `tests/Feature/WeaponHistoryTest.php`, `tests/Feature/WeaponPhotoTest.php`.
 
 ### 5.15 Dashboard operativo
 

@@ -22,9 +22,9 @@
                 <div class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">{{ session('status') }}</div>
             @endif
 
-            @if ($activeGrantMissing)
+            @if ($activeGrantMissing && $selectedTemporaryUserId)
                 <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                    {{ __('Este usuario temporal no tiene un acceso vigente. Asigne acceso temporal para ver las armas asignadas a ese colaborador.') }}
+                    {{ __('Este usuario temporal no tiene un acceso vigente. Se muestran las armas del último acceso asignado para revisar las fotos subidas. Asigne un nuevo acceso solo si el colaborador debe volver a capturar o subir más fotos.') }}
                 </div>
             @endif
 
@@ -127,8 +127,8 @@
                             @empty
                                 <tr class="revista-table-empty-server">
                                     <td colspan="9" class="px-3 py-8 text-center text-slate-500">
-                                        @if ($activeGrantMissing)
-                                            {{ __('No hay armas en el acceso vigente de este colaborador.') }}
+                                        @if ($noGrantHistory)
+                                            {{ __('Este colaborador no tiene accesos asignados.') }}
                                         @else
                                             {{ __('No hay armas en su alcance.') }}
                                         @endif

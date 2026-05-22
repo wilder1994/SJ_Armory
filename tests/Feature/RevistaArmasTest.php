@@ -169,7 +169,34 @@ class RevistaArmasTest extends TestCase
         ]);
     }
 
-    public function test_index_with_temporary_user_shows_only_weapons_from_active_grant(): void
+    public function test_index_with_temporary_user_shows_weapons_from_latest_grant_when_access_expired(): void
+    {
+        [$responsible, $weaponAssigned] = $this->createResponsibleWithWeapon();
+
+        $temporaryUser = TemporaryPhotoUser::create([
+            'owner_responsible_user_id' => $responsible->id,
+            'created_by_user_id' => $responsible->id,
+            'name' => 'Supervisor Sur',
+            'email' => 'supervisorsur@example.com',
+            'is_active' => true,
+        ]);
+
+        $grant = TemporaryPhotoAccessGrant::create([
+            'temporary_photo_user_id' => $temporaryUser->id,
+            'created_by_user_id' => $responsible->id,
+            'access_code_hash' => Hash::make('CODE1234'),
+            'expires_at' => now()->subHours(2),
+        ]);
+        $grant->weapons()->create(['weapon_id' => $weaponAssigned->id]);
+
+        $this->actingAs($responsible)
+            ->get(route('revista-armas.index', ['temporary_photo_user_id' => $temporaryUser->id]))
+            ->assertOk()
+            ->assertSee('REV-001', false)
+            ->assertSee(__('Este usuario temporal no tiene un acceso vigente'), false);
+    }
+
+    public function test_index_with_temporary_user_shows_only_weapons_from_assigned_grant(): void
     {
         [$responsible, $weaponAssigned] = $this->createResponsibleWithWeapon();
 
