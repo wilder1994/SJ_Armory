@@ -6,12 +6,11 @@
 <style>
     .sj-custody-maint-btn {
         background-color: #fcd34d;
-        border: 2px solid #f59e0b;
+        border: none;
         color: #451a03;
     }
     .sj-custody-maint-btn:hover {
         background-color: #fbbf24;
-        border-color: #d97706;
     }
 </style>
 
@@ -52,7 +51,7 @@
                 </button>
             </form>
 
-            <form method="POST" action="{{ route('weapons.custody.para_mantenimiento', $weapon) }}" class="rounded-lg border-2 border-[#fcd34d] bg-amber-50 p-3">
+            <form method="POST" action="{{ route('weapons.custody.para_mantenimiento', $weapon) }}" class="rounded-lg border border-amber-200 bg-amber-50 p-3">
                 @csrf
                 <div class="text-sm font-semibold text-amber-950">{{ __('Para mantenimiento') }}</div>
                 <p class="mt-1 text-xs text-amber-900">{{ __('Armerillo del responsable; fuera de operación.') }}</p>
