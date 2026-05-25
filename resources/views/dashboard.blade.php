@@ -124,12 +124,24 @@
                                 <h2 class="sj-panel__title">Renovaciones por mes</h2>
                                 <div class="sj-renewal-legend" aria-label="Leyenda de renovaciones">
                                     <span class="sj-renewal-legend__item">
-                                        <span class="sj-renewal-legend__swatch sj-renewal-legend__swatch--sin-novedad"></span>
-                                        <span class="sj-renewal-legend__text">Sin novedad</span>
+                                        <span class="sj-renewal-legend__swatch sj-renewal-legend__swatch--vigente"></span>
+                                        <span class="sj-renewal-legend__text">Vigente</span>
                                     </span>
                                     <span class="sj-renewal-legend__item">
-                                        <span class="sj-renewal-legend__swatch sj-renewal-legend__swatch--con-novedad"></span>
-                                        <span class="sj-renewal-legend__text">Con novedad</span>
+                                        <span class="sj-renewal-legend__swatch sj-renewal-legend__swatch--preventiva"></span>
+                                        <span class="sj-renewal-legend__text">Preventiva</span>
+                                    </span>
+                                    <span class="sj-renewal-legend__item">
+                                        <span class="sj-renewal-legend__swatch sj-renewal-legend__swatch--por-vencer"></span>
+                                        <span class="sj-renewal-legend__text">Por vencer</span>
+                                    </span>
+                                    <span class="sj-renewal-legend__item">
+                                        <span class="sj-renewal-legend__swatch sj-renewal-legend__swatch--vencido"></span>
+                                        <span class="sj-renewal-legend__text">Vencido</span>
+                                    </span>
+                                    <span class="sj-renewal-legend__item sj-renewal-legend__item--incident">
+                                        <span class="sj-renewal-legend__swatch sj-renewal-legend__swatch--incautada"></span>
+                                        <span class="sj-renewal-legend__text">Incautación en trámite</span>
                                     </span>
                                 </div>
                             </div>
@@ -159,31 +171,50 @@
                                 <div class="sj-column-chart">
                                     <template x-for="item in dashboard.renewal_chart.items" :key="item.key || item.label">
                                         <div class="sj-column-chart__item">
-                                            <div class="sj-column-chart__value" x-text="formatNumber(item.value)"></div>
-                                            <div class="sj-column-chart__track">
-                                                <!-- Barra azul: sin novedad -->
+                                            <div class="sj-column-chart__value" x-text="formatNumber(item.total)"></div>
+                                            <div class="sj-column-chart__track sj-column-chart__track--stacked">
                                                 <div
-                                                    class="sj-column-chart__bar sj-column-chart__bar--sin-novedad"
-                                                    :style="`height: ${columnHeight(item.sin_novedad, dashboard.renewal_chart.max)}%`"
-                                                    :title="`Sin novedad: ${formatNumber(item.sin_novedad)}`"
+                                                    class="sj-column-chart__stack"
+                                                    :class="renewalStackHeight(item, dashboard.renewal_chart.max) < 14
+                                                        ? 'sj-column-chart__stack--has-floating-labels'
+                                                        : ''"
+                                                    :style="`height: ${renewalStackHeight(item, dashboard.renewal_chart.max)}%`"
                                                 >
-                                                    <div
-                                                        class="sj-column-chart__bar-value sj-column-chart__bar-value--sin-novedad"
-                                                        x-show="item.sin_novedad > 0"
-                                                        x-text="formatNumber(item.sin_novedad)"
-                                                    ></div>
-                                                </div>
-                                                <!-- Barra roja: con novedad (lado a lado) -->
-                                                <div
-                                                    class="sj-column-chart__bar sj-column-chart__bar--con-novedad"
-                                                    :style="`height: ${columnHeight(item.con_novedad, dashboard.renewal_chart.max)}%`"
-                                                    :title="`Con novedad: ${formatNumber(item.con_novedad)}`"
-                                                >
-                                                    <div
-                                                        class="sj-column-chart__bar-value sj-column-chart__bar-value--con-novedad"
-                                                        x-show="item.con_novedad > 0"
-                                                        x-text="formatNumber(item.con_novedad)"
-                                                    ></div>
+                                                    <template x-for="segment in renewalSegments()" :key="`${item.key}-${segment.key}`">
+                                                        <div
+                                                            class="sj-column-chart__bar"
+                                                            :class="[
+                                                                `sj-column-chart__bar--${segment.key}`,
+                                                                renewalSegmentLabelAbove(
+                                                                    renewalSegmentCount(item, segment.key),
+                                                                    normalizeRenewalMonth(item).total,
+                                                                    renewalStackHeight(item, dashboard.renewal_chart.max)
+                                                                ) ? 'sj-column-chart__bar--has-floating-label' : '',
+                                                            ].join(' ').trim()"
+                                                            :data-segment="segment.key"
+                                                            x-show="renewalSegmentCount(item, segment.key) > 0"
+                                                            :style="renewalBarStyle(item, segment.key, dashboard.renewal_chart.max)"
+                                                            :title="`${segment.label}: ${formatNumber(renewalSegmentCount(item, segment.key))}`"
+                                                        >
+                                                            <span
+                                                                class="sj-column-chart__bar-value"
+                                                                :class="[
+                                                                    `sj-column-chart__bar-value--${segment.key}`,
+                                                                    renewalSegmentLabelAbove(
+                                                                        renewalSegmentCount(item, segment.key),
+                                                                        normalizeRenewalMonth(item).total,
+                                                                        renewalStackHeight(item, dashboard.renewal_chart.max)
+                                                                    ) ? 'sj-column-chart__bar-value--floating' : 'sj-column-chart__bar-value--inside',
+                                                                ].join(' ')"
+                                                                x-show="renewalSegmentShowsLabel(
+                                                                    renewalSegmentCount(item, segment.key),
+                                                                    normalizeRenewalMonth(item).total,
+                                                                    renewalStackHeight(item, dashboard.renewal_chart.max)
+                                                                )"
+                                                                x-text="formatNumber(renewalSegmentCount(item, segment.key))"
+                                                            ></span>
+                                                        </div>
+                                                    </template>
                                                 </div>
                                             </div>
                                             <div class="sj-column-chart__label" x-text="item.label"></div>

@@ -63,6 +63,40 @@ class WeaponRevalidationDocumentMetricsTest extends TestCase
         $this->assertSame(2, $expiredKpi['value']);
     }
 
+    public function test_renewal_chart_segments_exclude_non_revalidatable_weapons(): void
+    {
+        $admin = User::factory()->create(['role' => 'ADMIN']);
+        $responsible = User::factory()->create(['role' => 'RESPONSABLE']);
+        $client = Client::query()->create(['name' => 'Cliente Gráfico', 'nit' => '900300402-1']);
+        $responsible->clients()->attach($client->id);
+
+        $vigente = $this->createWeapon('SER-CH-VIG', $client, $responsible);
+        $hurtada = $this->createWeapon('SER-CH-HU', $client, $responsible);
+        $incautadaOpen = $this->createWeapon('SER-CH-IN', $client, $responsible);
+
+        $this->createIncident($hurtada, 'hurtada', WeaponIncident::STATUS_OPEN, $admin);
+        $this->createIncident($incautadaOpen, 'incautada', WeaponIncident::STATUS_IN_PROGRESS, $admin);
+
+        $chartMonth = now()->startOfMonth()->addMonths(2)->format('Y-m');
+        $chartYear = (int) now()->startOfMonth()->addMonths(2)->format('Y');
+        $validUntil = now()->startOfMonth()->addMonths(2)->endOfMonth()->toDateString();
+
+        $this->createRenewalDocument($vigente, $validUntil);
+        $this->createRenewalDocument($hurtada, $validUntil);
+        $this->createRenewalDocument($incautadaOpen, now()->subDays(5)->toDateString());
+
+        $metrics = app(DashboardMetricsService::class)->forUser($admin, $chartYear);
+        $monthItem = collect($metrics['renewal_chart']['items'])->firstWhere('key', $chartMonth);
+
+        $this->assertNotNull($monthItem);
+        $this->assertSame(2, $monthItem['total']);
+        $this->assertSame(1, $monthItem['vigente']);
+        $this->assertSame(0, $monthItem['vencido']);
+        $this->assertSame(1, $monthItem['incautada']);
+        $this->assertSame(0, $monthItem['preventiva']);
+        $this->assertSame(0, $monthItem['por_vencer']);
+    }
+
     public function test_weapon_revalidation_exclusion_scope(): void
     {
         $admin = User::factory()->create(['role' => 'ADMIN']);
@@ -120,10 +154,15 @@ class WeaponRevalidationDocumentMetricsTest extends TestCase
 
     private function createExpiredRenewalDocument(Weapon $weapon): WeaponDocument
     {
+        return $this->createRenewalDocument($weapon, now()->subDays(10)->toDateString());
+    }
+
+    private function createRenewalDocument(Weapon $weapon, string $validUntil): WeaponDocument
+    {
         return WeaponDocument::query()->create([
             'weapon_id' => $weapon->id,
             'document_name' => 'Revalidación',
-            'valid_until' => now()->subDays(10)->toDateString(),
+            'valid_until' => $validUntil,
             'status' => 'Sin novedad',
             'observations' => 'En Armerillo',
             'is_renewal' => true,

@@ -89,7 +89,13 @@ class DashboardMetricsService
             ->sortDesc()
             ->take(8);
 
-        $availableRenewalYears = $renewalDocuments
+        $weaponIdsWithActiveSeizure = $this->weaponIdsWithActiveSeizureForRevalidation($weaponIds);
+
+        $revalidatableRenewalDocuments = $renewalDocuments->filter(
+            fn (WeaponDocument $document) => ! in_array($document->weapon_id, $weaponsExcludedFromRevalidation, true)
+        );
+
+        $availableRenewalYears = $revalidatableRenewalDocuments
             ->filter(fn (WeaponDocument $document) => $document->valid_until !== null)
             ->map(fn (WeaponDocument $document) => (int) $document->valid_until->format('Y'))
             ->unique()
@@ -103,33 +109,49 @@ class DashboardMetricsService
                 ? $currentYear
                 : $availableRenewalYears->first());
 
-        $renewalMonths = $renewalDocuments
+        $renewalMonths = $revalidatableRenewalDocuments
             ->filter(fn (WeaponDocument $document) => $document->valid_until !== null)
             ->when($selectedRenewalYear, fn (Collection $items) => $items->filter(
                 fn (WeaponDocument $document) => (int) $document->valid_until->format('Y') === (int) $selectedRenewalYear
             ))
             ->groupBy(fn (WeaponDocument $document) => $document->valid_until->format('Y-m'))
             ->sortKeys()
-            ->map(function (Collection $group, string $monthKey) use ($weaponsExcludedFromRevalidation) {
+            ->map(function (Collection $group, string $monthKey) use ($weaponIdsWithActiveSeizure) {
                 $month = Carbon::createFromFormat('Y-m-d', $monthKey . '-01')
                     ->locale(app()->getLocale());
 
-                $sinNovedad = $group->filter(fn (WeaponDocument $document) =>
-                    ! in_array($document->weapon_id, $weaponsExcludedFromRevalidation, true)
-                )->count();
+                $segments = [
+                    'vigente' => 0,
+                    'preventiva' => 0,
+                    'por_vencer' => 0,
+                    'vencido' => 0,
+                    'incautada' => 0,
+                ];
 
-                $conNovedad = $group->filter(fn (WeaponDocument $document) =>
-                    in_array($document->weapon_id, $weaponsExcludedFromRevalidation, true)
-                )->count();
+                foreach ($group as $document) {
+                    if (in_array($document->weapon_id, $weaponIdsWithActiveSeizure, true)) {
+                        $segments['incautada']++;
+                        continue;
+                    }
 
-                return [
+                    $alert = WeaponDocumentAlert::forComplianceDocument($document);
+                    $segments[$this->renewalAlertSegmentKey($alert['state'])]++;
+                }
+
+                $total = array_sum($segments);
+
+                return $this->normalizeRenewalChartMonth([
                     'key' => $monthKey,
                     'label' => ucfirst($month->translatedFormat('M y')),
-                    'value' => $group->count(),
-                    'sin_novedad' => $sinNovedad,
-                    'con_novedad' => $conNovedad,
-                ];
+                    'total' => $total,
+                    'vigente' => $segments['vigente'],
+                    'preventiva' => $segments['preventiva'],
+                    'por_vencer' => $segments['por_vencer'],
+                    'vencido' => $segments['vencido'],
+                    'incautada' => $segments['incautada'],
+                ]);
             })
+            ->filter(fn (array $item) => $item['total'] > 0)
             ->values();
 
         $openIncidents = WeaponIncident::query()
@@ -261,7 +283,7 @@ class DashboardMetricsService
             ],
             'renewal_chart' => [
                 'items' => $renewalMonths->all(),
-                'max' => max(1, (int) $renewalMonths->max('value')),
+                'max' => max(1, (int) $renewalMonths->max('total')),
                 'years' => $availableRenewalYears->all(),
                 'selected_year' => $selectedRenewalYear,
             ],
@@ -386,6 +408,65 @@ class DashboardMetricsService
         }
 
         return $query;
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function weaponIdsWithActiveSeizureForRevalidation(Collection $weaponIds): array
+    {
+        if ($weaponIds->isEmpty()) {
+            return [];
+        }
+
+        return WeaponIncident::query()
+            ->whereIn('weapon_id', $weaponIds->all())
+            ->whereIn('status', [WeaponIncident::STATUS_OPEN, WeaponIncident::STATUS_IN_PROGRESS])
+            ->whereHas('type', fn (Builder $typeQuery) => $typeQuery->where('code', 'incautada'))
+            ->pluck('weapon_id')
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function renewalAlertSegmentKey(string $state): string
+    {
+        return match ($state) {
+            'Vigente' => 'vigente',
+            'Alerta preventiva' => 'preventiva',
+            "Pr\u{00F3}ximo a vencer" => 'por_vencer',
+            'Vencido' => 'vencido',
+            default => 'vigente',
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     * @return array<string, mixed>
+     */
+    private function normalizeRenewalChartMonth(array $item): array
+    {
+        $vigente = (int) ($item['vigente'] ?? 0) + (int) ($item['sin_novedad'] ?? 0);
+        $preventiva = (int) ($item['preventiva'] ?? 0);
+        $porVencer = (int) ($item['por_vencer'] ?? 0);
+        $vencido = (int) ($item['vencido'] ?? 0);
+        $incautada = (int) ($item['incautada'] ?? 0);
+        $total = (int) ($item['total'] ?? 0);
+
+        if ($total <= 0) {
+            $total = $vigente + $preventiva + $porVencer + $vencido + $incautada;
+        }
+
+        return [
+            'key' => $item['key'],
+            'label' => $item['label'],
+            'total' => $total,
+            'vigente' => $vigente,
+            'preventiva' => $preventiva,
+            'por_vencer' => $porVencer,
+            'vencido' => $vencido,
+            'incautada' => $incautada,
+        ];
     }
 
     private function transferStatusCounts(User $user): array

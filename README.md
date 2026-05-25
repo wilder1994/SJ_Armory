@@ -951,11 +951,22 @@ Comportamiento relevante:
 - El dashboard se refresca automaticamente sin recargar la pagina.
 - Eventos de dominio (armas, asignaciones, transferencias, documentos, novedades) se emiten via Laravel Reverb y el frontend escucha con Laravel Echo para sincronizar vistas sin recargar.
 - Grafico **Incidencias activas** (dashboard): solo tipos con `incident_types.is_reportable` (excluye mantenimiento, para mantenimiento y en armerillo).
-- El grafico `Renovaciones por mes`:
-  - muestra solo meses con datos,
-  - filtra por anio,
-  - por defecto usa el anio actual si existe en los documentos,
-  - y solo ofrece en el selector los anios que realmente tienen documentos.
+- El grafico **`Renovaciones por mes`** (panel Planeacion):
+  - cuenta solo documentos de **armas revalidables** (excluye hurtada, perdida, dar de baja e **incautacion definitiva**; **incautada en tramite** si entra, en segmento aparte),
+  - agrupa por mes de `valid_until` del documento de revalidacion (`is_renewal`),
+  - **barras apiladas** por estado de alerta **a la fecha de consulta** (`WeaponDocumentAlert`, misma logica que el donut **Riesgo documental**):
+    - **Vigente** (>120 dias) — verde
+    - **Preventiva** (91–120 dias) — ambar
+    - **Por vencer** (1–90 dias) — naranja
+    - **Vencido** — rojo
+  - segmento adicional **Incautacion en tramite** (granate): armas con incautacion abierta o en proceso (unica novedad bloqueante que sigue en planeacion); prioriza sobre el estado de alerta del documento,
+  - altura de cada mes proporcional al total del mes frente al mes maximo del anio (sin pisos minimos que distorsionen meses pequenos),
+  - etiqueta **dentro** del segmento si hay espacio; **pildora encima** si el segmento o el mes es muy bajo,
+  - base gris del stack y linea de apoyo bajo cada columna (estilo columna),
+  - colores aplicados por clase CSS y respaldo inline en `dashboard.js` (`renewalBarStyle`); compatibilidad con respuestas cacheadas que aun traigan `sin_novedad` (se suma a **vigente**),
+  - filtra por anio; por defecto el anio actual si existe en los datos; el selector solo lista anios con documentos,
+  - servicio: `DashboardMetricsService`; vista `dashboard.blade.php` + `resources/js/dashboard.js` + estilos en `resources/css/app.css` (`.sj-panel--renewal-chart`).
+  - Tras cambios en JS/CSS: `npm run build` (local) o `npm run build:deploy` (hosting) y subir `build_hosting/build/` → `public/build/`.
 - El alcance de los datos respeta el rol del usuario:
   - `ADMIN` y `AUDITOR` ven alcance global.
   - `RESPONSABLE` ve solo su operacion.
