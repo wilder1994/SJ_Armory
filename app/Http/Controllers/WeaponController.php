@@ -15,6 +15,7 @@ use App\Models\WeaponPhoto;
 use App\Services\WeaponDocumentService;
 use App\Services\WeaponHistoryService;
 use App\Support\WeaponDocumentAlert;
+use App\Support\WeaponPhotoExportHighlight;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -89,7 +90,7 @@ class WeaponController extends Controller
         $format = $this->normalizeExportFormat($request->input('format'));
 
         $query = $this->buildExportQuery($request)
-            ->with($this->indexRelationships());
+            ->with($this->exportRelationships());
 
         $this->applyInventoryOrdering($query);
 
@@ -162,7 +163,7 @@ class WeaponController extends Controller
         $this->applyInventoryScope($query, $filters['inventory_scope']);
         $this->applyRoleScope($query, $request->user());
 
-        $query->with($this->indexRelationships());
+        $query->with($this->exportRelationships());
 
         $this->applyInventoryOrdering($query);
 
@@ -1007,6 +1008,14 @@ class WeaponController extends Controller
         ];
     }
 
+    private function exportRelationships(): array
+    {
+        return array_merge($this->indexRelationships(), [
+            'photos',
+            'permitFile',
+        ]);
+    }
+
     private function indexFilterOptions(User $user): array
     {
         $clients = $user->isResponsible() && ! $user->isAdmin()
@@ -1094,7 +1103,10 @@ class WeaponController extends Controller
 
         $rows = [];
         foreach ($weapons as $weapon) {
-            $rows[] = $this->weaponExportRow($weapon);
+            $rows[] = [
+                'values' => $this->weaponExportRow($weapon),
+                'style' => WeaponPhotoExportHighlight::rowStyleFor($weapon),
+            ];
         }
 
         return response()->streamDownload(function () use ($headers, $rows) {
@@ -1107,6 +1119,7 @@ class WeaponController extends Controller
             $zip->addFromString('xl/_rels/workbook.xml.rels', $this->xlsxWorkbookRelsXml());
             $zip->addFromString('xl/styles.xml', $this->xlsxStylesXml());
             $zip->addFromString('xl/worksheets/sheet1.xml', $this->xlsxWorksheetXml($headers, $rows));
+            $zip->addFromString('xl/worksheets/sheet2.xml', $this->xlsxPhotoLegendWorksheetXml());
             $zip->close();
 
             $handle = fopen($temporaryPath, 'rb');
@@ -1141,6 +1154,7 @@ class WeaponController extends Controller
     <Default Extension="xml" ContentType="application/xml"/>
     <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
     <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+    <Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
     <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
 </Types>
 XML;
@@ -1163,6 +1177,7 @@ XML;
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
     <sheets>
         <sheet name="Armamento" sheetId="1" r:id="rId1"/>
+        <sheet name="Criterios de color" sheetId="2" r:id="rId3"/>
     </sheets>
 </workbook>
 XML;
@@ -1175,8 +1190,29 @@ XML;
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
     <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
     <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+    <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>
 </Relationships>
 XML;
+    }
+
+    private function xlsxPhotoLegendWorksheetXml(): string
+    {
+        $headers = [__('Muestra'), __('Significado')];
+        $rows = array_map(
+            fn (array $entry) => [
+                'values' => [$entry['sample'], $entry['meaning']],
+                'style' => $entry['style'],
+            ],
+            WeaponPhotoExportHighlight::legendSheetRows(),
+        );
+
+        return $this->xlsxWorksheetXml(
+            $headers,
+            $rows,
+            [16, 88],
+            freezeHeader: true,
+            autoFilter: false,
+        );
     }
 
     private function xlsxStylesXml(): string
@@ -1198,12 +1234,30 @@ XML;
             <family val="2"/>
         </font>
     </fonts>
-    <fills count="3">
+    <fills count="6">
         <fill><patternFill patternType="none"/></fill>
         <fill><patternFill patternType="gray125"/></fill>
         <fill>
             <patternFill patternType="solid">
                 <fgColor rgb="FF162457"/>
+                <bgColor indexed="64"/>
+            </patternFill>
+        </fill>
+        <fill>
+            <patternFill patternType="solid">
+                <fgColor rgb="FFFED7AA"/>
+                <bgColor indexed="64"/>
+            </patternFill>
+        </fill>
+        <fill>
+            <patternFill patternType="solid">
+                <fgColor rgb="FFFEF08A"/>
+                <bgColor indexed="64"/>
+            </patternFill>
+        </fill>
+        <fill>
+            <patternFill patternType="solid">
+                <fgColor rgb="FFBBF7D0"/>
                 <bgColor indexed="64"/>
             </patternFill>
         </fill>
@@ -1216,26 +1270,42 @@ XML;
     <cellStyleXfs count="1">
         <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
     </cellStyleXfs>
-    <cellXfs count="2">
+    <cellXfs count="5">
         <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
         <xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1">
             <alignment horizontal="center" vertical="center"/>
         </xf>
+        <xf numFmtId="0" fontId="0" fillId="3" borderId="0" xfId="0" applyFill="1"/>
+        <xf numFmtId="0" fontId="0" fillId="4" borderId="0" xfId="0" applyFill="1"/>
+        <xf numFmtId="0" fontId="0" fillId="5" borderId="0" xfId="0" applyFill="1"/>
     </cellXfs>
 </styleSheet>
 XML;
     }
 
-    private function xlsxWorksheetXml(array $headers, array $rows): string
-    {
+    private function xlsxWorksheetXml(
+        array $headers,
+        array $rows,
+        ?array $columnWidths = null,
+        bool $freezeHeader = true,
+        bool $autoFilter = true,
+    ): string {
         $allRows = array_merge([$headers], $rows);
-        $columnWidths = [22, 18, 18, 18, 14, 12, 18, 18, 14, 24, 24, 14, 14, 22, 22, 18, 14];
+        $columnWidths = $columnWidths ?? [22, 18, 18, 18, 14, 12, 18, 18, 14, 24, 24, 14, 14, 22, 22, 18, 14];
         $lastColumn = $this->xlsxColumnName(count($headers));
         $sheetRows = [];
 
         foreach ($allRows as $rowIndex => $row) {
             $cells = [];
-            $style = $rowIndex === 0 ? ' s="1"' : '';
+            if ($rowIndex === 0) {
+                $styleIndex = 1;
+            } else {
+                $styleIndex = is_array($row) && array_key_exists('style', $row)
+                    ? ($row['style'] ?? 0)
+                    : 0;
+                $row = is_array($row) && array_key_exists('values', $row) ? $row['values'] : $row;
+            }
+            $style = ' s="'.$styleIndex.'"';
 
             foreach ($row as $columnIndex => $value) {
                 $reference = $this->xlsxColumnName($columnIndex + 1).($rowIndex + 1);
@@ -1252,13 +1322,21 @@ XML;
             $columnsXml[] = '<col min="'.$column.'" max="'.$column.'" width="'.$width.'" customWidth="1"/>';
         }
 
+        $sheetView = $freezeHeader
+            ? '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'
+            : '<sheetViews><sheetView workbookViewId="0"/></sheetViews>';
+
+        $autoFilterXml = $autoFilter
+            ? '<autoFilter ref="A1:'.$lastColumn.'1"/>'
+            : '';
+
         return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             .'<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
-            .'<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'
+            .$sheetView
             .'<sheetFormatPr defaultRowHeight="15"/>'
             .'<cols>'.implode('', $columnsXml).'</cols>'
             .'<sheetData>'.implode('', $sheetRows).'</sheetData>'
-            .'<autoFilter ref="A1:'.$lastColumn.'1"/>'
+            .$autoFilterXml
             .'</worksheet>';
     }
 

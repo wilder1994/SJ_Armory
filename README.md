@@ -537,7 +537,36 @@ Listado de armas (`resources/views/weapons/partials/index_rows.blade.php`):
 
 - Columna **Puesto o trabajador**: si hay trabajador activo, muestra el **nombre** del trabajador (tambien cuando hay puesto combinado); si solo hay puesto, el nombre del puesto.
 - Columna **Cedula**: documento del trabajador activo, o `-` si no hay trabajador.
-- **Exportación** (misma página `resources/views/weapons/index.blade.php`): modales **Exportar filtrado** y **Exportar selección** con preview y formato xlsx/csv; el modal usa **z-index** por encima de la barra fija `.sj-nav` y el diálogo en **flex columna** con scroll solo en la tabla previa, de modo que el **pie con botones** siga visible.
+- **Exportación** (misma página `resources/views/weapons/index.blade.php`): modales **Exportar filtrado** y **Exportar selección** con preview y formatos xlsx/csv; ver **§5.3.0**.
+
+### 5.3.0 Exportación del listado (XLSX / CSV)
+
+Rutas: `GET /weapons/export`, `POST /weapons/export-selected`, `GET /weapons/export-preview`  
+Controlador: `WeaponController` (generador XLSX propio vía `ZipArchive`, sin PhpSpreadsheet).
+
+**Formatos**
+
+| Formato | Hojas | Colores de fila |
+|---------|-------|-----------------|
+| **XLSX** | **Armamento** (datos) + **Criterios de color** (leyenda) | Sí, según fotos en ficha |
+| **CSV** | Una tabla de datos | No |
+
+**Semáforo en la hoja Armamento** (solo fondo de fila; no se agregan columnas de conteo ni estado):
+
+| Color de fila | Condición |
+|---------------|-----------|
+| Sin color | 0 fotos, 1–3 fotos, o falta alguna de las **4 base** (`lado_derecho`, `lado_izquierdo`, `canon_disparador_marca`, `serie`) |
+| **Naranja** | Las 4 fotos base |
+| **Amarillo** | 4 base + foto **`impronta`** (`weapon_photos`) |
+| **Verde** | 4 base + impronta + **permiso del arma** (`weapons.permit_file_id`) |
+
+La hoja **Criterios de color** repite los mismos tonos con columnas *Muestra* / *Significado* para que quien descarga el archivo entienda el código sin revisar arma por arma.
+
+**Notas**
+
+- La columna **Impronta** del Excel sigue siendo el campo operativo `imprint_month` (recibida/pendiente), no la foto de impronta; el amarillo/verde usan la foto `impronta` de la galería.
+- La exportación carga `photos` y `permitFile` (`exportRelationships()`) para evaluar el color sin N+1.
+- Clase: `app/Support/WeaponPhotoExportHighlight.php`. Tests: `tests/Unit/WeaponPhotoExportHighlightTest.php`.
 
 ### 5.3.1 Custodia y taller (puestos especiales)
 
@@ -713,6 +742,8 @@ Descripciones tecnicas soportadas (`WeaponPhoto::DESCRIPTIONS`):
 - `canon_disparador_marca`
 - `serie`
 - `impronta`
+
+El **permiso** del arma no es un `WeaponPhoto`: se guarda en `permit_file_id` y cuenta para el **verde** en la exportación XLSX (§5.3.0).
 
 ### 5.9.0 Ficha de detalle del arma (`weapons/show`) — layout (mayo 2026)
 
