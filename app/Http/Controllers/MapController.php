@@ -24,12 +24,14 @@ class MapController extends Controller
             abort(403);
         }
 
-        $query = Weapon::query()->with([
-            'activeClientAssignment.client',
-            'activeClientAssignment.responsible',
-            'activePostAssignment.post',
-            'activeWorkerAssignment.worker.client',
-        ]);
+        $query = Weapon::query()
+            ->operationalInventory()
+            ->with([
+                'activeClientAssignment.client',
+                'activeClientAssignment.responsible',
+                'activePostAssignment.post',
+                'activeWorkerAssignment.worker.client',
+            ]);
 
         if ($user->isResponsible() && !$user->isAdmin()) {
             $query->whereHas('clientAssignments', function ($assignmentQuery) use ($user) {

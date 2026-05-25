@@ -18,7 +18,7 @@ Sistema web para **gestión de armamento**, **asignaciones operativas**, **trans
 - ✅ **Dashboard**: KPIs, métricas, gráficos y estado “as of”.
 - ✅ **Alertas documentales** (`/alerts/documents`): tarjetas vencidos / por vencer / sin alertas; filtro **multi-mes** con panel de checkboxes (varios meses y años); exportación `.docx` y vista previa PDF con nombre `Revalidacion_{mes}_{año}`.
 - ✅ **Revista armas** (`/revista-armas`): acceso temporal (12 h) para colaboradores de campo; usuarios temporales reutilizables; subida de **4 fotos técnicas** a staging; el invitado solo entra con código vigente; staff al filtrar ve armas del **último acceso** (aunque haya vencido) para revisar fotos en staging (✓/✕, **Ver**, **Actualizar**); confirmaciones en **modales**; historial de notas en la ficha del arma; **ADMIN** con gestión global.
-- ✅ **Mapa**: geocodificación y visualización operativa.
+- ✅ **Mapa**: geocodificación y visualización operativa; solo armas en inventario operativo (excluye hurtada, perdida, incautada, dar de baja y cierres definitivos bloqueantes).
 - ✅ **Auditoría**: registro de cambios y acciones críticas.
 - ✅ **Realtime (Broadcasting)**: Laravel Reverb + Echo (WebSockets) para sincronización en tiempo real.
 - ✅ **Notificaciones**: campana en barra superior con **solo no leídas**; menú de usuario con **Historial de notificaciones** (leídas y no leídas, mismo modal con `?history=1`); textos con actor y contexto (arma, cliente, puesto, etc.).
@@ -698,6 +698,7 @@ Frontend: `resources/js/map.js`
 
 - Vista `/mapa` para ADMIN/RESPONSABLE/AUDITOR.
 - Endpoint JSON `/mapa/armas`.
+- Solo armas en **inventario operativo** (`operationalInventory`): se excluyen las que tienen novedad bloqueante abierta o cierre definitivo (hurtada, perdida, incautada, dar de baja, etc.), alineado con el listado de armamento por defecto.
 - Coordenadas priorizadas por:
   1. Puesto activo.
   2. Cliente del trabajador activo.

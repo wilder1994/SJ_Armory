@@ -71,6 +71,36 @@ class WeaponOperationalInventoryTest extends TestCase
             ->assertDontSee('SER-OP-1');
     }
 
+    public function test_maps_weapons_endpoint_excludes_operational_blockers(): void
+    {
+        $admin = User::factory()->create(['role' => 'ADMIN']);
+        $responsible = User::factory()->create(['role' => 'RESPONSABLE']);
+        $client = Client::query()->create([
+            'name' => 'Cliente Mapa',
+            'nit' => '900200300-4',
+            'latitude' => 4.65,
+            'longitude' => -74.08,
+        ]);
+        $responsible->clients()->attach($client->id);
+
+        $operational = $this->createWeapon('SER-MAP-OP', $client, $responsible);
+        $stolen = $this->createWeapon('SER-MAP-HU', $client, $responsible);
+        $maintenance = $this->createWeapon('SER-MAP-MT', $client, $responsible);
+
+        $this->createIncident($stolen, 'hurtada', WeaponIncident::STATUS_OPEN, $admin);
+        $this->createIncident($maintenance, 'en_mantenimiento', WeaponIncident::STATUS_IN_PROGRESS, $admin);
+
+        $response = $this->actingAs($admin)
+            ->getJson(route('maps.weapons'))
+            ->assertOk();
+
+        $serials = collect($response->json())->pluck('serial_number');
+
+        $this->assertTrue($serials->contains('SER-MAP-OP'));
+        $this->assertTrue($serials->contains('SER-MAP-MT'));
+        $this->assertFalse($serials->contains('SER-MAP-HU'));
+    }
+
     public function test_weapon_delete_is_forbidden(): void
     {
         $admin = User::factory()->create(['role' => 'ADMIN']);
