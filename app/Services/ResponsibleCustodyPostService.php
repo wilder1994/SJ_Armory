@@ -13,11 +13,19 @@ class ResponsibleCustodyPostService
 {
     public function resolveResponsibleForWeapon(Weapon $weapon): User
     {
-        $weapon->loadMissing('activeClientAssignment.responsible');
-        $responsible = $weapon->activeClientAssignment?->responsible;
+        $weapon->loadMissing('activeClientAssignment.responsible', 'activeClientAssignment.client');
+        $assignment = $weapon->activeClientAssignment;
+        $responsible = $assignment?->responsible;
+        $clientId = (int) ($assignment?->client_id ?? 0);
 
-        if (! $responsible || ! $responsible->isResponsibleLevelOne()) {
-            throw new RuntimeException(__('El arma no tiene un responsable activo asignado.'));
+        if (! $responsible) {
+            throw new RuntimeException(__('El arma no tiene un responsable activo asignado en el destino operativo.'));
+        }
+
+        if (! $responsible->isCustodyResponsibleForClient($clientId)) {
+            throw new RuntimeException(__(
+                'El responsable asignado no puede operar custodia: debe ser un responsable nivel 1 o un administrador con cartera para este cliente.',
+            ));
         }
 
         return $responsible;

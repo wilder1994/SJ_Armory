@@ -162,7 +162,11 @@ class WeaponCustodyService
             return;
         }
 
-        if ($actor->isResponsibleLevelOne() && (int) $actor->id === (int) $responsible->id) {
+        if ((int) $actor->id !== (int) $responsible->id) {
+            throw new RuntimeException(__('No tiene permiso para mover armas de este responsable.'));
+        }
+
+        if ($actor->isResponsibleLevelOne()) {
             return;
         }
 

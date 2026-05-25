@@ -99,6 +99,23 @@ class User extends Authenticatable
         return $this->isResponsible() && $this->responsibilityLevelNumber() === 1;
     }
 
+    public function hasClientInPortfolio(int $clientId): bool
+    {
+        return $this->clients()->whereKey($clientId)->exists();
+    }
+
+    /**
+     * Responsable válido para custodia/taller en un cliente: nivel 1 con cartera o ADMIN con cartera.
+     */
+    public function isCustodyResponsibleForClient(int $clientId): bool
+    {
+        if ($clientId <= 0 || ! $this->hasClientInPortfolio($clientId)) {
+            return false;
+        }
+
+        return $this->isResponsibleLevelOne() || $this->isAdmin();
+    }
+
     public function isResponsibleReadOnly(): bool
     {
         return $this->isResponsible() && $this->responsibilityLevelNumber() === 2;

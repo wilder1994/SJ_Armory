@@ -411,6 +411,20 @@ class WeaponController extends Controller
         $pendingTransferForWeapon = $weapon->pendingTransfer();
 
         $custodyResponsible = $weapon->activeClientAssignment?->responsible;
+        $custodyCanOperate = false;
+        $custodyResponsibleMessage = null;
+        if ($custodyResponsible && $activeClientId) {
+            $custodyCanOperate = $custodyResponsible->isCustodyResponsibleForClient((int) $activeClientId);
+            if (! $custodyCanOperate) {
+                $custodyResponsibleMessage = __(
+                    'El responsable del destino (:name) no puede usar custodia para este cliente. Debe ser responsable nivel 1 o administrador con ese cliente en su cartera.',
+                    ['name' => $custodyResponsible->name],
+                );
+            }
+        } elseif ($weapon->activeClientAssignment && ! $custodyResponsible) {
+            $custodyResponsibleMessage = __('El arma no tiene un responsable activo en el destino operativo.');
+        }
+
         $armeroPosts = collect();
         if ($custodyResponsible && $activeClientId) {
             $armeroPosts = app(\App\Services\ResponsibleCustodyPostService::class)
@@ -436,6 +450,8 @@ class WeaponController extends Controller
             'pendingTransferForWeapon',
             'armeroPosts',
             'custodyResponsible',
+            'custodyCanOperate',
+            'custodyResponsibleMessage',
         ));
     }
 

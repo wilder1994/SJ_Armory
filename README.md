@@ -567,6 +567,8 @@ Constantes: `app/Support/PostCustodyRole.php`
 
 **Reglas técnicas**
 
+- **Responsable de custodia válido:** usuario asignado en el destino operativo del arma que sea **RESPONSABLE nivel 1** con ese cliente en cartera (`user_clients`), **o** **ADMIN** con ese cliente en cartera. Un ADMIN sin cartera para el cliente no puede operar armerillo/armero aunque figure como responsable en la ficha.
+- Quien ejecuta la acción: cualquier **ADMIN**, o el mismo responsable válido (incluido ADMIN con cartera en su propia ficha).
 - Un **armerillo** y un puesto **armerillo para mantenimiento** por responsable y cliente (se crean o reutilizan al primer uso).
 - Cada responsable registra sus **armeros** (no compartidos entre responsables).
 - Al cerrar asignación interna previa se usa `is_active = null` (igual que `WeaponInternalAssignmentController`), no `0`, para no violar el índice único `(weapon_id, is_active)` en `weapon_post_assignments`.

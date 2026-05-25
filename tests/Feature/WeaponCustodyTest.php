@@ -10,8 +10,10 @@ use App\Models\WeaponClientAssignment;
 use App\Models\WeaponIncident;
 use App\Services\WeaponIncidentReportService;
 use App\Support\PostCustodyRole;
+use App\Models\ResponsibilityLevel;
 use Database\Seeders\IncidentModalitySeeder;
 use Database\Seeders\IncidentTypeSeeder;
+use Database\Seeders\ResponsibilityLevelSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -26,7 +28,39 @@ class WeaponCustodyTest extends TestCase
         $this->seed([
             IncidentTypeSeeder::class,
             IncidentModalitySeeder::class,
+            ResponsibilityLevelSeeder::class,
         ]);
+    }
+
+    public function test_admin_with_portfolio_can_move_to_armerillo(): void
+    {
+        [$weapon, $adminResponsible, $client] = $this->createWeaponContext(
+            'SER-CUST-ADMIN-OK',
+            'ADMIN',
+            true,
+        );
+
+        $this->actingAs($adminResponsible)
+            ->post(route('weapons.custody.armerillo', $weapon))
+            ->assertRedirect(route('weapons.show', $weapon));
+
+        $weapon->refresh()->load('activePostAssignment.post');
+        $this->assertSame(PostCustodyRole::ARMERILLO, $weapon->activePostAssignment?->post?->custody_role);
+        $this->assertSame($adminResponsible->id, $weapon->activePostAssignment?->post?->owner_responsible_user_id);
+    }
+
+    public function test_admin_without_portfolio_for_client_cannot_use_custody(): void
+    {
+        [$weapon, $adminResponsible] = $this->createWeaponContext(
+            'SER-CUST-ADMIN-NO',
+            'ADMIN',
+            false,
+        );
+
+        $this->actingAs(User::factory()->create(['role' => 'ADMIN']))
+            ->post(route('weapons.custody.armerillo', $weapon))
+            ->assertRedirect()
+            ->assertSessionHasErrors('custody');
     }
 
     public function test_move_to_armerillo_assigns_custody_post_without_worker(): void
@@ -155,16 +189,27 @@ class WeaponCustodyTest extends TestCase
     /**
      * @return array{0: Weapon, 1: User, 2: Client}
      */
-    private function createWeaponContext(string $serial = 'SER-CUST-TEST'): array
-    {
-        $responsible = User::factory()->create(['role' => 'RESPONSABLE']);
+    private function createWeaponContext(
+        string $serial = 'SER-CUST-TEST',
+        string $responsibleRole = 'RESPONSABLE',
+        bool $attachClientToPortfolio = true,
+    ): array {
+        $attributes = ['role' => $responsibleRole];
+        if ($responsibleRole === 'RESPONSABLE') {
+            $levelOneId = ResponsibilityLevel::query()->where('level', 1)->value('id');
+            $attributes['responsibility_level_id'] = $levelOneId;
+        }
+
+        $responsible = User::factory()->create($attributes);
         $client = Client::query()->create([
             'name' => 'Cliente Custodia',
             'nit' => '900300400-1',
             'latitude' => 4.65,
             'longitude' => -74.08,
         ]);
-        $responsible->clients()->attach($client->id);
+        if ($attachClientToPortfolio) {
+            $responsible->clients()->attach($client->id);
+        }
 
         $weapon = Weapon::query()->create([
             'internal_code' => 'IC-'.$serial,

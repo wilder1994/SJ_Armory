@@ -1,6 +1,8 @@
 @php
     $custodyLabel = $weapon->custodyStatusLabel();
-    $canManageCustody = $weapon->activeClientAssignment && ! $pendingTransferForWeapon;
+    $canManageCustody = $weapon->activeClientAssignment
+        && ! $pendingTransferForWeapon
+        && ($custodyCanOperate ?? false);
 @endphp
 
 <style>
@@ -38,8 +40,18 @@
         </div>
     @endif
 
+    @if ($custodyResponsibleMessage ?? null)
+        <p class="text-sm text-amber-700">{{ $custodyResponsibleMessage }}</p>
+    @endif
+
     @if (! $canManageCustody)
-        <p class="text-sm text-amber-700">{{ __('Asigne destino operativo y resuelva transferencias pendientes para usar custodia.') }}</p>
+        @if ($pendingTransferForWeapon)
+            <p class="text-sm text-amber-700">{{ __('Resuelva la transferencia pendiente para usar custodia.') }}</p>
+        @elseif (! $weapon->activeClientAssignment)
+            <p class="text-sm text-amber-700">{{ __('Asigne destino operativo para usar custodia.') }}</p>
+        @elseif (! ($custodyResponsibleMessage ?? null))
+            <p class="text-sm text-amber-700">{{ __('No se puede usar custodia con la configuración actual del destino.') }}</p>
+        @endif
     @else
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <form method="POST" action="{{ route('weapons.custody.armerillo', $weapon) }}" class="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3">
