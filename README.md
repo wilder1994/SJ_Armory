@@ -18,7 +18,7 @@ Sistema web para **gestión de armamento**, **asignaciones operativas**, **trans
 - ✅ **Dashboard**: KPIs, métricas, gráficos y estado “as of”.
 - ✅ **Alertas documentales** (`/alerts/documents`): tarjetas vencidos / por vencer / sin alertas; filtro **multi-mes** con panel de checkboxes (varios meses y años); exportación `.docx` y vista previa PDF con nombre `Revalidacion_{mes}_{año}`.
 - ✅ **Revista armas** (`/revista-armas`): acceso temporal (12 h) para colaboradores de campo; usuarios temporales reutilizables; subida de **4 fotos técnicas** a staging; el invitado solo entra con código vigente; staff al filtrar ve armas del **último acceso** (aunque haya vencido) para revisar fotos en staging (✓/✕, **Ver**, **Actualizar**); confirmaciones en **modales**; historial de notas en la ficha del arma; **ADMIN** con gestión global.
-- ✅ **Mapa**: geocodificación y visualización operativa; solo armas en inventario operativo (excluye hurtada, perdida, incautada, dar de baja y cierres definitivos bloqueantes).
+- ✅ **Mapa**: geocodificación y visualización operativa; solo inventario operativo (sin novedad bloqueante ni custodia en taller / para mantenimiento).
 - ✅ **Auditoría**: registro de cambios y acciones críticas.
 - ✅ **Realtime (Broadcasting)**: Laravel Reverb + Echo (WebSockets) para sincronización en tiempo real.
 - ✅ **Notificaciones**: campana en barra superior con **solo no leídas**; menú de usuario con **Historial de notificaciones** (leídas y no leídas, mismo modal con `?history=1`); textos con actor y contexto (arma, cliente, puesto, etc.).
@@ -95,6 +95,13 @@ php artisan migrate
 En **producción** (`APP_ENV=production`): `php artisan migrate --force`. Antes, **respaldo de la BD** y **`git pull`** en el servidor para que los archivos en `database/migrations/` coincidan con el repo; si migras con código desactualizado, una migración puede fallar o dejar el esquema incoherente.
 
 **MySQL y `2026_05_08_120000_permit_authenticated_templates`:** esta migración elimina la FK de `weapons.permit_authenticated_file_id` usando el nombre real en `information_schema` y después borra la columna. Si ves `SQLSTATE[HY000]: 1828 Cannot drop column ... foreign key`, suele ser versión vieja del archivo de migración en el servidor o FK sin eliminar; actualiza el código, vuelve a ejecutar `migrate --force`, o en último caso elimina la FK manualmente en MySQL y repite la migración.
+
+**Custodia y reporte de novedades (mayo 2026):**
+
+- `2026_05_20_100000_add_is_reportable_to_incident_types_table.php` — columna `incident_types.is_reportable` (hurtada/perdida/incautada/dar de baja = `1`; en_mantenimiento, para_mantenimiento, en_armerillo = `0`).
+- `2026_05_20_100001_add_custody_fields_to_posts_table.php` — `posts.custody_role` (`armerillo`, `armerillo_para_mantenimiento`, `armero`) y `posts.owner_responsible_user_id`.
+
+Si `/reports/weapon-incidents` falla con `Unknown column 'is_reportable'`, falta ejecutar `migrate --force` tras `git pull`.
 
 ### 4) Instalar y compilar frontend
 
@@ -532,6 +539,46 @@ Listado de armas (`resources/views/weapons/partials/index_rows.blade.php`):
 - Columna **Cedula**: documento del trabajador activo, o `-` si no hay trabajador.
 - **Exportación** (misma página `resources/views/weapons/index.blade.php`): modales **Exportar filtrado** y **Exportar selección** con preview y formato xlsx/csv; el modal usa **z-index** por encima de la barra fija `.sj-nav` y el diálogo en **flex columna** con scroll solo en la tabla previa, de modo que el **pie con botones** siga visible.
 
+### 5.3.1 Custodia y taller (puestos especiales)
+
+Vista: `resources/views/weapons/partials/assignment_custody.blade.php` (bloque dentro de **Asignación interna** en `weapons/show`).  
+Controlador: `app/Http/Controllers/WeaponCustodyController.php`  
+Servicios: `ResponsibleCustodyPostService`, `WeaponCustodyService`  
+Constantes: `app/Support/PostCustodyRole.php`
+
+**Separación de conceptos**
+
+| Concepto | Dónde vive | Inventario operativo | Reporte novedades |
+|----------|------------|----------------------|-------------------|
+| Hurto, pérdida, incautación, baja | `weapon_incidents` (`is_reportable = 1`) | No (bloqueante) | Sí |
+| En mantenimiento / para mantenimiento / en armerillo (legado) | Historial de incidentes antiguos | — | No (solo notas en ficha) |
+| Armerillo del responsable | Puesto `custody_role = armerillo` | **Sí** (custodia sana) | No |
+| Armerillo — Para mantenimiento | Puesto `armerillo_para_mantenimiento` | No | No |
+| Armero / taller del responsable | Puesto `custody_role = armero` | No | No |
+
+**Acciones en ficha** (requieren destino operativo activo; respetan transferencia pendiente):
+
+| Acción | Ruta | Efecto |
+|--------|------|--------|
+| Enviar a mi armerillo | `POST weapons/{weapon}/custody/armerillo` | Cierra trabajador activo; asigna solo puesto armerillo del responsable (coords iniciales del **cliente activo**). |
+| Para mantenimiento | `POST weapons/{weapon}/custody/para-mantenimiento` | Puesto armerillo para mantenimiento; fuera de operación. |
+| Enviar a armero | `POST weapons/{weapon}/custody/armero` | Puesto armero elegido (debe tener ubicación en mapa). |
+| Registrar armero | `POST weapons/{weapon}/custody/armero-posts` | Alta de puesto `armero` del responsable en el cliente del arma. |
+
+**Reglas técnicas**
+
+- Un **armerillo** y un puesto **armerillo para mantenimiento** por responsable y cliente (se crean o reutilizan al primer uso).
+- Cada responsable registra sus **armeros** (no compartidos entre responsables).
+- Al cerrar asignación interna previa se usa `is_active = null` (igual que `WeaponInternalAssignmentController`), no `0`, para no violar el índice único `(weapon_id, is_active)` en `weapon_post_assignments`.
+- El desplegable de puestos en asignación interna **excluye** armerillo y armerillo para mantenimiento (`Post::scopeSelectableForInternalAssignment`); los armeros sí pueden elegirse manualmente si aplica.
+- UI del botón **Para mantenimiento**: texto homónimo, fondo dorado en `.sj-custody-maint-btn`; recuadro con `border border-amber-200 bg-amber-50` (estilos embebidos en la vista, no requieren recompilar CSS para el color del botón).
+
+**Inventario y mapa:** `Weapon::scopeOperationalInventory()` excluye novedades bloqueantes y puestos `armerillo_para_mantenimiento` / `armero`; **armerillo** normal cuenta como operativo.
+
+**Reporte:** `GET /reports/weapon-custody` — listado de armas con puesto de custodia activo.
+
+Tests: `tests/Feature/WeaponCustodyTest.php`, `tests/Feature/WeaponOperationalInventoryTest.php` (mapa + reporte).
+
 ### 5.4 Transferencias
 
 Controlador: `app/Http/Controllers/WeaponTransferController.php`
@@ -582,6 +629,8 @@ Controlador: `app/Http/Controllers/ClientController.php`
 
 Controlador: `app/Http/Controllers/PostController.php`
 
+- Campos de custodia (migración `2026_05_20_100001`): `custody_role` (`armerillo` | `armerillo_para_mantenimiento` | `armero` | `null` para puestos operativos normales) y `owner_responsible_user_id` (responsable dueño del puesto de custodia/taller).
+- Los puestos de custodia se generan desde la ficha del arma (`WeaponCustodyController`); el CRUD manual de puestos sigue siendo para puestos operativos.
 - CRUD operativo con **archivo** en lugar de borrado físico (`archived_at`), y **reactivación**.
 - **Historial** (`post_histories`): entrada en el alta; en cada edición, **nota de cambio obligatoria** que se registra en el historial (además del campo notas del puesto).
 - UI: listado con filtro de estado (activos/archivados); acción **Historial** (modal).
@@ -700,7 +749,7 @@ Frontend: `resources/js/map.js`
 
 - Vista `/mapa` para ADMIN/RESPONSABLE/AUDITOR.
 - Endpoint JSON `/mapa/armas`.
-- Solo armas en **inventario operativo** (`operationalInventory`): sin novedad bloqueante y sin puesto de custodia no operativo (`armerillo_para_mantenimiento`, `armero`). **Armerillo** normal sí es operativo.
+- Solo armas en **inventario operativo** (`operationalInventory`): sin novedad bloqueante (`operationalBlockers`) y sin puesto activo `armerillo_para_mantenimiento` o `armero`. **Armerillo** (`armerillo`) sí es operativo.
 - Coordenadas priorizadas por:
   1. Puesto activo.
   2. Cliente del trabajador activo.
@@ -747,8 +796,9 @@ Reportes:
 - Historial por arma (asignaciones + documentos).
 - Auditoria filtrable por rango (30/90 dias) y modulo.
 - **Novedades operativas** (`WeaponIncidentReportController`, `WeaponIncidentReportService`): solo `incident_types.is_reportable` (hurtada, perdida, incautada, dar de baja). Los tipos legados en mantenimiento/armerillo permanecen en historial de la ficha pero no entran en KPIs, gráficos ni alta nueva. Botón **Lista** → modal con tabla; **Alpine.js** filtra filas.
-- **Custodia y taller** (`WeaponCustodyReportController`, `WeaponCustodyReportService`): armas con `posts.custody_role` en armerillo, armerillo para mantenimiento o armero.
-- **Custodia en ficha** (`WeaponCustodyController`, `ResponsibleCustodyPostService`, `WeaponCustodyService`): rutas `weapons.custody.*`; crea puestos por responsable con coordenadas del cliente activo; asignación interna solo al puesto (sin trabajador).
+- **Custodia y taller** (`WeaponCustodyReportController`, `WeaponCustodyReportService`, `/reports/weapon-custody`): KPIs y tabla por `custody_role` (armerillo, para mantenimiento, armero).
+- **Novedades — tipos no reportables:** `en_mantenimiento`, `para_mantenimiento`, `en_armerillo` permanecen en BD y en historial (`weapon_histories` / expediente); no se pueden crear por HTTP; el gráfico de incidencias del dashboard solo cuenta tipos reportables.
+- Ver **§5.3.1** para rutas `weapons.custody.*` y reglas operativas.
 
 Alertas:
 
@@ -871,6 +921,7 @@ El dashboard principal ya no es una pantalla de accesos rapidos. Ahora muestra i
 Comportamiento relevante:
 - El dashboard se refresca automaticamente sin recargar la pagina.
 - Eventos de dominio (armas, asignaciones, transferencias, documentos, novedades) se emiten via Laravel Reverb y el frontend escucha con Laravel Echo para sincronizar vistas sin recargar.
+- Grafico **Incidencias activas** (dashboard): solo tipos con `incident_types.is_reportable` (excluye mantenimiento, para mantenimiento y en armerillo).
 - El grafico `Renovaciones por mes`:
   - muestra solo meses con datos,
   - filtra por anio,
@@ -917,7 +968,9 @@ Se registran, entre otros:
 ### Nucleo operativo
 
 - `clients`
-- `posts` (incluye `archived_at`)
+- `posts` (incluye `archived_at`, `custody_role`, `owner_responsible_user_id`)
+- `incident_types` (incluye `is_reportable`, `blocks_operation`, reglas operativas)
+- `weapon_incidents`, `incident_modalities`, `weapon_incident_updates`, `weapon_incident_follow_ups`
 - `post_histories`
 - `workers` (incluye `archived_at`)
 - `worker_histories`
@@ -969,6 +1022,7 @@ Grupos funcionales:
   - `weapon-imports.index`, `weapon-imports.preview`, `weapon-imports.start`, `weapon-imports.process`, `weapon-imports.status`, `weapon-imports.execute`, `weapon-imports.discard` (centro de cargas masivas de armas)
   - `weapons.client_assignments.store`
   - `weapons.internal_assignments.store/retire`
+  - `weapons.custody.armerillo`, `weapons.custody.para_mantenimiento`, `weapons.custody.armero`, `weapons.custody.armero_posts.store`
   - `weapons.photos.*`
   - `weapons.documents.*`
   - `weapons.permit`, `weapons.permit.update`
@@ -980,7 +1034,7 @@ Grupos funcionales:
 - Cartera:
   - `portfolios.index/edit/update/transfer`.
 - Reportes y alertas:
-  - `reports.*`, `alerts.documents`, `alerts.documents.preview`, `alerts.documents.download`.
+  - `reports.*`, `reports.weapon-incidents.*`, `reports.weapon-custody.index`, `alerts.documents`, `alerts.documents.preview`, `alerts.documents.download`.
 - Dashboard:
   - `dashboard`, `dashboard.metrics`.
 - Mapa:
