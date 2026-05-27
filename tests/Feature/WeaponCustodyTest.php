@@ -201,7 +201,7 @@ class WeaponCustodyTest extends TestCase
             ->first();
 
         $this->assertNotNull($resolved);
-        $this->assertSame(WeaponIncident::OUTCOME_REINTEGRATED, $resolved->closure_outcome);
+        $this->assertSame(WeaponIncident::OUTCOME_ADMINISTRATIVE_CLOSURE, $resolved->closure_outcome);
 
         $listStatus = \App\Support\WeaponListStatusResolver::for($weapon);
         $this->assertSame(__('Armerillo'), $listStatus['text']);

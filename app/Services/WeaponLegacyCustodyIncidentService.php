@@ -28,7 +28,7 @@ class WeaponLegacyCustodyIncidentService
         foreach ($incidents as $incident) {
             $this->incidentService->close($incident, [
                 'status' => WeaponIncident::STATUS_RESOLVED,
-                'closure_outcome' => WeaponIncident::OUTCOME_REINTEGRATED,
+                'closure_outcome' => WeaponIncident::OUTCOME_ADMINISTRATIVE_CLOSURE,
                 'resolution_note' => $resolutionNote,
             ], $actor);
             $closed++;

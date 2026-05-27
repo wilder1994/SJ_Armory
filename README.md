@@ -626,7 +626,7 @@ Textos: `resources/lang/es/weapons.php` (notas de cierre automático de novedade
 
 Antes, una novedad legada abierta (p. ej. *En Mantenimiento*) podía seguir mostrándose en la columna **Estado** aunque el arma ya estuviera en *Armerillo Cali* en **Puesto o trabajador**. Ahora:
 
-1. **Al mover custodia** (`WeaponCustodyService`), `WeaponLegacyCustodyIncidentService` cierra en la misma transacción las novedades legadas abiertas con resultado `reintegrated` y nota en expediente.
+1. **Al mover custodia** (`WeaponCustodyService`), `WeaponLegacyCustodyIncidentService` cierra en la misma transacción las novedades legadas abiertas con resultado `administrative_closure` (cierre administrativo sin bloqueo operativo) y nota en expediente.
 2. **Al pintar el listado**, `WeaponListStatusResolver::for()` prioriza: novedad **bloqueante** → etiqueta de **custodia** (`PostCustodyRole::label`) → novedad legada sin custodia → documentos/alertas → Asignada/Sin destino.
 3. **Exportación XLSX/CSV** usa el mismo resolver en la columna Estado; la columna de novedad del export ignora tipos legados si ya no aplican.
 
