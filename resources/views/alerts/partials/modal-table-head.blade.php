@@ -2,12 +2,12 @@
 
 @php
     $alertTableColumns = [
-        ['key' => 'cliente', 'label' => __('Cliente')],
-        ['key' => 'tipo', 'label' => __('Tipo')],
-        ['key' => 'serie', 'label' => __('Serie')],
-        ['key' => 'vence', 'label' => __('Vence')],
-        ['key' => 'estado', 'label' => __('Estado')],
-        ['key' => 'observacion', 'label' => __('Observación')],
+        ['key' => 'cliente', 'label' => __('alerts.columns.cliente')],
+        ['key' => 'tipo', 'label' => __('alerts.columns.tipo')],
+        ['key' => 'serie', 'label' => __('alerts.columns.serie')],
+        ['key' => 'vence', 'label' => __('alerts.columns.vence')],
+        ['key' => 'estado', 'label' => __('alerts.columns.estado')],
+        ['key' => 'observacion', 'label' => __('alerts.columns.observacion')],
     ];
 @endphp
 
@@ -26,7 +26,7 @@
                         aria-expanded="false"
                         aria-haspopup="dialog"
                         aria-controls="alerts-column-filter-popover"
-                        aria-label="{{ __('Filtrar :column', ['column' => $column['label']]) }}"
+                        aria-label="{{ __('alerts.filter_column', ['column' => $column['label']]) }}"
                     >
                         <svg class="alerts-col-filter__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.94a.75.75 0 111.08 1.04l-4.24 4.5a.75.75 0 01-1.08 0l-4.24-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />

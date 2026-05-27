@@ -121,11 +121,7 @@
 @endpush
 
 @php
-    $alertMonthShortNames = [
-        __('Ene'), __('Feb'), __('Mar'), __('Abr'),
-        __('May'), __('Jun'), __('Jul'), __('Ago'),
-        __('Sep'), __('Oct'), __('Nov'), __('Dic'),
-    ];
+    $alertMonthShortNames = __('alerts.months_short');
 @endphp
 
 <x-app-layout>
@@ -133,10 +129,10 @@
         <div id="alerts-toolbar-shell" class="alerts-toolbar-shell">
             <div class="alerts-toolbar">
                 <div class="alerts-toolbar__top">
-                    <h2 class="alerts-toolbar__title">{{ __('Alertas Documentales') }}</h2>
+                    <h2 class="alerts-toolbar__title">{{ __('alerts.title') }}</h2>
                     <div class="alerts-toolbar__center">
                         <form id="alerts-filter-form" method="GET" action="{{ route('alerts.documents') }}" class="alerts-toolbar__filters">
-                            <span class="alerts-period-picker__label">{{ __('Meses') }}</span>
+                            <span class="alerts-period-picker__label">{{ __('alerts.months_label') }}</span>
                             <div class="alerts-period-picker">
                                 <button
                                     type="button"
@@ -146,7 +142,7 @@
                                     aria-controls="alerts-period-panel"
                                     aria-haspopup="dialog"
                                 >
-                                    <span id="alerts-period-summary" class="alerts-period-picker__summary">{{ __('Seleccionar meses') }}</span>
+                                    <span id="alerts-period-summary" class="alerts-period-picker__summary">{{ __('alerts.select_months') }}</span>
                                     <svg class="alerts-period-picker__chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                         <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.94a.75.75 0 111.08 1.04l-4.24 4.5a.75.75 0 01-1.08 0l-4.24-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                                     </svg>
@@ -160,14 +156,14 @@
                                     hidden
                                 >
                                     <div class="alerts-period-panel__header">
-                                        <button type="button" class="alerts-period-panel__nav" data-period-year-step="-1" aria-label="{{ __('AÃ±o anterior') }}">&#8249;</button>
+                                        <button type="button" class="alerts-period-panel__nav" data-period-year-step="-1" aria-label="{{ __('alerts.previous_year') }}">&#8249;</button>
                                         <span id="alerts-period-year" class="alerts-period-panel__year">{{ now()->year }}</span>
-                                        <button type="button" class="alerts-period-panel__nav" data-period-year-step="1" aria-label="{{ __('AÃ±o siguiente') }}">&#8250;</button>
+                                        <button type="button" class="alerts-period-panel__nav" data-period-year-step="1" aria-label="{{ __('alerts.next_year') }}">&#8250;</button>
                                     </div>
                                     <div id="alerts-period-month-grid" class="alerts-period-panel__grid"></div>
                                     <div class="alerts-period-panel__footer">
-                                        <span id="alerts-period-hint" class="alerts-period-panel__hint">{{ __('Marque uno o varios meses y pulse Filtrar.') }}</span>
-                                        <button type="button" id="alerts-period-clear" class="alerts-period-panel__clear">{{ __('Limpiar') }}</button>
+                                        <span id="alerts-period-hint" class="alerts-period-panel__hint">{{ __('alerts.period_hint_empty') }}</span>
+                                        <button type="button" id="alerts-period-clear" class="alerts-period-panel__clear">{{ __('alerts.clear') }}</button>
                                     </div>
                                 </div>
                             </div>
@@ -176,9 +172,9 @@
                                     <input type="hidden" name="months[]" value="{{ $monthValue }}">
                                 @endforeach
                             </div>
-                            <button type="submit">{{ __('Filtrar') }}</button>
+                            <button type="submit">{{ __('alerts.filter') }}</button>
                             @if ($hasMonthFilter)
-                                <a href="{{ route('alerts.documents') }}">{{ __('Todos') }}</a>
+                                <a href="{{ route('alerts.documents') }}">{{ __('alerts.all') }}</a>
                             @endif
                             <button
                                 id="alerts-preview-button"
@@ -188,12 +184,12 @@
                                 formtarget="_blank"
                                 class="alerts-toolbar__preview"
                                 @disabled(!$previewAvailable)
-                                title="{{ $previewAvailable ? __('Ver relaciÃ³n') : __('La vista previa PDF no estÃ¡ disponible') }}"
-                                aria-label="{{ __('Ver relaciÃ³n') }}"
+                                title="{{ $previewAvailable ? __('alerts.view_relation') : __('alerts.pdf_preview_unavailable') }}"
+                                aria-label="{{ __('alerts.view_relation') }}"
                             >
                                 <img src="{{ asset('images/Ojo.webp') }}" alt="" aria-hidden="true">
                             </button>
-                            <button id="alerts-download-button" type="submit" form="alerts-download-form" class="alerts-toolbar__download" disabled>{{ __('Descargar relaciÃ³n') }}</button>
+                            <button id="alerts-download-button" type="submit" form="alerts-download-form" class="alerts-toolbar__download" disabled>{{ __('alerts.download_relation') }}</button>
                         </form>
                     </div>
                     <a href="{{ route('reports.index') }}" class="alerts-toolbar__back">{{ __('Volver') }}</a>
@@ -201,9 +197,9 @@
                 <div class="alerts-toolbar__bottom">
                     <div class="alerts-toolbar__bottom-group">
                         <div class="alerts-toolbar__search">
-                            <input id="alerts-search" type="search" placeholder="{{ __('Buscar en todas las columnas...') }}">
+                            <input id="alerts-search" type="search" placeholder="{{ __('alerts.search_all_columns') }}">
                         </div>
-                        <div id="alerts-selected-count" class="alerts-toolbar__count">0 {{ __('seleccionadas') }}</div>
+                        <div id="alerts-selected-count" class="alerts-toolbar__count">0 {{ __('alerts.selected_count') }}</div>
                     </div>
                 </div>
             </div>
@@ -218,21 +214,21 @@
                     <span class="alerts-card__count">{{ $summaryCards['expired']['count'] }}</span>
                     <span class="alerts-card__title">{{ $summaryCards['expired']['label'] }}</span>
                     <span class="alerts-card__subtitle">{{ $summaryCards['expired']['subtitle'] }}</span>
-                    <span class="alerts-card__action">{{ __('Abrir detalle') }}</span>
+                    <span class="alerts-card__action">{{ __('alerts.open_detail') }}</span>
                 </button>
                 <button type="button" class="alerts-card alerts-card--expiring" data-open-modal="expiring">
                     <span class="alerts-card__eyebrow">{{ $monthLabel }}</span>
                     <span class="alerts-card__count">{{ $summaryCards['expiring']['count'] }}</span>
                     <span class="alerts-card__title">{{ $summaryCards['expiring']['label'] }}</span>
                     <span class="alerts-card__subtitle">{{ $summaryCards['expiring']['subtitle'] }}</span>
-                    <span class="alerts-card__action">{{ __('Abrir detalle') }}</span>
+                    <span class="alerts-card__action">{{ __('alerts.open_detail') }}</span>
                 </button>
                 <button type="button" class="alerts-card alerts-card--safe" data-open-modal="no_alerts">
                     <span class="alerts-card__eyebrow">{{ $monthLabel }}</span>
                     <span class="alerts-card__count">{{ $summaryCards['no_alerts']['count'] }}</span>
                     <span class="alerts-card__title">{{ $summaryCards['no_alerts']['label'] }}</span>
                     <span class="alerts-card__subtitle">{{ $summaryCards['no_alerts']['subtitle'] }}</span>
-                    <span class="alerts-card__action">{{ __('Abrir detalle') }}</span>
+                    <span class="alerts-card__action">{{ __('alerts.open_detail') }}</span>
                 </button>
             </section>
 
@@ -244,7 +240,7 @@
                     @endforeach
                 </div>
                 <div id="alerts-modal-layer" class="alerts-modal-layer hidden" aria-hidden="true">
-                    <button type="button" class="alerts-modal-backdrop" data-close-modal aria-label="{{ __('Cerrar') }}"></button>
+                    <button type="button" class="alerts-modal-backdrop" data-close-modal aria-label="{{ __('alerts.close') }}"></button>
                     <div class="alerts-modal-wrap">
                         <section class="alerts-modal-panel hidden" data-alerts-modal="expired" role="dialog" aria-modal="true" aria-labelledby="alerts-modal-title-expired">
                             <div class="alerts-modal-panel__header">
@@ -252,20 +248,20 @@
                                     <h3 id="alerts-modal-title-expired" class="alerts-modal-panel__title">{{ $summaryCards['expired']['label'] }}</h3>
                                     <div class="alerts-modal-panel__subtitle">{{ $summaryCards['expired']['subtitle'] }}</div>
                                     <div class="alerts-modal-panel__toolbar">
-                                        <span id="expired-visible-count" class="alerts-modal-panel__count" data-alerts-visible-count data-target-body="expired-alerts-body">0 {{ __('armas en la lista') }}</span>
-                                        <button type="button" class="alerts-modal-panel__clear-filters hidden" data-clear-column-filters="expired-alerts-body">{{ __('Limpiar filtros de columna') }}</button>
+                                        <span id="expired-visible-count" class="alerts-modal-panel__count" data-alerts-visible-count data-target-body="expired-alerts-body">0 {{ __('alerts.weapons_in_list') }}</span>
+                                        <button type="button" class="alerts-modal-panel__clear-filters hidden" data-clear-column-filters="expired-alerts-body">{{ __('alerts.clear_column_filters') }}</button>
                                         <label class="alerts-modal-panel__toggle">
                                             <input type="checkbox" class="alerts-exclude-novedades" data-target-body="expired-alerts-body">
-                                            <span>{{ __('Excluir armas no revalidables') }}</span>
+                                            <span>{{ __('alerts.exclude_non_revalidatable') }}</span>
                                         </label>
                                     </div>
                                 </div>
                                 <div class="alerts-modal-panel__header-actions">
                                     <label class="alerts-modal-panel__toggle">
                                         <input type="checkbox" class="alert-select-all-toggle" data-target-body="expired-alerts-body">
-                                        <span>{{ __('Seleccionar todo') }}</span>
+                                        <span>{{ __('alerts.select_all') }}</span>
                                     </label>
-                                    <button type="button" class="alerts-modal-panel__close" data-close-modal>{{ __('Cerrar') }}</button>
+                                    <button type="button" class="alerts-modal-panel__close" data-close-modal>{{ __('alerts.close') }}</button>
                                 </div>
                             </div>
                             <div class="alerts-modal-panel__body">
@@ -277,7 +273,7 @@
                                                 @php
                                                     $alert = \App\Support\WeaponDocumentAlert::forComplianceDocument($doc);
                                                     $excludedFromRevalidation = $doc->weapon?->isExcludedFromRevalidationDocuments() ?? false;
-                                                    $colCliente = $doc->weapon?->activeClientAssignment?->client?->name ?? __('Sin cliente');
+                                                    $colCliente = $doc->weapon?->activeClientAssignment?->client?->name ?? __('alerts.without_client');
                                                     $colTipo = $doc->weapon?->weapon_type ?? '-';
                                                     $colSerie = $doc->weapon?->serial_number ?? '-';
                                                     $colVence = $doc->valid_until?->format('Y-m-d') ?? '-';
@@ -288,7 +284,7 @@
                                                     <td class="px-3 py-2">
                                                         <label class="inline-flex items-center gap-2">
                                                             <input type="checkbox" name="weapon_ids[]" value="{{ $doc->weapon_id }}" class="alert-weapon-checkbox rounded border-gray-300 text-indigo-600">
-                                                            <span>{{ $doc->weapon?->activeClientAssignment?->client?->name ?? __('Sin cliente') }}</span>
+                                                            <span>{{ $doc->weapon?->activeClientAssignment?->client?->name ?? __('alerts.without_client') }}</span>
                                                         </label>
                                                     </td>
                                                     <td class="px-3 py-2">{{ $doc->weapon?->weapon_type ?? '-' }}</td>
@@ -300,7 +296,7 @@
                                             @empty
                                                 <tr class="alerts-empty-row"><td colspan="6" class="px-3 py-6 text-center text-gray-500">{{ $summaryCards['expired']['empty'] }}</td></tr>
                                             @endforelse
-                                            <tr id="expired-alerts-no-results" class="hidden"><td colspan="6" class="px-3 py-6 text-center text-gray-500">{{ __('No hay resultados con los filtros actuales.') }}</td></tr>
+                                            <tr id="expired-alerts-no-results" class="hidden"><td colspan="6" class="px-3 py-6 text-center text-gray-500">{{ __('alerts.no_results') }}</td></tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -313,20 +309,20 @@
                                     <h3 id="alerts-modal-title-expiring" class="alerts-modal-panel__title">{{ $summaryCards['expiring']['label'] }}</h3>
                                     <div class="alerts-modal-panel__subtitle">{{ $summaryCards['expiring']['subtitle'] }}</div>
                                     <div class="alerts-modal-panel__toolbar">
-                                        <span id="expiring-visible-count" class="alerts-modal-panel__count" data-alerts-visible-count data-target-body="expiring-alerts-body">0 {{ __('armas en la lista') }}</span>
-                                        <button type="button" class="alerts-modal-panel__clear-filters hidden" data-clear-column-filters="expiring-alerts-body">{{ __('Limpiar filtros de columna') }}</button>
+                                        <span id="expiring-visible-count" class="alerts-modal-panel__count" data-alerts-visible-count data-target-body="expiring-alerts-body">0 {{ __('alerts.weapons_in_list') }}</span>
+                                        <button type="button" class="alerts-modal-panel__clear-filters hidden" data-clear-column-filters="expiring-alerts-body">{{ __('alerts.clear_column_filters') }}</button>
                                         <label class="alerts-modal-panel__toggle">
                                             <input type="checkbox" class="alerts-exclude-novedades" data-target-body="expiring-alerts-body">
-                                            <span>{{ __('Excluir armas no revalidables') }}</span>
+                                            <span>{{ __('alerts.exclude_non_revalidatable') }}</span>
                                         </label>
                                     </div>
                                 </div>
                                 <div class="alerts-modal-panel__header-actions">
                                     <label class="alerts-modal-panel__toggle">
                                         <input type="checkbox" class="alert-select-all-toggle" data-target-body="expiring-alerts-body">
-                                        <span>{{ __('Seleccionar todo') }}</span>
+                                        <span>{{ __('alerts.select_all') }}</span>
                                     </label>
-                                    <button type="button" class="alerts-modal-panel__close" data-close-modal>{{ __('Cerrar') }}</button>
+                                    <button type="button" class="alerts-modal-panel__close" data-close-modal>{{ __('alerts.close') }}</button>
                                 </div>
                             </div>
                             <div class="alerts-modal-panel__body">
@@ -338,7 +334,7 @@
                                                 @php
                                                     $alert = \App\Support\WeaponDocumentAlert::forComplianceDocument($doc);
                                                     $excludedFromRevalidation = $doc->weapon?->isExcludedFromRevalidationDocuments() ?? false;
-                                                    $colCliente = $doc->weapon?->activeClientAssignment?->client?->name ?? __('Sin cliente');
+                                                    $colCliente = $doc->weapon?->activeClientAssignment?->client?->name ?? __('alerts.without_client');
                                                     $colTipo = $doc->weapon?->weapon_type ?? '-';
                                                     $colSerie = $doc->weapon?->serial_number ?? '-';
                                                     $colVence = $doc->valid_until?->format('Y-m-d') ?? '-';
@@ -349,7 +345,7 @@
                                                     <td class="px-3 py-2">
                                                         <label class="inline-flex items-center gap-2">
                                                             <input type="checkbox" name="weapon_ids[]" value="{{ $doc->weapon_id }}" class="alert-weapon-checkbox rounded border-gray-300 text-indigo-600">
-                                                            <span>{{ $doc->weapon?->activeClientAssignment?->client?->name ?? __('Sin cliente') }}</span>
+                                                            <span>{{ $doc->weapon?->activeClientAssignment?->client?->name ?? __('alerts.without_client') }}</span>
                                                         </label>
                                                     </td>
                                                     <td class="px-3 py-2">{{ $doc->weapon?->weapon_type ?? '-' }}</td>
@@ -361,7 +357,7 @@
                                             @empty
                                                 <tr class="alerts-empty-row"><td colspan="6" class="px-3 py-6 text-center text-gray-500">{{ $summaryCards['expiring']['empty'] }}</td></tr>
                                             @endforelse
-                                            <tr id="expiring-alerts-no-results" class="hidden"><td colspan="6" class="px-3 py-6 text-center text-gray-500">{{ __('No hay resultados con los filtros actuales.') }}</td></tr>
+                                            <tr id="expiring-alerts-no-results" class="hidden"><td colspan="6" class="px-3 py-6 text-center text-gray-500">{{ __('alerts.no_results') }}</td></tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -374,20 +370,20 @@
                                     <h3 id="alerts-modal-title-no-alerts" class="alerts-modal-panel__title">{{ $summaryCards['no_alerts']['label'] }}</h3>
                                     <div class="alerts-modal-panel__subtitle">{{ $summaryCards['no_alerts']['subtitle'] }}</div>
                                     <div class="alerts-modal-panel__toolbar">
-                                        <span id="no-alerts-visible-count" class="alerts-modal-panel__count" data-alerts-visible-count data-target-body="no-alerts-body">0 {{ __('armas en la lista') }}</span>
-                                        <button type="button" class="alerts-modal-panel__clear-filters hidden" data-clear-column-filters="no-alerts-body">{{ __('Limpiar filtros de columna') }}</button>
+                                        <span id="no-alerts-visible-count" class="alerts-modal-panel__count" data-alerts-visible-count data-target-body="no-alerts-body">0 {{ __('alerts.weapons_in_list') }}</span>
+                                        <button type="button" class="alerts-modal-panel__clear-filters hidden" data-clear-column-filters="no-alerts-body">{{ __('alerts.clear_column_filters') }}</button>
                                         <label class="alerts-modal-panel__toggle">
                                             <input type="checkbox" class="alerts-exclude-novedades" data-target-body="no-alerts-body">
-                                            <span>{{ __('Excluir armas no revalidables') }}</span>
+                                            <span>{{ __('alerts.exclude_non_revalidatable') }}</span>
                                         </label>
                                     </div>
                                 </div>
                                 <div class="alerts-modal-panel__header-actions">
                                     <label class="alerts-modal-panel__toggle">
                                         <input type="checkbox" class="alert-select-all-toggle" data-target-body="no-alerts-body">
-                                        <span>{{ __('Seleccionar todo') }}</span>
+                                        <span>{{ __('alerts.select_all') }}</span>
                                     </label>
-                                    <button type="button" class="alerts-modal-panel__close" data-close-modal>{{ __('Cerrar') }}</button>
+                                    <button type="button" class="alerts-modal-panel__close" data-close-modal>{{ __('alerts.close') }}</button>
                                 </div>
                             </div>
                             <div class="alerts-modal-panel__body">
@@ -398,31 +394,31 @@
                                             @forelse ($noAlerts as $doc)
                                                 @php
                                                     $excludedFromRevalidation = $doc->weapon?->isExcludedFromRevalidationDocuments() ?? false;
-                                                    $colCliente = $doc->weapon?->activeClientAssignment?->client?->name ?? __('Sin cliente');
+                                                    $colCliente = $doc->weapon?->activeClientAssignment?->client?->name ?? __('alerts.without_client');
                                                     $colTipo = $doc->weapon?->weapon_type ?? '-';
                                                     $colSerie = $doc->weapon?->serial_number ?? '-';
                                                     $colVence = $doc->valid_until?->format('Y-m-d') ?? '-';
-                                                    $colEstado = __('Sin alerta');
-                                                    $colObservacion = __('Fuera de la ventana de 120 días');
+                                                    $colEstado = __('alerts.no_alert');
+                                                    $colObservacion = __('alerts.outside_alert_window');
                                                     $searchText = strtolower(trim($colCliente . ' ' . $colTipo . ' ' . $colSerie . ' ' . $colVence . ' ' . $colEstado . ' ' . $colObservacion));
                                                 @endphp
                                                 <tr class="alert-document-row" data-blocking-novedad="{{ $excludedFromRevalidation ? '1' : '0' }}" data-col-cliente="{{ $colCliente }}" data-col-tipo="{{ $colTipo }}" data-col-serie="{{ $colSerie }}" data-col-vence="{{ $colVence }}" data-col-estado="{{ $colEstado }}" data-col-observacion="{{ $colObservacion }}" data-alert-search="{{ $searchText }}">
                                                     <td class="px-3 py-2">
                                                         <label class="inline-flex items-center gap-2">
                                                             <input type="checkbox" name="weapon_ids[]" value="{{ $doc->weapon_id }}" class="alert-weapon-checkbox rounded border-gray-300 text-indigo-600">
-                                                            <span>{{ $doc->weapon?->activeClientAssignment?->client?->name ?? __('Sin cliente') }}</span>
+                                                            <span>{{ $doc->weapon?->activeClientAssignment?->client?->name ?? __('alerts.without_client') }}</span>
                                                         </label>
                                                     </td>
                                                     <td class="px-3 py-2">{{ $doc->weapon?->weapon_type ?? '-' }}</td>
                                                     <td class="px-3 py-2">{{ $doc->weapon?->serial_number ?? '-' }}</td>
                                                     <td class="px-3 py-2">{{ $doc->valid_until?->format('Y-m-d') }}</td>
-                                                    <td class="px-3 py-2 text-green-700">{{ __('Sin alerta') }}</td>
-                                                    <td class="px-3 py-2 text-gray-700">{{ __('Fuera de la ventana de 120 días') }}</td>
+                                                    <td class="px-3 py-2 text-green-700">{{ __('alerts.no_alert') }}</td>
+                                                    <td class="px-3 py-2 text-gray-700">{{ __('alerts.outside_alert_window') }}</td>
                                                 </tr>
                                             @empty
                                                 <tr class="alerts-empty-row"><td colspan="6" class="px-3 py-6 text-center text-gray-500">{{ $summaryCards['no_alerts']['empty'] }}</td></tr>
                                             @endforelse
-                                            <tr id="no-alerts-no-results" class="hidden"><td colspan="6" class="px-3 py-6 text-center text-gray-500">{{ __('No hay resultados con los filtros actuales.') }}</td></tr>
+                                            <tr id="no-alerts-no-results" class="hidden"><td colspan="6" class="px-3 py-6 text-center text-gray-500">{{ __('alerts.no_results') }}</td></tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -441,16 +437,16 @@
                         type="search"
                         class="alerts-col-filter-popover__search"
                         data-col-filter-search
-                        placeholder="{{ __('Buscar en la listaâ€¦') }}"
+                        placeholder="{{ __('alerts.filter_search_placeholder') }}"
                         autocomplete="off"
                     >
                     <div class="alerts-col-filter-popover__actions">
-                        <button type="button" data-col-filter-select-all>{{ __('Seleccionar todo') }}</button>
-                        <button type="button" data-col-filter-clear>{{ __('Limpiar') }}</button>
+                        <button type="button" data-col-filter-select-all>{{ __('alerts.select_all') }}</button>
+                        <button type="button" data-col-filter-clear>{{ __('alerts.clear') }}</button>
                     </div>
                     <div class="alerts-col-filter-popover__list" data-col-filter-list></div>
                     <div class="alerts-col-filter-popover__footer">
-                        <button type="button" class="alerts-col-filter-popover__apply" data-col-filter-apply>{{ __('Aplicar') }}</button>
+                        <button type="button" class="alerts-col-filter-popover__apply" data-col-filter-apply>{{ __('alerts.apply') }}</button>
                     </div>
                 </div>
             </form>
@@ -464,22 +460,22 @@
             'previewAvailable' => $previewAvailable,
             'locale' => str_replace('_', '-', app()->getLocale()),
             'labels' => [
-                'selectMonths' => __('Seleccionar meses'),
-                'allMonths' => __('Todos los meses'),
-                'periodsSelected' => __('períodos seleccionados'),
-                'periodHintEmpty' => __('Marque uno o varios meses y pulse Filtrar.'),
-                'periodHintCount' => __('seleccionado(s). Pulse Filtrar para aplicar.'),
-                'armaEnLista' => __('arma en la lista'),
-                'armasEnLista' => __('armas en la lista'),
-                'descargarRelacion' => __('Descargar relaciÃ³n'),
-                'seleccionadas' => __('seleccionadas'),
-                'filterSearchPlaceholder' => __('Buscar en la listaâ€¦'),
-                'filterSelectAll' => __('Seleccionar todo'),
-                'filterClear' => __('Limpiar'),
-                'filterApply' => __('Aplicar'),
-                'clearColumnFilters' => __('Limpiar filtros de columna'),
-                'filterActive' => __('Filtro activo'),
-                'noFilterValues' => __('Sin valores para mostrar.'),
+                'selectMonths' => __('alerts.select_months'),
+                'allMonths' => __('alerts.all_months'),
+                'periodsSelected' => __('alerts.periods_selected'),
+                'periodHintEmpty' => __('alerts.period_hint_empty'),
+                'periodHintCount' => __('alerts.period_hint_count'),
+                'armaEnLista' => __('alerts.weapon_in_list'),
+                'armasEnLista' => __('alerts.weapons_in_list'),
+                'descargarRelacion' => __('alerts.download_relation'),
+                'seleccionadas' => __('alerts.selected_count'),
+                'filterSearchPlaceholder' => __('alerts.filter_search_placeholder'),
+                'filterSelectAll' => __('alerts.select_all'),
+                'filterClear' => __('alerts.clear'),
+                'filterApply' => __('alerts.apply'),
+                'clearColumnFilters' => __('alerts.clear_column_filters'),
+                'filterActive' => __('alerts.filter_active'),
+                'noFilterValues' => __('alerts.no_filter_values'),
             ],
         ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}
     </script>

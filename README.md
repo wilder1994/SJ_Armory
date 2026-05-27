@@ -19,7 +19,7 @@ Sistema web para **gestión de armamento**, **asignaciones operativas**, **trans
 - ✅ **Alertas documentales** (`/alerts/documents`): tarjetas vencidos / por vencer / sin alertas; filtro **multi-mes** con panel de checkboxes (varios meses y años); modales con **filtros por columna** tipo Excel (multi-selección en encabezado); exportación `.docx` y vista previa PDF con nombre `Revalidacion_{mes}_{año}`.
 - ✅ **Revista armas** (`/revista-armas`): acceso temporal (12 h) para colaboradores de campo; usuarios temporales reutilizables; subida de **4 fotos técnicas** a staging; el invitado solo entra con código vigente; staff al filtrar ve armas del **último acceso** (aunque haya vencido) para revisar fotos en staging (✓/✕, **Ver**, **Actualizar**); confirmaciones en **modales**; historial de notas en la ficha del arma; **ADMIN** con gestión global.
 - ✅ **Mapa**: geocodificación y visualización operativa; solo inventario operativo (sin novedad bloqueante ni custodia en taller / para mantenimiento).
-- ✅ **Auditoría**: registro de cambios y acciones críticas.
+- ✅ **Auditoría**: registro de cambios y acciones críticas; etiquetas legibles en español vía `resources/lang/es/audit.php`.
 - ✅ **Realtime (Broadcasting)**: Laravel Reverb + Echo (WebSockets) para sincronización en tiempo real.
 - ✅ **Notificaciones**: campana en barra superior con **solo no leídas**; menú de usuario con **Historial de notificaciones** (leídas y no leídas, mismo modal con `?history=1`); textos con actor y contexto (arma, cliente, puesto, etc.).
 - ✅ **Reportes — Novedades operativas** (`/reports/weapon-incidents`): solo tipos reportables (**hurtada**, **perdida**, **incautada**, **dar de baja**); mantenimiento/armerillo históricos quedan en notas de la ficha pero no suman en gráficos ni KPIs.
@@ -860,7 +860,7 @@ Controlador: `app/Http/Controllers/ResponsiblePortfolioController.php`
 
 ### 5.13 Reportes y alertas
 
-Controlador: `app/Http/Controllers/ReportController.php`  
+Controlador: `app/Http/Controllers/ReportController.php` (auditoría: etiquetas de entidad/acción en `resources/lang/es/audit.php`)  
 Controlador: `app/Http/Controllers/AlertsController.php`
 
 Reportes:
@@ -904,6 +904,7 @@ Alertas:
   - un toggle `Excluir armas no revalidables` que oculta hurtada / perdida / baja / incautación definitiva y las retira de la seleccion, vista previa y descarga (misma regla que el KPI del dashboard).
   - **Filtros por columna (estilo Excel)** en el encabezado de la tabla (Cliente, Tipo, Serie, Vence, Estado, Observación): botón ▼ por columna, lista con checkboxes (multi-selección), buscador interno, **Seleccionar todo** / **Limpiar** y **Aplicar**; icono activo cuando hay filtro; botón **Limpiar filtros de columna** en la barra del modal; listas en **cascada** (al filtrar una columna, las demás solo muestran valores compatibles). Se combinan en AND con la búsqueda global y el toggle de no revalidables.
   - JS: `resources/js/alerts-documents-modal.js` (carga diferida desde `app.js` solo en `[data-alerts-page]`); vista parcial `resources/views/alerts/partials/modal-table-head.blade.php`; filas con `data-col-*` por columna.
+  - Textos de UI en `resources/lang/es/alerts.php` (evita cadenas sueltas en Blade con riesgo de encoding).
   - Tras cambios en JS/CSS de alertas: `npm run build` (local) o `npm run build:deploy` (hosting) y subir `build_hosting/build/` → `public/build/`.
 - La ventana de alerta preventiva opera sobre 120 dias.
 
@@ -1174,8 +1175,11 @@ Rutas usadas por el dominio:
 - Fallback: `es`.
 - Middleware de locale: `App\Http\Middleware\SetLocale`.
 - Archivos:
-  - `resources/lang/es/*`
+  - `resources/lang/es/*` (incluye `audit.php` y `alerts.php` para etiquetas de auditoría y alertas documentales)
   - `resources/lang/en.json`
+- **UTF-8 en todo el stack**: `.editorconfig` (`charset = utf-8`), Blade/PHP en UTF-8, MySQL `utf8mb4` / `utf8mb4_unicode_ci` (`config/database.php`), `<meta charset="utf-8">` en layouts.
+- **Textos visibles al usuario**: preferir `__('clave')` / `trans('archivo.clave')` en archivos `lang` en lugar de cadenas con tildes embebidas en controladores o Blade (evita mojibake tipo `relaciÃ³n` o `sesiÃ³n` si un archivo se guarda con encoding incorrecto).
+- Tras editar vistas o `lang`: `php artisan view:clear` si se usó caché de vistas.
 
 ## 12. Instalacion local
 
