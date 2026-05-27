@@ -170,6 +170,65 @@ class WeaponCustodyTest extends TestCase
         $this->assertSame(1, $dashboard['kpis'][3]['value']);
     }
 
+    public function test_move_to_armerillo_closes_legacy_maintenance_incident(): void
+    {
+        $admin = User::factory()->create(['role' => 'ADMIN']);
+        [$weapon, $responsible] = $this->createWeaponContext('SER-CUST-LEGACY');
+
+        $maintenanceType = IncidentType::query()->where('code', 'en_mantenimiento')->firstOrFail();
+        WeaponIncident::query()->create([
+            'weapon_id' => $weapon->id,
+            'incident_type_id' => $maintenanceType->id,
+            'status' => WeaponIncident::STATUS_IN_PROGRESS,
+            'observation' => 'Legado abierto',
+            'event_at' => now()->subDay(),
+            'reported_at' => now()->subDay(),
+            'reported_by' => $admin->id,
+        ]);
+
+        $this->actingAs($responsible)
+            ->post(route('weapons.custody.armerillo', $weapon))
+            ->assertRedirect(route('weapons.show', $weapon));
+
+        $weapon->refresh()->load(['activePostAssignment.post', 'openIncidents.type']);
+
+        $this->assertSame(PostCustodyRole::ARMERILLO, $weapon->activePostAssignment?->post?->custody_role);
+        $this->assertTrue($weapon->openIncidents->isEmpty());
+
+        $resolved = WeaponIncident::query()
+            ->where('weapon_id', $weapon->id)
+            ->where('status', WeaponIncident::STATUS_RESOLVED)
+            ->first();
+
+        $this->assertNotNull($resolved);
+        $this->assertSame(WeaponIncident::OUTCOME_REINTEGRATED, $resolved->closure_outcome);
+
+        $listStatus = \App\Support\WeaponListStatusResolver::for($weapon);
+        $this->assertSame(__('Armerillo'), $listStatus['text']);
+    }
+
+    public function test_list_status_shows_custody_when_legacy_incident_open_without_custody_post(): void
+    {
+        $admin = User::factory()->create(['role' => 'ADMIN']);
+        [$weapon] = $this->createWeaponContext('SER-CUST-STATUS');
+
+        $maintenanceType = IncidentType::query()->where('code', 'en_mantenimiento')->firstOrFail();
+        WeaponIncident::query()->create([
+            'weapon_id' => $weapon->id,
+            'incident_type_id' => $maintenanceType->id,
+            'status' => WeaponIncident::STATUS_IN_PROGRESS,
+            'observation' => 'Sin custodia aún',
+            'event_at' => now()->subDay(),
+            'reported_at' => now()->subDay(),
+            'reported_by' => $admin->id,
+        ]);
+
+        $weapon->load(['openIncidents.type', 'documents', 'activePostAssignment.post']);
+
+        $listStatus = \App\Support\WeaponListStatusResolver::for($weapon);
+        $this->assertSame($maintenanceType->name, $listStatus['text']);
+    }
+
     public function test_cannot_create_non_reportable_incident_via_http(): void
     {
         $admin = User::factory()->create(['role' => 'ADMIN']);

@@ -19,6 +19,7 @@ class WeaponCustodyService
     public function __construct(
         private readonly ResponsibleCustodyPostService $custodyPosts,
         private readonly WeaponHistoryService $weaponHistory,
+        private readonly WeaponLegacyCustodyIncidentService $legacyIncidents,
     ) {}
 
     public function moveToArmerillo(Weapon $weapon, User $actor, ?string $reason = null): void
@@ -144,6 +145,10 @@ class WeaponCustodyService
                 null,
                 $hadActiveInternal,
             );
+
+            if (filled($post->custody_role)) {
+                $this->legacyIncidents->closeOpenLegacyIncidents($weapon, $actor, (string) $post->custody_role);
+            }
         });
 
         app()->terminating(function () use ($weapon, $activeClientAssignment, $post): void {

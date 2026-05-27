@@ -24,7 +24,7 @@ Sistema web para **gestión de armamento**, **asignaciones operativas**, **trans
 - ✅ **Notificaciones**: campana en barra superior con **solo no leídas**; menú de usuario con **Historial de notificaciones** (leídas y no leídas, mismo modal con `?history=1`); textos con actor y contexto (arma, cliente, puesto, etc.).
 - ✅ **Reportes — Novedades operativas** (`/reports/weapon-incidents`): solo tipos reportables (**hurtada**, **perdida**, **incautada**, **dar de baja**); mantenimiento/armerillo históricos quedan en notas de la ficha pero no suman en gráficos ni KPIs.
 - ✅ **Reportes — Custodia y taller** (`/reports/weapon-custody`): armas en puestos de armerillo, armerillo para mantenimiento o armero por responsable.
-- ✅ **Custodia en ficha del arma**: acciones **Enviar a mi armerillo** (operativa), **Para mantenimiento** y **Enviar a armero** (no operativas, sin novedad); un armerillo y armeros por responsable, ubicación inicial del cliente.
+- ✅ **Custodia en ficha del arma**: acciones **Enviar a mi armerillo** (operativa), **Para mantenimiento** y **Enviar a armero** (no operativas, sin novedad); un armerillo y armeros por responsable, ubicación inicial del cliente. Al mover custodia se cierran novedades legadas abiertas (`en_mantenimiento`, `para_mantenimiento`, `en_armerillo`) y el listado muestra **Estado** alineado con el puesto de custodia (`WeaponListStatusResolver`).
 
 ---
 
@@ -536,6 +536,7 @@ Reglas:
 
 Listado de armas (`resources/views/weapons/partials/index_rows.blade.php`):
 
+- Columna **Estado**: resuelta por `App\Support\WeaponListStatusResolver` — prioridad: novedad bloqueante → custodia activa (`custody_role` del puesto) → novedad legada abierta → documentos/alertas → Asignada/Sin destino. Así **Estado** y **Puesto o trabajador** quedan alineados cuando el arma está en armerillo, para mantenimiento o armero.
 - Columna **Puesto o trabajador**: si hay trabajador activo, muestra el **nombre** del trabajador (tambien cuando hay puesto combinado); si solo hay puesto, el nombre del puesto.
 - Columna **Cedula**: documento del trabajador activo, o `-` si no hay trabajador.
 - **Filtros del listado** (`weapons/index`): panel sin título; fila 1 con **Inventario, Tipo, Cliente, Responsable, Destino, Fecha** (rango de vencimiento del permiso con **Litepicker**: popover anclado, dos calendarios independientes `splitView`, desplegables de mes/año, `selectForward` para que el fin sea ≥ inicio; confirmación solo con **Listo** del popover); fila 2 con **Limpiar filtro** / **Aplicar filtro**. JS: `resources/js/weapons-filter-date.js`. Grid proporcional en escritorio (sin scroll horizontal).
@@ -585,8 +586,10 @@ Sin pie duplicado de Litepicker (solo **Limpiar** / **Listo** del popover). Tras
 
 Vista: `resources/views/weapons/partials/assignment_custody.blade.php` (bloque dentro de **Asignación interna** en `weapons/show`).  
 Controlador: `app/Http/Controllers/WeaponCustodyController.php`  
-Servicios: `ResponsibleCustodyPostService`, `WeaponCustodyService`  
-Constantes: `app/Support/PostCustodyRole.php`
+Servicios: `ResponsibleCustodyPostService`, `WeaponCustodyService`, `WeaponLegacyCustodyIncidentService`  
+Soporte: `PostCustodyRole`, `LegacyCustodyIncidentTypeCode`, `WeaponListStatusResolver`  
+Listado/export: `resources/views/weapons/partials/index_rows.blade.php`, `WeaponController::weaponExportRow()`  
+Textos: `resources/lang/es/weapons.php` (notas de cierre automático de novedades legadas)
 
 **Separación de conceptos**
 
@@ -602,9 +605,9 @@ Constantes: `app/Support/PostCustodyRole.php`
 
 | Acción | Ruta | Efecto |
 |--------|------|--------|
-| Enviar a mi armerillo | `POST weapons/{weapon}/custody/armerillo` | Cierra trabajador activo; asigna solo puesto armerillo del responsable (coords iniciales del **cliente activo**). |
-| Para mantenimiento | `POST weapons/{weapon}/custody/para-mantenimiento` | Puesto armerillo para mantenimiento; fuera de operación. |
-| Enviar a armero | `POST weapons/{weapon}/custody/armero` | Puesto armero elegido (debe tener ubicación en mapa). |
+| Enviar a mi armerillo | `POST weapons/{weapon}/custody/armerillo` | Cierra trabajador activo; asigna puesto armerillo del responsable (coords iniciales del **cliente activo**). Cierra novedades legadas abiertas. **Estado** en listado: *Armerillo*. |
+| Para mantenimiento | `POST weapons/{weapon}/custody/para-mantenimiento` | Puesto armerillo para mantenimiento; fuera de operación. Cierra novedades legadas abiertas. **Estado**: *Armerillo — Para mantenimiento*. |
+| Enviar a armero | `POST weapons/{weapon}/custody/armero` | Puesto armero elegido (ubicación en mapa obligatoria). Cierra novedades legadas abiertas. **Estado**: *Armero / taller*. |
 | Registrar armero | `POST weapons/{weapon}/custody/armero-posts` | Alta de puesto `armero` del responsable en el cliente del arma. |
 
 **Reglas técnicas**
@@ -619,9 +622,26 @@ Constantes: `app/Support/PostCustodyRole.php`
 
 **Inventario y mapa:** `Weapon::scopeOperationalInventory()` excluye novedades bloqueantes y puestos `armerillo_para_mantenimiento` / `armero`; **armerillo** normal cuenta como operativo.
 
+**Sincronización Estado ↔ custodia (listado y exportación)**
+
+Antes, una novedad legada abierta (p. ej. *En Mantenimiento*) podía seguir mostrándose en la columna **Estado** aunque el arma ya estuviera en *Armerillo Cali* en **Puesto o trabajador**. Ahora:
+
+1. **Al mover custodia** (`WeaponCustodyService`), `WeaponLegacyCustodyIncidentService` cierra en la misma transacción las novedades legadas abiertas con resultado `reintegrated` y nota en expediente.
+2. **Al pintar el listado**, `WeaponListStatusResolver::for()` prioriza: novedad **bloqueante** → etiqueta de **custodia** (`PostCustodyRole::label`) → novedad legada sin custodia → documentos/alertas → Asignada/Sin destino.
+3. **Exportación XLSX/CSV** usa el mismo resolver en la columna Estado; la columna de novedad del export ignora tipos legados si ya no aplican.
+
+> 🧩 **Despliegue:** solo PHP, Blade y lang — **no** requiere `npm run build` ni subir `public/build/`.
+
 **Reporte:** `GET /reports/weapon-custody` — listado de armas con puesto de custodia activo.
 
-Tests: `tests/Feature/WeaponCustodyTest.php`, `tests/Feature/WeaponOperationalInventoryTest.php` (mapa + reporte).
+**Limpieza de datos históricos** (armas ya en custodia antes del fix):
+
+```bash
+php artisan weapons:close-stale-legacy-custody-incidents --dry-run
+php artisan weapons:close-stale-legacy-custody-incidents
+```
+
+Tests: `tests/Feature/WeaponCustodyTest.php` (incl. cierre de legado al enviar a armerillo), `tests/Feature/WeaponOperationalInventoryTest.php` (mapa + reporte).
 
 ### 5.4 Transferencias
 

@@ -1,32 +1,13 @@
 @forelse ($weapons as $weapon)
     @php
-        $renewalDocument = $weapon->documents->firstWhere('is_renewal', true) ?? $weapon->documents->firstWhere('is_permit', true);
-        $renewalAlert = \App\Support\WeaponDocumentAlert::forComplianceDocument($renewalDocument);
-        $manualInProcess = $weapon->documents
-            ->filter(fn ($doc) => !($doc->is_permit || $doc->is_renewal))
-            ->first(fn ($doc) => ($doc->status ?? '') === 'En proceso');
-        $openIncident = $weapon->openIncidents->first();
+        $listStatus = \App\Support\WeaponListStatusResolver::for($weapon);
+        $statusText = $listStatus['text'];
+        $statusClass = $listStatus['text_class'];
+        $incidentTone = $listStatus['tone'];
+        $rowClass = $listStatus['row_class'];
         $internalAssignment = $weapon->activeWorkerAssignment ?? $weapon->activePostAssignment;
         $imprintChecked = $weapon->imprint_month === now()->format('Y-m');
         $canToggleImprint = auth()->user()?->isAdmin();
-        $rowClass = $openIncident ? 'bg-red-50' : ($manualInProcess ? 'bg-red-100' : ($renewalAlert['row_class'] ?? ''));
-        $statusText = $openIncident
-            ? trim(($openIncident->type?->name ?? __('Novedad')) . ($openIncident->modality ? ': ' . $openIncident->modality->name : ''))
-            : ($manualInProcess
-                ? trim(($manualInProcess->document_name ?: 'Documento') . ': ' . ($manualInProcess->observations ?: 'En proceso'))
-                : ($renewalAlert['observation'] !== '-' ? $renewalAlert['observation'] : ($weapon->operationalDisplayClient() ? __('Asignada') : __('Sin destino'))));
-        $statusClass = $openIncident ? 'text-red-700' : ($manualInProcess ? 'text-red-700' : ($renewalAlert['text_class'] ?? ''));
-        $incidentTone = $openIncident
-            ? 'danger'
-            : ($manualInProcess
-                ? 'danger'
-            : (($renewalAlert['severity'] ?? 0) >= 3
-                ? 'danger'
-                : (($renewalAlert['severity'] ?? 0) >= 2
-                    ? 'warning'
-                    : (($renewalAlert['severity'] ?? 0) >= 1
-                        ? 'notice'
-                        : ($weapon->operationalDisplayClient() || $weapon->activePostAssignment || $weapon->activeWorkerAssignment ? 'ok' : 'neutral')))));
         $destinationLabel = '-';
         if ($weapon->activeWorkerAssignment) {
             $destinationLabel = $weapon->activeWorkerAssignment->worker?->name ?? '-';

@@ -15,6 +15,7 @@ use App\Models\WeaponPhoto;
 use App\Services\WeaponDocumentService;
 use App\Services\WeaponHistoryService;
 use App\Support\WeaponDocumentAlert;
+use App\Support\WeaponListStatusResolver;
 use App\Support\WeaponPhotoExportHighlight;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -1377,22 +1378,10 @@ XML;
 
     private function weaponExportRow(Weapon $weapon): array
     {
-        $renewalDocument = $weapon->documents->firstWhere('is_renewal', true)
-            ?? $weapon->documents->firstWhere('is_permit', true);
-        $renewalAlert = WeaponDocumentAlert::forComplianceDocument($renewalDocument);
-        $manualInProcess = $weapon->documents
-            ->filter(fn ($doc) => ! ($doc->is_permit || $doc->is_renewal))
-            ->first(fn ($doc) => ($doc->status ?? '') === 'En proceso');
-        $openIncident = $weapon->openIncidents->first();
+        $listStatus = WeaponListStatusResolver::for($weapon);
+        $statusText = $listStatus['text'];
+        $incidentText = WeaponListStatusResolver::openIncidentLabelForExport($weapon);
         $internalAssignment = $weapon->activeWorkerAssignment ?? $weapon->activePostAssignment;
-        $statusText = $manualInProcess
-            ? trim(($manualInProcess->document_name ?: 'Documento').': '.($manualInProcess->observations ?: 'En proceso'))
-            : ($renewalAlert['observation'] !== '-'
-                ? $renewalAlert['observation']
-                : ($weapon->operationalDisplayClient() ? 'Asignada' : 'Sin destino'));
-        $incidentText = $openIncident
-            ? trim(($openIncident->type?->name ?? 'Novedad').($openIncident->modality ? ' / '.$openIncident->modality->name : ''))
-            : 'Sin novedades';
 
         $destination = '-';
         if ($weapon->activeWorkerAssignment) {
