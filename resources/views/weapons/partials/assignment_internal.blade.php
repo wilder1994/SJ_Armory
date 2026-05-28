@@ -63,23 +63,121 @@
 
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                    <label class="text-sm text-gray-600">{{ __('Puesto') }}</label>
-                    <select name="post_id" class="mt-1 block w-full rounded-md border-gray-300 text-sm" data-internal-post-select>
-                        <option value="">{{ __('Seleccione') }}</option>
-                        @foreach ($posts as $post)
-                            <option value="{{ $post->id }}" @selected((string) old('post_id') === (string) $post->id)>{{ $post->name }}</option>
-                        @endforeach
-                    </select>
+                    <label class="text-sm text-gray-600" for="internal-post-search">{{ __('Puesto') }}</label>
+                    <div
+                        class="relative mt-1"
+                        data-assignment-combobox
+                        data-empty-message="{{ __('No se encontraron puestos.') }}"
+                    >
+                        <select name="post_id" class="hidden" data-combobox-select data-internal-post-select>
+                            <option value="">{{ __('Seleccione') }}</option>
+                            @foreach ($posts as $post)
+                                <option
+                                    value="{{ $post->id }}"
+                                    data-label="{{ $post->name }}"
+                                    data-subtitle="{{ $post->address }}"
+                                    data-search-text="{{ $post->name }} {{ $post->address }}"
+                                    @selected((string) old('post_id') === (string) $post->id)
+                                >{{ $post->name }}</option>
+                            @endforeach
+                        </select>
+
+                        <input
+                            type="text"
+                            id="internal-post-search"
+                            data-combobox-search
+                            class="block w-full rounded-md border-gray-300 pr-10 text-sm shadow-sm"
+                            placeholder="{{ __('Buscar puesto...') }}"
+                            autocomplete="off"
+                            spellcheck="false"
+                            role="combobox"
+                            aria-expanded="false"
+                            aria-controls="internal-post-options"
+                            @disabled(!$weapon->activeClientAssignment)
+                        >
+
+                        <button
+                            type="button"
+                            data-combobox-toggle
+                            class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 disabled:cursor-not-allowed disabled:opacity-50"
+                            aria-label="{{ __('Mostrar puestos') }}"
+                            @disabled(!$weapon->activeClientAssignment)
+                        >
+                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+
+                        <div
+                            id="internal-post-options"
+                            data-combobox-panel
+                            class="absolute left-0 right-0 z-20 mt-2 hidden max-h-72 overflow-y-auto rounded-md border border-slate-200 bg-white py-1 shadow-xl"
+                            role="listbox"
+                        ></div>
+                    </div>
                     <x-input-error :messages="$errors->get('post_id')" class="mt-2" />
                 </div>
                 <div>
-                    <label class="text-sm text-gray-600">{{ __('Trabajador') }}</label>
-                    <select name="worker_id" class="mt-1 block w-full rounded-md border-gray-300 text-sm" data-internal-worker-select>
-                        <option value="">{{ __('Seleccione') }}</option>
-                        @foreach ($workers as $worker)
-                            <option value="{{ $worker->id }}" @selected((string) old('worker_id') === (string) $worker->id)>{{ $worker->name }} ({{ \App\Models\Worker::roleLabels()[$worker->role] ?? $worker->role }})</option>
-                        @endforeach
-                    </select>
+                    <label class="text-sm text-gray-600" for="internal-worker-search">{{ __('Trabajador') }}</label>
+                    <div
+                        class="relative mt-1"
+                        data-assignment-combobox
+                        data-empty-message="{{ __('No se encontraron trabajadores.') }}"
+                    >
+                        <select name="worker_id" class="hidden" data-combobox-select data-internal-worker-select>
+                            <option value="">{{ __('Seleccione') }}</option>
+                            @foreach ($workers as $worker)
+                                @php
+                                    $workerRoleLabel = \App\Models\Worker::roleLabels()[$worker->role] ?? $worker->role;
+                                    $workerSearchText = trim(implode(' ', array_filter([
+                                        $worker->name,
+                                        $worker->document,
+                                        $workerRoleLabel,
+                                    ])));
+                                @endphp
+                                <option
+                                    value="{{ $worker->id }}"
+                                    data-label="{{ $worker->name }}"
+                                    data-subtitle="{{ $workerRoleLabel }}{{ $worker->document ? ' · ' . $worker->document : '' }}"
+                                    data-search-text="{{ $workerSearchText }}"
+                                    @selected((string) old('worker_id') === (string) $worker->id)
+                                >{{ $worker->name }} ({{ $workerRoleLabel }})</option>
+                            @endforeach
+                        </select>
+
+                        <input
+                            type="text"
+                            id="internal-worker-search"
+                            data-combobox-search
+                            class="block w-full rounded-md border-gray-300 pr-10 text-sm shadow-sm"
+                            placeholder="{{ __('Buscar trabajador...') }}"
+                            autocomplete="off"
+                            spellcheck="false"
+                            role="combobox"
+                            aria-expanded="false"
+                            aria-controls="internal-worker-options"
+                            @disabled(!$weapon->activeClientAssignment)
+                        >
+
+                        <button
+                            type="button"
+                            data-combobox-toggle
+                            class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 disabled:cursor-not-allowed disabled:opacity-50"
+                            aria-label="{{ __('Mostrar trabajadores') }}"
+                            @disabled(!$weapon->activeClientAssignment)
+                        >
+                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+
+                        <div
+                            id="internal-worker-options"
+                            data-combobox-panel
+                            class="absolute left-0 right-0 z-20 mt-2 hidden max-h-72 overflow-y-auto rounded-md border border-slate-200 bg-white py-1 shadow-xl"
+                            role="listbox"
+                        ></div>
+                    </div>
                     <x-input-error :messages="$errors->get('worker_id')" class="mt-2" />
                 </div>
                 <div>
@@ -190,11 +288,12 @@
             }
             errorBox.textContent = requiredMessage;
             errorBox.classList.remove('hidden');
-            postSelect?.focus();
+            document.getElementById('internal-post-search')?.focus();
         };
 
         postSelect?.addEventListener('change', hideRequiredError);
         workerSelect?.addEventListener('change', hideRequiredError);
+        form.addEventListener('assignment-combobox:change', hideRequiredError);
 
         form.addEventListener('submit', (event) => {
             if (!hasSelection()) {

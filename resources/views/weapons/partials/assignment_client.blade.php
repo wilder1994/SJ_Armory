@@ -12,8 +12,14 @@
             <div class="md:col-span-5">
                 <label class="text-xs font-medium text-gray-500 mb-1 block">{{ __('Cliente') }}</label>
 
-                <div class="relative">
-                    <select name="client_id" id="destination-client-select" class="hidden" required>
+                <div
+                    class="relative"
+                    data-assignment-combobox
+                    data-empty-message="{{ __('No se encontraron clientes.') }}"
+                    data-selected-badge="{{ __('Actual') }}"
+                    id="destination-client-combobox"
+                >
+                    <select name="client_id" id="destination-client-select" class="hidden" required data-combobox-select>
                         <option value="">{{ __('Seleccione') }}</option>
                         @foreach ($clientOptions as $client)
                             @php
@@ -21,6 +27,8 @@
                             @endphp
                             <option
                                 value="{{ $client->id }}"
+                                data-label="{{ $client->name }}"
+                                data-search-text="{{ $client->name }}"
                                 data-responsible-id="{{ $responsibleMeta['id'] ?? '' }}"
                                 data-responsible-name="{{ $responsibleMeta['name'] ?? '' }}"
                                 @selected(old('client_id', $weapon->activeClientAssignment?->client_id) == $client->id)
@@ -33,6 +41,7 @@
                     <input
                         type="text"
                         id="destination-client-search"
+                        data-combobox-search
                         class="block w-full rounded-md border-gray-300 pr-10 text-sm shadow-sm"
                         placeholder="{{ __('Buscar cliente...') }}"
                         autocomplete="off"
@@ -45,6 +54,7 @@
                     <button
                         type="button"
                         id="destination-client-toggle"
+                        data-combobox-toggle
                         class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500"
                         aria-label="{{ __('Mostrar clientes') }}"
                     >
@@ -55,6 +65,7 @@
 
                     <div
                         id="destination-client-options"
+                        data-combobox-panel
                         class="absolute left-0 right-0 z-20 mt-2 hidden max-h-72 overflow-y-auto rounded-md border border-slate-200 bg-white py-1 shadow-xl"
                         role="listbox"
                     ></div>
@@ -101,25 +112,16 @@
 <script>
     (() => {
         const form = document.getElementById('destination-operational-form');
+        const clientCombobox = document.getElementById('destination-client-combobox');
         const clientSelect = document.getElementById('destination-client-select');
-        const clientSearch = document.getElementById('destination-client-search');
-        const clientToggle = document.getElementById('destination-client-toggle');
-        const clientOptionsPanel = document.getElementById('destination-client-options');
         const responsibleDisplay = document.getElementById('destination-responsible-display');
         const responsibleIdInput = document.getElementById('destination-responsible-id');
         const modal = document.getElementById('missing-responsible-modal');
         const closeBtn = document.getElementById('missing-responsible-modal-close');
 
-        if (!form || !clientSelect || !clientSearch || !clientToggle || !clientOptionsPanel || !responsibleDisplay || !responsibleIdInput || !modal || !closeBtn) {
+        if (!form || !clientCombobox || !clientSelect || !responsibleDisplay || !responsibleIdInput || !modal || !closeBtn) {
             return;
         }
-
-        const availableOptions = Array.from(clientSelect.options).filter((option) => option.value !== '');
-
-        const normalizeText = (value) => String(value || '')
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .toLowerCase();
 
         const showModal = () => {
             modal.classList.remove('hidden');
@@ -148,100 +150,10 @@
             return responsibleId !== '';
         };
 
-        const closeClientOptions = () => {
-            clientOptionsPanel.classList.add('hidden');
-            clientSearch.setAttribute('aria-expanded', 'false');
-        };
-
-        const openClientOptions = () => {
-            clientOptionsPanel.classList.remove('hidden');
-            clientSearch.setAttribute('aria-expanded', 'true');
-        };
-
-        const syncSearchFromSelection = () => {
-            const option = clientSelect.selectedOptions?.[0];
-            clientSearch.value = option?.value ? option.textContent.trim() : '';
-        };
-
-        const renderClientOptions = (term = '') => {
-            const normalizedTerm = normalizeText(term);
-            const filtered = normalizedTerm === ''
-                ? availableOptions
-                : availableOptions.filter((option) => normalizeText(option.textContent).includes(normalizedTerm));
-
-            if (filtered.length === 0) {
-                clientOptionsPanel.innerHTML = `<div class="px-3 py-2 text-sm text-slate-500">{{ __('No se encontraron clientes.') }}</div>`;
-                openClientOptions();
-                return;
-            }
-
-            clientOptionsPanel.innerHTML = filtered.map((option) => {
-                const isSelected = clientSelect.value === option.value;
-                const selectedMarkup = isSelected
-                    ? '<span class="text-xs font-semibold uppercase tracking-wide">Actual</span>'
-                    : '';
-
-                return `
-                    <button
-                        type="button"
-                        class="flex w-full items-center justify-between px-3 py-2 text-left text-sm transition hover:bg-slate-50 ${isSelected ? 'bg-indigo-50 text-indigo-700' : 'text-slate-700'}"
-                        data-client-value="${option.value}"
-                    >
-                        <span>${option.textContent.trim()}</span>
-                        ${selectedMarkup}
-                    </button>
-                `;
-            }).join('');
-
-            openClientOptions();
-        };
-
-        const applySelectedClient = (value) => {
-            clientSelect.value = value;
-            syncSearchFromSelection();
-
-            if (!syncResponsible()) {
+        clientCombobox.addEventListener('assignment-combobox:change', () => {
+            if (!syncResponsible() && clientSelect.value) {
                 showModal();
             }
-
-            closeClientOptions();
-        };
-
-        clientSearch.addEventListener('focus', () => {
-            renderClientOptions(clientSearch.value);
-        });
-
-        clientSearch.addEventListener('input', () => {
-            const exactMatch = availableOptions.find((option) => option.textContent.trim() === clientSearch.value.trim());
-
-            if (exactMatch) {
-                clientSelect.value = exactMatch.value;
-                syncResponsible();
-            } else {
-                clientSelect.value = '';
-                syncResponsible();
-            }
-
-            renderClientOptions(clientSearch.value);
-        });
-
-        clientToggle.addEventListener('click', () => {
-            if (clientOptionsPanel.classList.contains('hidden')) {
-                renderClientOptions(clientSearch.value);
-                clientSearch.focus();
-                return;
-            }
-
-            closeClientOptions();
-        });
-
-        clientOptionsPanel.addEventListener('click', (event) => {
-            const optionButton = event.target.closest('[data-client-value]');
-            if (!optionButton) {
-                return;
-            }
-
-            applySelectedClient(optionButton.dataset.clientValue);
         });
 
         form.addEventListener('submit', (event) => {
@@ -258,16 +170,6 @@
             }
         });
 
-        document.addEventListener('click', (event) => {
-            if (!event.target.closest('#destination-client-search') &&
-                !event.target.closest('#destination-client-toggle') &&
-                !event.target.closest('#destination-client-options')) {
-                closeClientOptions();
-                syncSearchFromSelection();
-            }
-        });
-
-        syncSearchFromSelection();
         syncResponsible();
 
         @if ($errors->has('client_id') && str_contains((string) $errors->first('client_id'), 'Primero debe realizar la asignación del responsable.'))

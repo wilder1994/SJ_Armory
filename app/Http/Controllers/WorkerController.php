@@ -49,7 +49,6 @@ class WorkerController extends Controller
 
     public function index(Request $request)
     {
-        $query = Worker::with(['client', 'responsible']);
         $user = $request->user();
         $search = trim((string) $request->input('q', ''));
         $clientId = $request->integer('client_id');
@@ -61,10 +60,13 @@ class WorkerController extends Controller
             $archiveFilter = 'active';
         }
 
+        $scopedQuery = Worker::query();
         if ($user?->isResponsible() && !$user?->isAdmin()) {
-            $clientIds = $user->clients()->pluck('clients.id');
-            $query->whereIn('client_id', $clientIds);
+            $scopedQuery->whereIn('client_id', $user->clients()->pluck('clients.id'));
         }
+
+        $workersGlobalTotal = (clone $scopedQuery)->count();
+        $query = (clone $scopedQuery)->with(['client', 'responsible']);
 
         if ($archiveFilter === 'archived') {
             $query->archived();
@@ -105,6 +107,7 @@ class WorkerController extends Controller
             return response()->json([
                 'tbody' => view('workers.partials.index_rows', compact('workers', 'roles'))->render(),
                 'pagination' => view('workers.partials.index_pagination', compact('workers'))->render(),
+                'total_global' => $workersGlobalTotal,
             ])
                 ->withHeaders([
                     'Cache-Control' => 'private, no-store, must-revalidate',
@@ -124,6 +127,7 @@ class WorkerController extends Controller
                 'responsibleId',
                 'archiveFilter',
                 'showResponsibleFilter',
+                'workersGlobalTotal',
             ))
             ->withHeaders([
                 'Cache-Control' => 'private, no-store, must-revalidate',

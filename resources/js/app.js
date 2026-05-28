@@ -5,8 +5,10 @@ import './realtime-weapons-sync';
 import './realtime-posts-workers-sync';
 import './reports-incidents';
 import './nav-notifications-realtime';
+import { initAssignmentComboboxes } from './assignment-combobox';
 
 document.addEventListener('DOMContentLoaded', () => {
+    initAssignmentComboboxes();
     const alertsPage = document.querySelector('[data-alerts-page]');
     if (alertsPage) {
         import('./alerts-documents-modal.js').then(({ initAlertsDocumentsPage }) => {

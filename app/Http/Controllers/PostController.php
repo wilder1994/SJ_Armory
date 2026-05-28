@@ -49,7 +49,6 @@ class PostController extends Controller
 
     public function index(Request $request)
     {
-        $query = Post::with('client');
         $user = $request->user();
         $search = trim((string) $request->input('q', ''));
         $clientId = $request->integer('client_id');
@@ -58,10 +57,13 @@ class PostController extends Controller
             $archiveFilter = 'active';
         }
 
+        $scopedQuery = Post::query();
         if ($user?->isResponsible() && !$user?->isAdmin()) {
-            $clientIds = $user->clients()->pluck('clients.id');
-            $query->whereIn('client_id', $clientIds);
+            $scopedQuery->whereIn('client_id', $user->clients()->pluck('clients.id'));
         }
+
+        $postsGlobalTotal = (clone $scopedQuery)->count();
+        $query = (clone $scopedQuery)->with('client');
 
         if ($archiveFilter === 'archived') {
             $query->archived();
@@ -88,6 +90,7 @@ class PostController extends Controller
             return response()->json([
                 'tbody' => view('posts.partials.index_rows', compact('posts'))->render(),
                 'pagination' => view('posts.partials.index_pagination', compact('posts'))->render(),
+                'total_global' => $postsGlobalTotal,
             ])
                 ->withHeaders([
                     'Cache-Control' => 'private, no-store, must-revalidate',
@@ -102,7 +105,7 @@ class PostController extends Controller
         }
 
         return response()
-            ->view('posts.index', compact('posts', 'clients', 'search', 'clientId', 'archiveFilter'))
+            ->view('posts.index', compact('posts', 'clients', 'search', 'clientId', 'archiveFilter', 'postsGlobalTotal'))
             ->withHeaders([
                 'Cache-Control' => 'private, no-store, must-revalidate',
                 'Vary' => 'Cookie',

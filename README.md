@@ -709,7 +709,8 @@ Controlador: `app/Http/Controllers/PostController.php`
   - conserva la ubicacion si luego solo se corrige la direccion.
 - Si el usuario diligencia manualmente direccion, municipio y departamento:
   - el sistema intenta calcular latitud y longitud antes de guardar.
-- Filtros por cliente y texto.
+- Filtros por cliente y texto (una fila horizontal).
+- **Total global** en la misma fila de filtros (`Total: N puestos`): cuenta todos los puestos del ámbito del usuario (activos + archivados), sin depender de los filtros del formulario. JSON AJAX (`PostChanged`): `total_global` para actualizar el contador vía `realtime-posts-workers-sync.js`.
 
 ### 5.7 Trabajadores
 
@@ -718,7 +719,7 @@ Controlador: `app/Http/Controllers/WorkerController.php`
 - CRUD con **archivo** / **reactivación** (no eliminación física); al archivar se cierran asignaciones internas activas arma–trabajador.
 - **Historial** (`worker_histories`): misma regla que puestos (registro inicial + nota obligatoria en cada edición).
 - **Responsable nivel 1 (no admin)**: puede gestionar trabajadores solo para **clientes de su cartera**; al crear/editar el **responsable queda fijo en su usuario**. El filtro **Responsable** en el listado se oculta para ese rol.
-- Listado: filtros en una sola fila horizontal; evento `WorkerChanged` en canal `workers.updates` cuando broadcasting está activo.
+- Listado: filtros en una sola fila horizontal; **total global** de trabajadores en esa fila (misma regla que puestos; `total_global` en JSON AJAX). Evento `WorkerChanged` en canal `workers.updates` cuando broadcasting está activo.
 - Roles de trabajador (campo `workers.role`, validado en alta/edición): `ESCOLTA`, `SUPERVISOR`, `GUARDA`, `MOTORIZADO`, `GUARDA_INFRAESTRUCTURA`. Etiquetas en español para formularios y listados: `Worker::roleLabels()` (constant `ROLE_*` en el modelo).
 
 ### 5.8 Documentos de arma
@@ -793,13 +794,25 @@ Vista: `resources/views/weapons/show.blade.php` y partials en `resources/views/w
 
 | Columna izquierda | Columna derecha (ADMIN / RESPONSABLE) |
 |-------------------|--------------------------------------|
-| **Características**, **Permisos**, **Propiedad** — filas de campos tipo formulario (solo lectura, componente `x-weapon-detail-field`) | **Destino operativo** (`assignment_client`: cliente actual, fila cliente / responsable / actualizar, observaciones) |
-| **Notas** — historial cronológico; el bloque **crece en altura** (`flex-1`) para alinear el pie de la columna con la derecha | **Asignación interna** — custodia (`assignment_custody`) + puesto/trabajador (`assignment_internal`) |
+| **Características**, **Permisos**, **Propiedad** — filas de campos tipo formulario (solo lectura, componente `x-weapon-detail-field`) | **Destino operativo** (`assignment_client`: cliente con combobox buscable, responsable, actualizar destino) |
+| **Notas** — historial cronológico; el bloque **crece en altura** (`flex-1`) para alinear el pie de la columna con la derecha | **Asignación interna** — custodia (`assignment_custody`) + puesto/trabajador (`assignment_internal`, combobox buscable) |
 | **Documentos** — fila de subida + tabla (`documents` con `embedded => true`) | |
 
 **Fotos (ancho completo debajo del grid)**
 
 - Partial `photos` con `compact => true`: cabecera ligera + **7 casillas en una fila** en `xl` (5 técnicas + permiso frente + permiso autenticado de referencia); imágenes `h-32` en esta vista. CSS: `.sj-weapon-detail-photos #weapon-photo-grid { grid-template-columns: repeat(7, …) }` en `app.css`.
+
+**Combobox de asignación (destino operativo + asignación interna)**
+
+Módulo: `resources/js/assignment-combobox.js` (inicializado desde `app.js` en `[data-assignment-combobox]`).
+
+| Campo | Vista | Búsqueda |
+|-------|-------|----------|
+| Cliente | `assignment_client` | Nombre del cliente; badge «Actual» en la opción seleccionada |
+| Puesto | `assignment_internal` | Nombre y dirección (`data-search-text` / subtítulo) |
+| Trabajador | `assignment_internal` | Nombre, cédula y rol |
+
+Patrón: `<select class="hidden">` conserva `client_id` / `post_id` / `worker_id` para el POST; input `role="combobox"` filtra en cliente; panel `role="listbox"`. Evento `assignment-combobox:change` para lógica adicional (p. ej. sincronizar responsable en destino operativo). Opciones del puesto/trabajador: solo clientes activos del destino operativo (`WeaponController@show`, scopes `active` y `selectableForInternalAssignment` en puestos).
 
 **Archivos clave**
 
@@ -807,8 +820,10 @@ Vista: `resources/views/weapons/show.blade.php` y partials en `resources/views/w
 - `resources/views/weapons/partials/show/{characteristics,permits,ownership,notes}.blade.php`
 - `resources/views/weapons/partials/documents.blade.php` (`$embedded`)
 - `resources/views/weapons/partials/photos.blade.php` (`$compact`)
+- `resources/views/weapons/partials/assignment_client.blade.php`, `assignment_internal.blade.php`
+- `resources/js/assignment-combobox.js`
 
-Tras cambios en `app.css`, recompilar Vite (`npm run build` local / `npm run build:deploy` hosting).
+Tras cambios en `app.css` o JS de la ficha, recompilar Vite (`npm run build` local / `npm run build:deploy` hosting).
 
 ### 5.9.1 Historial de notas (ficha del arma)
 

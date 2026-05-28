@@ -1,3 +1,10 @@
+function formatGlobalTotalLabel(total, singular, plural) {
+    const safeTotal = Number.isFinite(Number(total)) ? Number(total) : 0;
+    const noun = safeTotal === 1 ? singular : plural;
+
+    return `Total: ${safeTotal.toLocaleString('es-CO')} ${noun}`;
+}
+
 function normalizePath(pathname) {
     const p = pathname || '';
     if (p === '/' || p === '') {
@@ -51,6 +58,10 @@ function initRealtimePostsWorkersSync() {
 
         tbody.innerHTML = data.tbody;
         pagination.innerHTML = data.pagination;
+        const totalEl = document.getElementById('posts-global-total');
+        if (totalEl && data.total_global != null) {
+            totalEl.textContent = formatGlobalTotalLabel(data.total_global, 'puesto', 'puestos');
+        }
         window.Alpine?.initTree?.(tbody);
     };
 
@@ -85,6 +96,10 @@ function initRealtimePostsWorkersSync() {
 
         tbody.innerHTML = data.tbody;
         pagination.innerHTML = data.pagination;
+        const totalEl = document.getElementById('workers-global-total');
+        if (totalEl && data.total_global != null) {
+            totalEl.textContent = formatGlobalTotalLabel(data.total_global, 'trabajador', 'trabajadores');
+        }
         window.Alpine?.initTree?.(tbody);
     };
 

@@ -85,6 +85,15 @@
                                 {{ __('Limpiar') }}
                             </a>
                         </div>
+                        <p
+                            id="posts-global-total"
+                            class="ml-auto shrink-0 self-end pb-0.5 text-sm font-medium text-gray-700 whitespace-nowrap"
+                            aria-live="polite"
+                        >
+                            {{ __('Total') }}:
+                            <span class="tabular-nums text-gray-900">{{ number_format($postsGlobalTotal, 0, ',', '.') }}</span>
+                            {{ trans_choice('puesto|puestos', $postsGlobalTotal) }}
+                        </p>
                     </form>
 
                     <div class="overflow-x-auto sj-table-wrap">

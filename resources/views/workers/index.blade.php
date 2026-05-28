@@ -105,6 +105,15 @@
                                     {{ __('Limpiar') }}
                                 </a>
                             </div>
+                            <p
+                                id="workers-global-total"
+                                class="ml-auto shrink-0 self-end pb-0.5 text-sm font-medium text-gray-700 whitespace-nowrap"
+                                aria-live="polite"
+                            >
+                                {{ __('Total') }}:
+                                <span class="tabular-nums text-gray-900">{{ number_format($workersGlobalTotal, 0, ',', '.') }}</span>
+                                {{ trans_choice('trabajador|trabajadores', $workersGlobalTotal) }}
+                            </p>
                         </div>
                     </form>
 
