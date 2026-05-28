@@ -539,8 +539,11 @@ Listado de armas (`resources/views/weapons/partials/index_rows.blade.php`):
 - Columna **Estado**: resuelta por `App\Support\WeaponListStatusResolver` — prioridad: novedad bloqueante → custodia activa (`custody_role` del puesto) → novedad legada abierta → documentos/alertas → Asignada/Sin destino. Así **Estado** y **Puesto o trabajador** quedan alineados cuando el arma está en armerillo, para mantenimiento o armero.
 - Columna **Puesto o trabajador**: si hay trabajador activo, muestra el **nombre** del trabajador (tambien cuando hay puesto combinado); si solo hay puesto, el nombre del puesto.
 - Columna **Cedula**: documento del trabajador activo, o `-` si no hay trabajador.
-- **Filtros del listado** (`weapons/index`): filtros por columna en el encabezado, estilo Excel (multi-selección, cascada de valores y botón global **Limpiar filtros de columna**). El bloque superior legado de filtros (`Inventario`, `Tipo`, `Cliente`, `Responsable`, `Destino`, `Fecha`) se retiró para evitar doble lógica.
-- **Exportación** (misma página `resources/views/weapons/index.blade.php`): modales **Exportar filtrado** y **Exportar selección** con preview y formatos xlsx/csv; ver **§5.3.0**.
+- **Barra superior compacta** (`weapons/index`, slot `header`): buscador, chip `X de Y resultados`, `X seleccionadas`, selector de inventario (**Operativas** / **Todas** / **No operativas**), acciones **Ver**, **Editar**, **Exportar**, **Nueva arma**.
+- **Filtros por columna** en encabezado de tabla (estilo Excel): multi-selección, cascada vía `GET /weapons/filter-options`, aplicados en backend sobre todo el universo filtrado (no solo la página visible). Parámetros: `q`, `inventory_scope`, `col[clave][]`.
+- **Pie de tabla**: botón **Limpiar filtros de columna** (izquierda) y paginación numérica (derecha), sin texto «Showing 1 to 50 of N results» (`resources/views/pagination/without-summary.blade.php`).
+- El bloque superior legado de filtros (`Inventario`, `Tipo`, `Cliente`, `Responsable`, `Destino`, `Fecha`) se retiró para evitar doble lógica.
+- **Exportación** (misma página): modales **Exportar filtrado** y **Exportar selección** con preview y formatos xlsx/csv; respeta los mismos filtros activos; ver **§5.3.0**.
 
 ### 5.3.0 Exportación del listado (XLSX / CSV)
 
@@ -571,7 +574,16 @@ La hoja **Criterios de color** repite los mismos tonos con columnas *Muestra* / 
 - La exportación carga `photos` y `permitFile` (`exportRelationships()`) para evaluar el color sin N+1.
 - Clase: `app/Support/WeaponPhotoExportHighlight.php`. Tests: `tests/Unit/WeaponPhotoExportHighlightTest.php`.
 
-Los filtros del encabezado se aplican en backend sobre todo el universo del filtro de inventario (por defecto, operativas), se combinan con el buscador superior y conservan cascada de valores vía `weapons.filter_options`.
+**Filtros globales del listado**
+
+| Elemento | Comportamiento |
+|----------|----------------|
+| Buscador (`q`) | Filtra en backend por cliente, responsable, serie, marca, permiso, etc. |
+| Inventario (`inventory_scope`) | Por defecto `operational`; también `all` y `non_operational`. |
+| Columnas (`col[cliente][]`, …) | Multi-select por columna; AND entre columnas; cascada al abrir popover. |
+| Ruta opciones | `GET /weapons/filter-options?target=cliente` (y demás claves). |
+
+**Despliegue:** tras cambios en `weapons/index` o JS del listado, `npm run build` (local) o `npm run build:deploy` (hosting).
 
 ### 5.3.1 Custodia y taller (puestos especiales)
 

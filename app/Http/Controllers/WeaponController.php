@@ -54,6 +54,8 @@ class WeaponController extends Controller
             return response()->json([
                 'tbody' => view('weapons.partials.index_rows', compact('weapons'))->render(),
                 'pagination' => view('weapons.partials.index_pagination', compact('weapons'))->render(),
+                'shown_count' => $weapons->count(),
+                'total_count' => $weapons->total(),
             ]);
         }
 

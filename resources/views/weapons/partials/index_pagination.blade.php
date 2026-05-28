@@ -1,5 +1,5 @@
 <div class="mt-4">
-    {{ $weapons->links() }}
+    {{ $weapons->links('pagination.without-summary') }}
 </div>
 
 

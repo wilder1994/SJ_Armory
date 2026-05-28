@@ -1,85 +1,83 @@
 ﻿<x-app-layout>
     <x-slot name="header">
         <div class="weapon-header">
-            <div class="weapon-header__row">
-                <div class="weapon-header__intro">
-                    <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                        {{ Auth::user()->isResponsible() && !Auth::user()->isAdmin() ? __('Mis armas') : __('Armamento') }}
-                    </h2>
-                    <p class="mt-1 text-sm text-slate-500">
-                        {{ __('Selecciona una fila para ver o editar. Usa la selección múltiple para exportar relaciones operativas. Las armas con novedad bloqueante se consultan desde historial y novedades.') }}
-                    </p>
+            <div class="weapon-toolbar">
+                <div class="weapon-toolbar__search">
+                    <input
+                        id="weapons-search"
+                        type="search"
+                        name="q"
+                        value="{{ $search ?? '' }}"
+                        class="weapon-toolbar__search-input"
+                        placeholder="{{ __('Buscar por cliente, responsable, serie, marca o permiso...') }}"
+                    >
                 </div>
 
-                <div class="weapon-header__actions">
+                <span id="weapons-results-count" class="weapon-toolbar__chip">
+                    {{ $weapons->count() }} de {{ $weapons->total() }} {{ __('resultados') }}
+                </span>
+
+                <span id="weapons-selected-count" class="weapon-toolbar__chip">
+                    {{ __('0 seleccionadas') }}
+                </span>
+
+                <label class="sr-only" for="weapons-inventory-scope">{{ __('Inventario') }}</label>
+                <select id="weapons-inventory-scope" class="weapon-toolbar__scope">
+                    <option value="operational" @selected(($filters['inventory_scope'] ?? 'operational') === 'operational')>{{ __('Operativas') }}</option>
+                    <option value="all" @selected(($filters['inventory_scope'] ?? null) === 'all')>{{ __('Todas') }}</option>
+                    <option value="non_operational" @selected(($filters['inventory_scope'] ?? null) === 'non_operational')>{{ __('No operativas') }}</option>
+                </select>
+
+                <a
+                    id="weapon-view-action"
+                    href="#"
+                    class="weapon-toolbar-action is-disabled"
+                    aria-disabled="true"
+                >
+                    {{ __('Ver') }}
+                </a>
+
+                @if (auth()->user()?->isAdmin())
                     <a
-                        id="weapon-view-action"
+                        id="weapon-edit-action"
                         href="#"
                         class="weapon-toolbar-action is-disabled"
                         aria-disabled="true"
                     >
-                        {{ __('Ver') }}
+                        {{ __('Editar') }}
                     </a>
+                @endif
 
-                    @if (auth()->user()?->isAdmin())
-                        <a
-                            id="weapon-edit-action"
-                            href="#"
-                            class="weapon-toolbar-action is-disabled"
-                            aria-disabled="true"
-                        >
-                            {{ __('Editar') }}
-                        </a>
-                    @endif
+                <details id="weapons-export-menu" class="relative">
+                    <summary class="weapon-header__utility list-none">{{ __('Exportar') }}</summary>
+                    <div class="absolute right-0 z-[120] mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+                        <form id="weapons-export-filtered-form" method="GET" action="{{ route('weapons.export') }}">
+                            <div id="weapons-export-filtered-inputs"></div>
+                            <button type="submit" class="block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-50">
+                                {{ __('Exportar filtrado') }}
+                            </button>
+                        </form>
 
-                    @can('create', App\Models\Weapon::class)
-                        <a href="{{ route('weapons.create') }}" class="weapon-header__primary-action">
-                            {{ __('Nueva arma') }}
-                        </a>
-                    @endcan
-                </div>
-            </div>
+                        <form id="weapons-export-selected-form" method="POST" action="{{ route('weapons.export.selected') }}">
+                            @csrf
+                            <div id="weapons-export-selected-inputs"></div>
+                            <button
+                                type="submit"
+                                id="weapons-export-selected-button"
+                                class="mt-1 block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                disabled
+                            >
+                                {{ __('Exportar selección') }}
+                            </button>
+                        </form>
+                    </div>
+                </details>
 
-            <div class="weapon-header__row weapon-header__row--bottom">
-                <div class="weapon-header__search">
-                    <input id="weapons-search" type="search" name="q" value="{{ $search ?? '' }}"
-                        class="h-10 w-full rounded-xl border-slate-300 text-sm shadow-sm"
-                        placeholder="{{ __('Buscar por cliente, responsable, serie, marca o permiso...') }}">
-                </div>
-
-                <div class="weapon-header__tools">
-                    <span id="weapons-selected-count" class="weapon-header__counter">
-                        {{ __('0 seleccionadas') }}
-                    </span>
-
-                    <details id="weapons-export-menu" class="relative">
-                        <summary class="weapon-header__utility list-none">
-                            {{ __('Exportar') }}
-                        </summary>
-
-                        <div class="absolute right-0 z-[120] mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
-                            <form id="weapons-export-filtered-form" method="GET" action="{{ route('weapons.export') }}">
-                                <div id="weapons-export-filtered-inputs"></div>
-                                <button type="submit" class="block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-50">
-                                    {{ __('Exportar filtrado') }}
-                                </button>
-                            </form>
-
-                            <form id="weapons-export-selected-form" method="POST" action="{{ route('weapons.export.selected') }}">
-                                @csrf
-                                <div id="weapons-export-selected-inputs"></div>
-                                <button
-                                    type="submit"
-                                    id="weapons-export-selected-button"
-                                    class="mt-1 block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                                    disabled
-                                >
-                                    {{ __('Exportar selección') }}
-                                </button>
-                            </form>
-                        </div>
-                    </details>
-                </div>
+                @can('create', App\Models\Weapon::class)
+                    <a href="{{ route('weapons.create') }}" class="weapon-header__primary-action">
+                        {{ __('Nueva arma') }}
+                    </a>
+                @endcan
             </div>
         </div>
     </x-slot>
@@ -156,13 +154,14 @@
                         </table>
                     </div>
 
-                    <div id="weapons-pagination">
-                        @include('weapons.partials.index_pagination', ['weapons' => $weapons])
+                    <div class="weapon-table-footer">
+                        <button type="button" id="weapons-clear-column-filters" class="hidden weapon-header__utility">
+                            {{ __('Limpiar filtros de columna') }}
+                        </button>
+                        <div id="weapons-pagination">
+                            @include('weapons.partials.index_pagination', ['weapons' => $weapons])
+                        </div>
                     </div>
-
-                    <button type="button" id="weapons-clear-column-filters" class="hidden mt-4 weapon-header__utility">
-                        {{ __('Limpiar filtros de columna') }}
-                    </button>
                 </div>
             </div>
 
@@ -307,51 +306,63 @@
         z-index: 60;
         isolation: isolate;
         overflow: visible;
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
     }
 
-    .weapon-header__row {
-        align-items: flex-end;
-        display: flex;
-        gap: 1rem;
-        justify-content: space-between;
-    }
-
-    .weapon-header__row--bottom {
-        align-items: flex-start;
-    }
-
-    .weapon-header__intro,
-    .weapon-header__search {
-        flex: 1 1 auto;
-        min-width: 0;
-    }
-
-    .weapon-header__search {
-        max-width: 46rem;
-    }
-
-    .weapon-header__intro p {
-        display: none;
-    }
-
-    .weapon-header__actions,
-    .weapon-header__tools {
-        position: relative;
-        z-index: 70;
-        overflow: visible;
+    .weapon-toolbar {
         align-items: center;
         display: flex;
-        flex: 0 0 auto;
         flex-wrap: wrap;
-        gap: 0.5rem;
-        justify-content: flex-end;
+        gap: 0.45rem;
+        padding: 0.35rem 0;
     }
 
-    .weapon-header__tools {
-        align-items: flex-start;
+    .weapon-toolbar__search {
+        flex: 1 1 18rem;
+        min-width: 14rem;
+    }
+
+    .weapon-toolbar__search-input {
+        width: 100%;
+        height: 2.25rem;
+        border: 1px solid rgb(203 213 225);
+        border-radius: 0.55rem;
+        font-size: 0.82rem;
+        padding: 0 0.75rem;
+        color: rgb(30 41 59);
+    }
+
+    .weapon-toolbar__chip {
+        align-items: center;
+        border-radius: 0.5rem;
+        border: 1px solid rgb(226 232 240);
+        background: #fff;
+        color: rgb(51 65 85);
+        display: inline-flex;
+        font-size: 0.78rem;
+        font-weight: 600;
+        height: 2.25rem;
+        padding: 0 0.6rem;
+        white-space: nowrap;
+    }
+
+    .weapon-toolbar__scope {
+        appearance: none;
+        background: #fff;
+        border: 1px solid rgb(226 232 240);
+        border-radius: 0.5rem;
+        color: rgb(51 65 85);
+        font-size: 0.78rem;
+        font-weight: 600;
+        height: 2.25rem;
+        padding: 0 1.8rem 0 0.6rem;
+        background-image:
+            linear-gradient(45deg, transparent 50%, #64748b 50%),
+            linear-gradient(135deg, #64748b 50%, transparent 50%);
+        background-position:
+            calc(100% - 0.8rem) calc(50% - 0.1rem),
+            calc(100% - 0.55rem) calc(50% - 0.1rem);
+        background-repeat: no-repeat;
+        background-size: 0.3rem 0.3rem, 0.3rem 0.3rem;
     }
 
     .weapon-header__primary-action,
@@ -362,7 +373,7 @@
         display: inline-flex;
         font-size: 0.875rem;
         font-weight: 600;
-        height: 2.5rem;
+        height: 2.25rem;
     }
 
     .weapon-header__primary-action {
@@ -526,6 +537,23 @@
     .weapon-col-filter-popover__btn--primary {
         background: rgb(15 23 42);
         color: #fff;
+    }
+
+    .weapon-table-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-top: 1rem;
+        min-height: 2.25rem;
+    }
+
+    .weapon-table-footer #weapons-pagination {
+        margin-left: auto;
+    }
+
+    .weapon-table-footer #weapons-pagination > div {
+        margin-top: 0;
     }
 
     .weapon-export-modal {
@@ -706,18 +734,23 @@
     }
 
     @media (max-width: 1100px) {
-        .weapon-header__row {
+        .weapon-toolbar {
             align-items: stretch;
+            gap: 0.5rem;
+        }
+
+        .weapon-toolbar__search {
+            flex-basis: 100%;
+            min-width: 100%;
+        }
+
+        .weapon-table-footer {
             flex-direction: column;
+            align-items: stretch;
         }
 
-        .weapon-header__search {
-            max-width: none;
-        }
-
-        .weapon-header__actions,
-        .weapon-header__tools {
-            justify-content: flex-start;
+        .weapon-table-footer #weapons-pagination {
+            margin-left: 0;
         }
 
         .weapon-export-modal__dialog {
@@ -793,6 +826,8 @@
 <script>
     (() => {
         const input = document.getElementById('weapons-search');
+        const inventoryScope = document.getElementById('weapons-inventory-scope');
+        const resultsCount = document.getElementById('weapons-results-count');
         const tbody = document.getElementById('weapons-tbody');
         const pagination = document.getElementById('weapons-pagination');
         const clearColumnFiltersBtn = document.getElementById('weapons-clear-column-filters');
@@ -826,7 +861,7 @@
         const exportModalBackdrop = exportModal?.querySelector('.weapon-export-modal__backdrop');
         const exportFormatInputs = Array.from(document.querySelectorAll('input[name="weapon_export_format"]'));
 
-        if (!input || !tbody || !pagination || !viewAction || !selectedCount || !exportFilteredForm || !exportFilteredInputs || !exportSelectedForm || !exportSelectedInputs || !exportSelectedButton || !exportMenu || !exportModal || !exportModalTitle || !exportModalDescription || !exportModalWarning || !exportModalTableShell || !exportModalTbody || !exportModalConfirm || !exportModalCancel || !exportModalEdit || !exportModalClose || !exportModalBackdrop || exportFormatInputs.length === 0) {
+        if (!input || !inventoryScope || !resultsCount || !tbody || !pagination || !viewAction || !selectedCount || !exportFilteredForm || !exportFilteredInputs || !exportSelectedForm || !exportSelectedInputs || !exportSelectedButton || !exportMenu || !exportModal || !exportModalTitle || !exportModalDescription || !exportModalWarning || !exportModalTableShell || !exportModalTbody || !exportModalConfirm || !exportModalCancel || !exportModalEdit || !exportModalClose || !exportModalBackdrop || exportFormatInputs.length === 0) {
             return;
         }
 
@@ -895,6 +930,11 @@
 
         const selectedExportFormat = () => exportFormatInputs.find((input) => input.checked)?.value || 'xlsx';
         const countActiveColumnFilters = () => COLUMN_KEYS.reduce((count, key) => count + (columnFilters[key].size > 0 ? 1 : 0), 0);
+        const updateResultsCount = (shown, total) => {
+            const safeShown = Number.isFinite(Number(shown)) ? Number(shown) : 0;
+            const safeTotal = Number.isFinite(Number(total)) ? Number(total) : 0;
+            resultsCount.textContent = `${safeShown} de ${safeTotal} {{ __('resultados') }}`;
+        };
 
         const updateColumnFilterTriggerStates = () => {
             document.querySelectorAll('[data-weapon-col-filter-trigger]').forEach((trigger) => {
@@ -911,6 +951,7 @@
             if (q !== '') {
                 params.set('q', q);
             }
+            params.set('inventory_scope', inventoryScope.value || 'operational');
             COLUMN_KEYS.forEach((key) => {
                 columnFilters[key].forEach((value) => params.append(`col[${key}][]`, value));
             });
@@ -943,6 +984,12 @@
                 exportFilteredInputs.appendChild(qInput);
             }
 
+            const inventoryInput = document.createElement('input');
+            inventoryInput.type = 'hidden';
+            inventoryInput.name = 'inventory_scope';
+            inventoryInput.value = inventoryScope.value || 'operational';
+            exportFilteredInputs.appendChild(inventoryInput);
+
             COLUMN_KEYS.forEach((key) => {
                 columnFilters[key].forEach((value) => {
                     const hidden = document.createElement('input');
@@ -972,6 +1019,12 @@
             qSelectedInput.name = 'q';
             qSelectedInput.value = q;
             exportSelectedInputs.appendChild(qSelectedInput);
+
+            const inventorySelectedInput = document.createElement('input');
+            inventorySelectedInput.type = 'hidden';
+            inventorySelectedInput.name = 'inventory_scope';
+            inventorySelectedInput.value = inventoryScope.value || 'operational';
+            exportSelectedInputs.appendChild(inventorySelectedInput);
 
             COLUMN_KEYS.forEach((key) => {
                 columnFilters[key].forEach((value) => {
@@ -1131,6 +1184,7 @@
             const data = await response.json();
             tbody.innerHTML = data.tbody;
             pagination.innerHTML = data.pagination;
+            updateResultsCount(data.shown_count ?? 0, data.total_count ?? 0);
             clearSelectedRow();
             syncExportCheckboxes();
             syncSelectionDetailsFromVisibleRows();
@@ -1189,6 +1243,12 @@
             window.history.replaceState({}, '', url.toString());
             if (timer) clearTimeout(timer);
             timer = setTimeout(() => updateList(url.toString()), 300);
+        });
+
+        inventoryScope.addEventListener('change', async () => {
+            const url = applyStateToUrl(new URL(window.location.href), { resetPage: true });
+            window.history.replaceState({}, '', url.toString());
+            await updateList(url.toString());
         });
 
         document.addEventListener('click', (event) => {
@@ -1354,6 +1414,7 @@
         syncExportForms();
         clearSelectedRow();
         syncExportCheckboxes();
+        updateResultsCount({{ $weapons->count() }}, {{ $weapons->total() }});
         updateColumnFilterTriggerStates();
 
         window.addEventListener('resize', () => {
