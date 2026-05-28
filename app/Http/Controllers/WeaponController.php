@@ -543,7 +543,9 @@ class WeaponController extends Controller
 
         event(new WeaponChanged('updated', $weapon->id));
 
-        return response()->json(['ok' => true]);
+        return \App\Support\WeaponPhotoSlotPayload::json(
+            \App\Support\WeaponPhotoSlotPayload::forPermit($weapon->fresh()->load('permitFile'))
+        );
     }
 
     public function edit(Weapon $weapon)

@@ -15,6 +15,7 @@ export default defineConfig({
                 'resources/js/app.js',
                 'resources/js/map.js',
                 'resources/js/location-picker.js',
+                'resources/js/weapon-photo-editor.js',
             ],
             refresh: false,
             publicDirectory: 'build_hosting',

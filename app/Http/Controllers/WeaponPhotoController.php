@@ -7,6 +7,7 @@ use App\Models\File;
 use App\Models\Weapon;
 use App\Models\WeaponPhoto;
 use App\Services\WeaponDocumentService;
+use App\Support\WeaponPhotoSlotPayload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -26,10 +27,12 @@ class WeaponPhotoController extends Controller
         ]);
 
         $file = $data['photo'];
-        $path = $file->store('weapons/' . $weapon->id . '/photos', 'public');
+        $path = $file->store('weapons/'.$weapon->id.'/photos', 'public');
+
+        $photo = null;
 
         try {
-            DB::transaction(function () use ($data, $file, $path, $request, $weapon) {
+            DB::transaction(function () use ($data, $file, $path, $request, $weapon, &$photo) {
                 $storedFile = File::create([
                     'disk' => 'public',
                     'path' => $path,
@@ -83,16 +86,25 @@ class WeaponPhotoController extends Controller
 
         $documentService->syncRenewalDocument($weapon);
 
+        if ($request->expectsJson()) {
+            return WeaponPhotoSlotPayload::json(
+                WeaponPhotoSlotPayload::forWeaponPhoto($photo->load('file'))
+            );
+        }
+
         return redirect()->route('weapons.show', $weapon)->with('status', 'Foto cargada.');
     }
 
-    public function destroy(Weapon $weapon, WeaponPhoto $photo, WeaponDocumentService $documentService)
+    public function destroy(Request $request, Weapon $weapon, WeaponPhoto $photo, WeaponDocumentService $documentService)
     {
         $this->authorize('updatePhotos', $weapon);
 
         if ($photo->weapon_id !== $weapon->id) {
             abort(404);
         }
+
+        $description = $photo->description;
+        $label = WeaponPhoto::DESCRIPTIONS[$description] ?? $description;
 
         $file = $photo->file;
         $photo->delete();
@@ -103,6 +115,12 @@ class WeaponPhotoController extends Controller
         }
 
         $documentService->syncRenewalDocument($weapon);
+
+        if ($request->expectsJson()) {
+            return WeaponPhotoSlotPayload::json(
+                WeaponPhotoSlotPayload::emptyWeaponSlot($description, $label)
+            );
+        }
 
         return redirect()->route('weapons.show', $weapon)->with('status', 'Foto eliminada.');
     }
@@ -120,7 +138,7 @@ class WeaponPhotoController extends Controller
         ]);
 
         $file = $data['photo'];
-        $path = $file->store('weapons/' . $weapon->id . '/photos', 'public');
+        $path = $file->store('weapons/'.$weapon->id.'/photos', 'public');
 
         try {
             DB::transaction(function () use ($file, $path, $request, $photo) {
@@ -164,7 +182,8 @@ class WeaponPhotoController extends Controller
 
         $documentService->syncRenewalDocument($weapon);
 
-        return response()->json(['ok' => true]);
+        return WeaponPhotoSlotPayload::json(
+            WeaponPhotoSlotPayload::forWeaponPhoto($photo->fresh()->load('file'))
+        );
     }
 }
-
