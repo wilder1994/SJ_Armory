@@ -297,7 +297,7 @@ La pantalla **Detalle de arma** dejó de usar un único bloque grande “Informa
 ## 10. Conclusiones y recomendaciones
 
 1. El sistema cumple el rol de **plataforma única** para el control de armamento frente al Excel manual.  
-2. Se recomienda **manual de usuario** por rol (ADMIN, RESPONSABLE, AUDITOR) y **plan de respaldos** aprobado por TI.  
+2. Manuales de usuario en `docs/manuales/`: **Auditoría**, **Administrador**, **Responsable** y **Revista armas** (formato con espacios para capturas). Se recomienda **plan de respaldos** aprobado por TI.  
 3. Mantener **registro de cambios** (como el FO-CE-12) para mejoras posteriores.  
 4. Programar **revisiones periódicas** con Dirección de Operaciones para priorizar mejoras.
 
@@ -308,6 +308,7 @@ La pantalla **Detalle de arma** dejó de usar un único bloque grande “Informa
 - Factura / contrato **Hostinger**.  
 - Evidencia de **capacitación** (captura Teams, lista de asistentes).  
 - Constancia de **go-live** (correo o acta con fecha).  
+- Manuales de usuario: carpeta **`docs/manuales/`** (índice en `docs/manuales/README.md`).  
 - Extracto del **`README.md`** del repositorio (documentación técnica).
 
 ---
