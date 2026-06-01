@@ -57,10 +57,14 @@ class WeaponRevalidationDocumentMetricsTest extends TestCase
         $this->createExpiredRenewalDocument($incautadaDefinitive);
 
         $metrics = app(DashboardMetricsService::class)->forUser($admin);
-        $expiredKpi = collect($metrics['kpis'])->firstWhere('label', 'Documentos vencidos');
+        $kpis = collect($metrics['kpis'])->keyBy('key');
 
-        $this->assertNotNull($expiredKpi);
-        $this->assertSame(2, $expiredKpi['value']);
+        $this->assertCount(6, $metrics['kpis']);
+        $this->assertSame(4, $kpis['total']['value']);
+        $this->assertSame(1, $kpis['outside']['value']);
+        $this->assertSame(3, $kpis['in_inventory']['value']);
+        $this->assertSame(1, $kpis['seizure_open']['value']);
+        $this->assertSame(2, $kpis['expired_docs']['value']);
     }
 
     public function test_renewal_chart_segments_exclude_non_revalidatable_weapons(): void

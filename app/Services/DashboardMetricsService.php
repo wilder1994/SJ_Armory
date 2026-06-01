@@ -180,15 +180,20 @@ class DashboardMetricsService
 
         $transferCounts = $this->transferStatusCounts($user);
 
+        $totalWeapons = $weapons->count();
+        $outsideInventoryCount = $weapons
+            ->filter(fn (Weapon $weapon) => $weapon->isExcludedFromRevalidationDocuments())
+            ->count();
+        $inInventoryCount = $totalWeapons - $outsideInventoryCount;
+        $openSeizureWeaponIds = $this->weaponIdsWithActiveSeizureForRevalidation($weaponIds);
+        $openSeizureCount = count($openSeizureWeaponIds);
+        $expiringSoonCount = $riskCounts['Por vencer'] + $riskCounts['Preventivas'];
+
+        $incautadaType = $incidentTypeMap->get('Incautada');
+
         $activeDestinationWeapons = $weapons
             ->filter(fn (Weapon $weapon) => $weapon->activeClientAssignment)
             ->values();
-
-        $operationalWeaponsCount = $weapons
-            ->filter(fn (Weapon $weapon) => $weapon->isOperationalForInventory())
-            ->count();
-
-        $nonOperationalWeaponsCount = $weapons->count() - $operationalWeaponsCount;
 
         $operationalDistribution = [
             'Solo puesto' => $activeDestinationWeapons
@@ -219,60 +224,21 @@ class DashboardMetricsService
         return [
             'scope_label' => $this->scopeLabel($user),
             'as_of' => now(),
-            'kpis' => [
-                [
-                    'label' => 'Total de armas',
-                    'value' => $weapons->count(),
-                    'tone' => 'slate',
-                    'helper' => 'Inventario visible para tu rol',
-                ],
-                [
-                    'label' => 'Armas operativas',
-                    'value' => $operationalWeaponsCount,
-                    'tone' => 'green',
-                    'helper' => 'Disponibles para operación',
-                ],
-                [
-                    'label' => 'Armas con novedad',
-                    'value' => $nonOperationalWeaponsCount,
-                    'tone' => 'red',
-                    'helper' => 'Fuera de operación por novedad bloqueante',
-                ],
-                [
-                    'label' => 'Con destino activo',
-                    'value' => $activeDestinationWeapons->count(),
-                    'tone' => 'blue',
-                    'helper' => 'Armas con cliente asignado',
-                ],
-                [
-                    'label' => 'Sin destino',
-                    'value' => $weapons->filter(fn (Weapon $weapon) => ! $weapon->activeClientAssignment)->count(),
-                    'tone' => 'amber',
-                    'helper' => 'Pendientes de asignación operativa',
-                ],
-                [
-                    'label' => 'Documentos vencidos',
-                    'value' => $riskCounts['Vencidas'],
-                    'tone' => 'red',
-                    'helper' => 'Solo armas revalidables (sin hurtada, pérdida, baja ni incautación definitiva)',
-                ],
-                [
-                    'label' => 'Por vencer',
-                    'value' => $riskCounts['Por vencer'] + $riskCounts['Preventivas'],
-                    'tone' => 'orange',
-                    'helper' => 'Dentro de la ventana de 120 días',
-                ],
-                [
-                    'label' => 'Transferencias pendientes',
-                    'value' => $transferCounts['Pendientes'],
-                    'tone' => 'indigo',
-                    'helper' => 'Solicitudes aún sin resolver',
-                ],
-            ],
+            'kpis' => $this->buildInventoryKpis(
+                $user,
+                $totalWeapons,
+                $outsideInventoryCount,
+                $inInventoryCount,
+                $openSeizureCount,
+                $riskCounts['Vencidas'],
+                $expiringSoonCount,
+                $incautadaType
+            ),
             'meta' => [
                 ['label' => 'Clientes', 'value' => $clientCount],
                 ['label' => 'Puestos', 'value' => $postCount],
                 ['label' => 'Trabajadores', 'value' => $workerCount],
+                ['label' => 'Transferencias pendientes', 'value' => $transferCounts['Pendientes']],
             ],
             'responsible_chart' => [
                 'items' => $responsibleCounts->map(fn (int $value, string $label) => [
@@ -347,6 +313,75 @@ class DashboardMetricsService
                 })->values()->all(),
                 'total' => array_sum($operationalDistribution),
                 'max' => max(1, max($operationalDistribution)),
+            ],
+        ];
+    }
+
+    /**
+     * @return list<array{key: string, label: string, value: int, tone: string, helper: string, url: ?string}>
+     */
+    private function buildInventoryKpis(
+        User $user,
+        int $totalWeapons,
+        int $outsideInventoryCount,
+        int $inInventoryCount,
+        int $openSeizureCount,
+        int $expiredDocumentsCount,
+        int $expiringSoonCount,
+        ?IncidentType $incautadaType
+    ): array {
+        $canAlerts = $user->isAdmin() || $user->isAuditor();
+
+        return [
+            [
+                'key' => 'total',
+                'label' => 'Total',
+                'value' => $totalWeapons,
+                'tone' => 'slate',
+                'helper' => 'Inventario visible para tu rol',
+                'url' => route('weapons.index'),
+            ],
+            [
+                'key' => 'outside',
+                'label' => 'Fuera',
+                'value' => $outsideInventoryCount,
+                'tone' => 'red',
+                'helper' => 'Hurtada, perdida, incautación definitiva o dada de baja',
+                'url' => route('reports.weapon-incidents.index'),
+            ],
+            [
+                'key' => 'in_inventory',
+                'label' => 'En inventario',
+                'value' => $inInventoryCount,
+                'tone' => 'green',
+                'helper' => 'Armas sin salida definitiva del inventario',
+                'url' => route('weapons.index'),
+            ],
+            [
+                'key' => 'seizure_open',
+                'label' => 'Incautadas',
+                'value' => $openSeizureCount,
+                'tone' => 'brown',
+                'helper' => 'Incautación en trámite (proceso abierto)',
+                'url' => $incautadaType
+                    ? route('reports.weapon-incidents.show', ['incidentType' => $incautadaType->code])
+                    : route('reports.weapon-incidents.index'),
+            ],
+            [
+                'key' => 'expired_docs',
+                'label' => 'Vencidos',
+                'value' => $expiredDocumentsCount,
+                'tone' => 'red',
+                'helper' => 'Revalidación vencida (armas revalidables)',
+                'url' => $canAlerts ? route('alerts.documents') : null,
+            ],
+            [
+                'key' => 'expiring_docs',
+                'label' => 'Por vencer',
+                'value' => $expiringSoonCount,
+                'tone' => 'orange',
+                'helper' => 'Revalidación en ventana de 120 días',
+                'url' => $canAlerts ? route('alerts.documents') : null,
             ],
         ];
     }

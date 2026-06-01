@@ -15,7 +15,7 @@ Sistema web para **gestión de armamento**, **asignaciones operativas**, **trans
 - ✅ **Transferencias**: listado **unificado** (pendientes y enviadas en una tabla; serie en columna arma; munición/proveedores opcionales en el envío; aceptación; **cancelación** con restauración cuando aplica); con transferencia **pendiente**, la ficha del arma muestra un **aviso** (usuario normal: mensaje genérico; **ADMIN**: quién **envió** y quién **debe aceptar**); botón **Historial** (modal, últimas participaciones).
 - ✅ **Clientes / Puestos / Trabajadores / Usuarios** (puestos y trabajadores: archivo, historial de cambios, políticas por rol)
 - ✅ **Cargas masivas**: validación previa, preview, ejecución por chunks, trazabilidad por lote; en la vista **Subir armas**, el **ADMIN** gestiona las plantillas globales de reverso autenticado (porte y tenencia) usadas en el PDF y en la ficha.
-- ✅ **Dashboard**: KPIs, métricas, gráficos y estado “as of”.
+- ✅ **Dashboard**: fila de **6 KPIs** (Total, Fuera, En inventario, Incautadas en trámite, Vencidos, Por vencer), gráficos y estado “as of”.
 - ✅ **Alertas documentales** (`/alerts/documents`): tarjetas vencidos / por vencer / sin alertas; filtro **multi-mes** con panel de checkboxes (varios meses y años); modales con **filtros por columna** tipo Excel (multi-selección en encabezado); exportación `.docx` y vista previa PDF con nombre `Revalidacion_{mes}_{año}`.
 - ✅ **Revista armas** (`/revista-armas`): acceso temporal (12 h) para colaboradores de campo; usuarios temporales reutilizables; subida de **4 fotos técnicas** a staging; el invitado solo entra con código vigente; staff al filtrar ve armas del **último acceso** (aunque haya vencido) para revisar fotos en staging (✓/✕, **Ver**, **Actualizar**); confirmaciones en **modales**; historial de notas en la ficha del arma; **ADMIN** con gestión global.
 - ✅ **Mapa**: geocodificación y visualización operativa; solo inventario operativo (sin novedad bloqueante ni custodia en taller / para mantenimiento).
@@ -1017,17 +1017,14 @@ Servicio: `app/Services/DashboardMetricsService.php`
 
 El dashboard principal ya no es una pantalla de accesos rapidos. Ahora muestra informacion real del sistema:
 
-- KPIs de inventario:
-  - total de armas
-  - con destino activo
-  - sin destino
-  - documentos vencidos (solo armas revalidables; ver `WeaponIncident::scopeRevalidationDocumentExclusions`)
-  - por vencer (misma regla de exclusión en documentos de revalidación)
-  - transferencias pendientes
-- Metricas auxiliares:
-  - clientes
-  - puestos
-  - trabajadores
+- **Fila de KPIs** (una banda; scroll horizontal bajo 1280px, 6 columnas desde 1280px; estilos `.sj-dashboard-kpis--row-six`):
+  - **Total**: inventario visible para el rol.
+  - **Fuera**: armas fuera de inventario operativo — hurtada, perdida, **incautación definitiva** o dar de baja (`Weapon::isExcludedFromRevalidationDocuments()` / `WeaponIncident::scopeRevalidationDocumentExclusions()`).
+  - **En inventario**: total − fuera (la **incautación en trámite** cuenta aquí, no en Fuera).
+  - **Incautadas**: armas con novedad **Incautada** abierta o en proceso (en trámite).
+  - **Vencidos** / **Por vencer**: documentos de revalidación (`is_renewal`), solo armas revalidables; por vencer incluye preventiva + próximo a vencer (ventana 120 días).
+  - Cada tarjeta enlaza al módulo correspondiente (armas, reporte de novedades, alertas) cuando el rol lo permite.
+- **Meta** en cabecera (chips): clientes, puestos, trabajadores, **transferencias pendientes**.
 - Graficos operativos:
   - armas por responsable
   - estado documental

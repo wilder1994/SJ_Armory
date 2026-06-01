@@ -35,9 +35,23 @@
                 })"
                 x-init="init()"
             >
-                <section class="sj-dashboard-kpis sj-dashboard-kpis--compact">
-                    <template x-for="item in dashboard.kpis" :key="item.label">
-                        <article class="sj-kpi-card" :class="`sj-kpi-card--${item.tone}`">
+                <section class="sj-dashboard-kpis sj-dashboard-kpis--compact sj-dashboard-kpis--row-six">
+                    <template x-for="item in dashboard.kpis" :key="item.key || item.label">
+                        <a
+                            x-show="item.url"
+                            :href="item.url"
+                            class="sj-kpi-card sj-kpi-card--link"
+                            :class="`sj-kpi-card--${item.tone}`"
+                        >
+                            <div class="sj-kpi-card__label" x-text="item.label"></div>
+                            <div class="sj-kpi-card__value" x-text="formatNumber(item.value)"></div>
+                            <div class="sj-kpi-card__helper" x-text="item.helper"></div>
+                        </a>
+                        <article
+                            x-show="!item.url"
+                            class="sj-kpi-card"
+                            :class="`sj-kpi-card--${item.tone}`"
+                        >
                             <div class="sj-kpi-card__label" x-text="item.label"></div>
                             <div class="sj-kpi-card__value" x-text="formatNumber(item.value)"></div>
                             <div class="sj-kpi-card__helper" x-text="item.helper"></div>
