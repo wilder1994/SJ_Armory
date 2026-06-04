@@ -839,12 +839,12 @@ class WeaponController extends Controller
             case 'all':
                 return;
             case 'non_operational':
-                $query->nonOperationalInventory();
+                $query->outsideInventory();
 
                 return;
             case 'operational':
             default:
-                $query->operationalInventory();
+                $query->inInventory();
 
                 return;
         }

@@ -15,7 +15,7 @@ Sistema web para **gestión de armamento**, **asignaciones operativas**, **trans
 - ✅ **Transferencias**: listado **unificado** (pendientes y enviadas en una tabla; serie en columna arma; munición/proveedores opcionales en el envío; aceptación; **cancelación** con restauración cuando aplica); con transferencia **pendiente**, la ficha del arma muestra un **aviso** (usuario normal: mensaje genérico; **ADMIN**: quién **envió** y quién **debe aceptar**); botón **Historial** (modal, últimas participaciones).
 - ✅ **Clientes / Puestos / Trabajadores / Usuarios** (puestos y trabajadores: archivo, historial de cambios, políticas por rol)
 - ✅ **Cargas masivas**: validación previa, preview, ejecución por chunks, trazabilidad por lote; en la vista **Subir armas**, el **ADMIN** gestiona las plantillas globales de reverso autenticado (porte y tenencia) usadas en el PDF y en la ficha.
-- ✅ **Dashboard**: fila de **6 KPIs** (Total, Fuera, En inventario, Incautadas en trámite, Vencidos, Por vencer), gráficos y estado “as of”.
+- ✅ **Dashboard**: fila de **6 KPIs** (Total, No operativas, En inventario, Incautadas en trámite, Vencidos, Por vencer), gráficos y estado “as of”.
 - ✅ **Alertas documentales** (`/alerts/documents`): tarjetas vencidos / por vencer / sin alertas; filtro **multi-mes** con panel de checkboxes (varios meses y años); modales con **filtros por columna** tipo Excel (multi-selección en encabezado); exportación `.docx` y vista previa PDF con nombre `Revalidacion_{mes}_{año}`.
 - ✅ **Revista armas** (`/revista-armas`): acceso temporal (12 h) para colaboradores de campo; usuarios temporales reutilizables; subida de **4 fotos técnicas** a staging; el invitado solo entra con código vigente; staff al filtrar ve armas del **último acceso** (aunque haya vencido) para revisar fotos en staging (✓/✕, **Ver**, **Actualizar**); confirmaciones en **modales**; historial de notas en la ficha del arma; **ADMIN** con gestión global.
 - ✅ **Mapa**: geocodificación y visualización operativa; solo inventario operativo (sin novedad bloqueante ni custodia en taller / para mantenimiento).
@@ -579,7 +579,7 @@ La hoja **Criterios de color** repite los mismos tonos con columnas *Muestra* / 
 | Elemento | Comportamiento |
 |----------|----------------|
 | Buscador (`q`) | Filtra en backend por cliente, responsable, serie, marca, permiso, etc. |
-| Inventario (`inventory_scope`) | Por defecto `operational`; también `all` y `non_operational`. |
+| Inventario (`inventory_scope`) | Por defecto `operational` (**en inventario**, `Weapon::inInventory()`); `non_operational` (**fuera**, `outsideInventory()`); `all` sin filtro. Misma regla que los KPIs del dashboard (no confundir con `operationalInventory()` del mapa). |
 | Columnas (`col[cliente][]`, …) | Multi-select por columna; AND entre columnas; cascada al abrir popover. |
 | Ruta opciones | `GET /weapons/filter-options?target=cliente` (y demás claves). |
 
@@ -1019,8 +1019,8 @@ El dashboard principal ya no es una pantalla de accesos rapidos. Ahora muestra i
 
 - **Fila de KPIs** (una banda; scroll horizontal bajo 1280px, 6 columnas desde 1280px; estilos `.sj-dashboard-kpis--row-six`):
   - **Total**: inventario visible para el rol.
-  - **Fuera**: armas fuera de inventario operativo — hurtada, perdida, **incautación definitiva** o dar de baja (`Weapon::isExcludedFromRevalidationDocuments()` / `WeaponIncident::scopeRevalidationDocumentExclusions()`).
-  - **En inventario**: total − fuera (la **incautación en trámite** cuenta aquí, no en Fuera).
+  - **No operativas**: armas fuera del inventario — hurtada, perdida, **incautación definitiva** o dar de baja (`Weapon::outsideInventory()` / `isExcludedFromRevalidationDocuments()`). Enlace al listado con `inventory_scope=non_operational`.
+  - **En inventario**: total − no operativas (la **incautación en trámite** cuenta aquí). Enlace al listado con `inventory_scope=operational` (etiqueta UI **Operativas**).
   - **Incautadas**: armas con novedad **Incautada** abierta o en proceso (en trámite).
   - **Vencidos** / **Por vencer**: documentos de revalidación (`is_renewal`), solo armas revalidables; por vencer incluye preventiva + próximo a vencer (ventana 120 días).
   - Cada tarjeta enlaza al módulo correspondiente (armas, reporte de novedades, alertas) cuando el rol lo permite.

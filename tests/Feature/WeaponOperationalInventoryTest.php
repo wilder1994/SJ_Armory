@@ -28,22 +28,22 @@ class WeaponOperationalInventoryTest extends TestCase
         ]);
     }
 
-    public function test_weapons_index_defaults_to_operational_inventory(): void
+    public function test_weapons_index_inventory_scope_aligns_with_dashboard_kpis(): void
     {
         $admin = User::factory()->create(['role' => 'ADMIN']);
         $responsible = User::factory()->create(['role' => 'RESPONSABLE']);
         $client = Client::query()->create(['name' => 'Cliente Operativo', 'nit' => '900200300-1']);
         $responsible->clients()->attach($client->id);
 
-        $operational = $this->createWeapon('SER-OP-1', $client, $responsible);
+        $this->createWeapon('SER-OP-1', $client, $responsible);
         $maintenance = $this->createWeapon('SER-MT-1', $client, $responsible);
         $stolen = $this->createWeapon('SER-HU-1', $client, $responsible);
-        $seized = $this->createWeapon('SER-IN-1', $client, $responsible);
+        $seizedInProgress = $this->createWeapon('SER-IN-1', $client, $responsible);
         $retired = $this->createWeapon('SER-DB-1', $client, $responsible);
 
         $this->createIncident($maintenance, 'en_mantenimiento', WeaponIncident::STATUS_IN_PROGRESS, $admin);
         $this->createIncident($stolen, 'hurtada', WeaponIncident::STATUS_OPEN, $admin);
-        $this->createIncident($seized, 'incautada', WeaponIncident::STATUS_IN_PROGRESS, $admin);
+        $this->createIncident($seizedInProgress, 'incautada', WeaponIncident::STATUS_IN_PROGRESS, $admin);
         $this->createIncident($retired, 'dar_de_baja', WeaponIncident::STATUS_RESOLVED, $admin, WeaponIncident::OUTCOME_RETIRED_DEFINITIVE);
 
         $this->actingAs($admin)
@@ -51,8 +51,8 @@ class WeaponOperationalInventoryTest extends TestCase
             ->assertOk()
             ->assertSee('SER-OP-1')
             ->assertSee('SER-MT-1')
+            ->assertSee('SER-IN-1')
             ->assertDontSee('SER-HU-1')
-            ->assertDontSee('SER-IN-1')
             ->assertDontSee('SER-DB-1');
 
         $this->actingAs($admin)
@@ -66,9 +66,10 @@ class WeaponOperationalInventoryTest extends TestCase
             ->get(route('weapons.index', ['inventory_scope' => 'non_operational']))
             ->assertOk()
             ->assertSee('SER-HU-1')
-            ->assertSee('SER-IN-1')
             ->assertSee('SER-DB-1')
-            ->assertDontSee('SER-OP-1');
+            ->assertDontSee('SER-IN-1')
+            ->assertDontSee('SER-OP-1')
+            ->assertDontSee('SER-MT-1');
     }
 
     public function test_maps_weapons_endpoint_excludes_operational_blockers(): void

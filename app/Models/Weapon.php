@@ -90,6 +90,33 @@ class Weapon extends Model
         return $this->revalidationDocumentExcludingIncidents()->exists();
     }
 
+    public function isOutsideInventory(): bool
+    {
+        return $this->isExcludedFromRevalidationDocuments();
+    }
+
+    /**
+     * Inventario activo del listado y KPI «En inventario» (incautación en trámite sí cuenta).
+     */
+    public function scopeInInventory(Builder $query): Builder
+    {
+        return $query->whereDoesntHave(
+            'incidents',
+            fn (Builder $incidentQuery) => $incidentQuery->revalidationDocumentExclusions()
+        );
+    }
+
+    /**
+     * Fuera del inventario: misma regla que KPI «No operativas» / revalidación excluida.
+     */
+    public function scopeOutsideInventory(Builder $query): Builder
+    {
+        return $query->whereHas(
+            'incidents',
+            fn (Builder $incidentQuery) => $incidentQuery->revalidationDocumentExclusions()
+        );
+    }
+
     public function clientAssignments()
     {
         return $this->hasMany(WeaponClientAssignment::class);

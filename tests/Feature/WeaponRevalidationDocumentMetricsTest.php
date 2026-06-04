@@ -61,10 +61,13 @@ class WeaponRevalidationDocumentMetricsTest extends TestCase
 
         $this->assertCount(6, $metrics['kpis']);
         $this->assertSame(4, $kpis['total']['value']);
-        $this->assertSame(1, $kpis['outside']['value']);
-        $this->assertSame(3, $kpis['in_inventory']['value']);
+        $this->assertSame('No operativas', $kpis['outside']['label']);
+        $this->assertSame(2, $kpis['outside']['value']);
+        $this->assertSame(2, $kpis['in_inventory']['value']);
         $this->assertSame(1, $kpis['seizure_open']['value']);
         $this->assertSame(2, $kpis['expired_docs']['value']);
+        $this->assertStringContainsString('inventory_scope=non_operational', (string) $kpis['outside']['url']);
+        $this->assertStringContainsString('inventory_scope=operational', (string) $kpis['in_inventory']['url']);
     }
 
     public function test_renewal_chart_segments_exclude_non_revalidatable_weapons(): void

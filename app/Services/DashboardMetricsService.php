@@ -343,11 +343,11 @@ class DashboardMetricsService
             ],
             [
                 'key' => 'outside',
-                'label' => 'Fuera',
+                'label' => 'No operativas',
                 'value' => $outsideInventoryCount,
                 'tone' => 'red',
                 'helper' => 'Hurtada, perdida, incautación definitiva o dada de baja',
-                'url' => route('reports.weapon-incidents.index'),
+                'url' => route('weapons.index', ['inventory_scope' => 'non_operational']),
             ],
             [
                 'key' => 'in_inventory',
@@ -355,7 +355,7 @@ class DashboardMetricsService
                 'value' => $inInventoryCount,
                 'tone' => 'green',
                 'helper' => 'Armas sin salida definitiva del inventario',
-                'url' => route('weapons.index'),
+                'url' => route('weapons.index', ['inventory_scope' => 'operational']),
             ],
             [
                 'key' => 'seizure_open',
