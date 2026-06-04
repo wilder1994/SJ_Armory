@@ -136,11 +136,13 @@ class WeaponController extends Controller
     {
         $this->authorize('viewAny', Weapon::class);
 
+        $filters = $this->filtersFromRequest($request);
         $hasExplicitFilters = $this->hasExplicitExportFilters($request);
+        $inventoryScoped = ($filters['inventory_scope'] ?? 'operational') !== 'all';
         $query = $this->buildExportQuery($request);
         $count = (clone $query)->count();
 
-        if (! $hasExplicitFilters) {
+        if (! $hasExplicitFilters && ! $inventoryScoped) {
             return response()->json([
                 'count' => $count,
                 'has_filters' => false,
@@ -782,10 +784,6 @@ class WeaponController extends Controller
         $query = Weapon::query();
         $filters = $this->filtersFromRequest($request);
         $columnFilters = $this->columnFiltersFromRequest($request);
-
-        if (! $this->hasExplicitExportFilters($request)) {
-            $filters['inventory_scope'] = 'all';
-        }
 
         $this->applyInventoryScope($query, $filters['inventory_scope']);
         $this->applyRoleScope($query, $request->user());

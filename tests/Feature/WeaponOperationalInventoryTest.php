@@ -72,6 +72,50 @@ class WeaponOperationalInventoryTest extends TestCase
             ->assertDontSee('SER-MT-1');
     }
 
+    public function test_export_preview_respects_inventory_scope(): void
+    {
+        $admin = User::factory()->create(['role' => 'ADMIN']);
+        $responsible = User::factory()->create(['role' => 'RESPONSABLE']);
+        $client = Client::query()->create(['name' => 'Cliente Export', 'nit' => '900200300-5']);
+        $responsible->clients()->attach($client->id);
+
+        $this->createWeapon('SER-EXP-OP', $client, $responsible);
+        $stolen = $this->createWeapon('SER-EXP-HU', $client, $responsible);
+        $this->createIncident($stolen, 'hurtada', WeaponIncident::STATUS_OPEN, $admin);
+
+        $operationalPreview = $this->actingAs($admin)
+            ->getJson(route('weapons.export.preview', ['inventory_scope' => 'operational']))
+            ->assertOk()
+            ->json();
+
+        $this->assertTrue($operationalPreview['has_filters']);
+        $this->assertSame(1, $operationalPreview['count']);
+
+        $defaultPreview = $this->actingAs($admin)
+            ->getJson(route('weapons.export.preview'))
+            ->assertOk()
+            ->json();
+
+        $this->assertTrue($defaultPreview['has_filters']);
+        $this->assertSame(1, $defaultPreview['count']);
+
+        $allPreview = $this->actingAs($admin)
+            ->getJson(route('weapons.export.preview', ['inventory_scope' => 'all']))
+            ->assertOk()
+            ->json();
+
+        $this->assertFalse($allPreview['has_filters']);
+        $this->assertSame(2, $allPreview['count']);
+
+        $nonOperationalPreview = $this->actingAs($admin)
+            ->getJson(route('weapons.export.preview', ['inventory_scope' => 'non_operational']))
+            ->assertOk()
+            ->json();
+
+        $this->assertTrue($nonOperationalPreview['has_filters']);
+        $this->assertSame(1, $nonOperationalPreview['count']);
+    }
+
     public function test_maps_weapons_endpoint_excludes_operational_blockers(): void
     {
         $admin = User::factory()->create(['role' => 'ADMIN']);

@@ -543,7 +543,7 @@ Listado de armas (`resources/views/weapons/partials/index_rows.blade.php`):
 - **Filtros por columna** en encabezado de tabla (estilo Excel): multi-selección, cascada vía `GET /weapons/filter-options`, aplicados en backend sobre todo el universo filtrado (no solo la página visible). Parámetros: `q`, `inventory_scope`, `col[clave][]`.
 - **Pie de tabla**: botón **Limpiar filtros de columna** (izquierda) y paginación numérica (derecha), sin texto «Showing 1 to 50 of N results» (`resources/views/pagination/without-summary.blade.php`).
 - El bloque superior legado de filtros (`Inventario`, `Tipo`, `Cliente`, `Responsable`, `Destino`, `Fecha`) se retiró para evitar doble lógica.
-- **Exportación** (misma página): modales **Exportar filtrado** y **Exportar selección** con preview y formatos xlsx/csv; respeta los mismos filtros activos; ver **§5.3.0**.
+- **Exportación** (misma página): modales **Exportar filtrado** y **Exportar selección** con preview y formatos xlsx/csv; respeta `inventory_scope`, buscador y filtros de columna como el listado; ver **§5.3.0**.
 
 ### 5.3.0 Exportación del listado (XLSX / CSV)
 
@@ -574,14 +574,15 @@ La hoja **Criterios de color** repite los mismos tonos con columnas *Muestra* / 
 - La exportación carga `photos` y `permitFile` (`exportRelationships()`) para evaluar el color sin N+1.
 - Clase: `app/Support/WeaponPhotoExportHighlight.php`. Tests: `tests/Unit/WeaponPhotoExportHighlightTest.php`.
 
-**Filtros globales del listado**
+**Filtros globales del listado y exportación**
 
 | Elemento | Comportamiento |
 |----------|----------------|
 | Buscador (`q`) | Filtra en backend por cliente, responsable, serie, marca, permiso, etc. |
-| Inventario (`inventory_scope`) | Por defecto `operational` (**en inventario**, `Weapon::inInventory()`); `non_operational` (**fuera**, `outsideInventory()`); `all` sin filtro. Misma regla que los KPIs del dashboard (no confundir con `operationalInventory()` del mapa). |
+| Inventario (`inventory_scope`) | Por defecto `operational` (**en inventario**, `Weapon::inInventory()`); `non_operational` (**fuera**, `outsideInventory()`); `all` sin filtro. Misma regla que los KPIs del dashboard (no confundir con `operationalInventory()` del mapa). **Exportar filtrado** y **export-preview** aplican siempre este alcance (no se sustituye por `all` si no hay más filtros). |
 | Columnas (`col[cliente][]`, …) | Multi-select por columna; AND entre columnas; cascada al abrir popover. |
 | Ruta opciones | `GET /weapons/filter-options?target=cliente` (y demás claves). |
+| Exportación sin alcance | Solo con `inventory_scope=all` y sin `q` ni `col[...]` se muestra aviso de exportar todo el inventario del rol. |
 
 **Despliegue:** tras cambios en `weapons/index` o JS del listado, `npm run build` (local) o `npm run build:deploy` (hosting).
 
