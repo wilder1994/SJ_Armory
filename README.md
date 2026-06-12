@@ -536,7 +536,7 @@ Reglas:
 
 Listado de armas (`resources/views/weapons/partials/index_rows.blade.php`):
 
-- Columna **Estado**: resuelta por `App\Support\WeaponListStatusResolver` — prioridad: novedad bloqueante → custodia activa (`custody_role` del puesto) → novedad legada abierta → documentos/alertas → Asignada/Sin destino. Así **Estado** y **Puesto o trabajador** quedan alineados cuando el arma está en armerillo, para mantenimiento o armero.
+- Columna **Estado**: resuelta por `App\Support\WeaponListStatusResolver` — combina **contexto operativo** (novedad bloqueante → custodia → novedad legada → documento manual → Asignada/Sin destino) con **alerta de revalidación** (`WeaponDocumentAlert`) cuando aplica. Texto compuesto, p. ej. `Armerillo — 348 días vencido. Fuera de servicio` o `Sin destino — …`. El **color de fila** y el punto usan la **severidad más alta** (vencido / por vencer gana sobre Armerillo o Asignada). Misma regla en listado y exportación XLSX/CSV.
 - Columna **Puesto o trabajador**: si hay trabajador activo, muestra el **nombre** del trabajador (tambien cuando hay puesto combinado); si solo hay puesto, el nombre del puesto.
 - Columna **Cedula**: documento del trabajador activo, o `-` si no hay trabajador.
 - **Barra superior compacta** (`weapons/index`, slot `header`): buscador, chip `X de Y resultados`, `X seleccionadas`, selector de inventario (**Operativas** / **Todas** / **No operativas**), acciones **Ver**, **Editar**, **Exportar**, **Nueva arma**.
@@ -631,7 +631,7 @@ Textos: `resources/lang/es/weapons.php` (notas de cierre automático de novedade
 Antes, una novedad legada abierta (p. ej. *En Mantenimiento*) podía seguir mostrándose en la columna **Estado** aunque el arma ya estuviera en *Armerillo Cali* en **Puesto o trabajador**. Ahora:
 
 1. **Al mover custodia** (`WeaponCustodyService`), `WeaponLegacyCustodyIncidentService` cierra en la misma transacción las novedades legadas abiertas con resultado `administrative_closure` (cierre administrativo sin bloqueo operativo) y nota en expediente.
-2. **Al pintar el listado**, `WeaponListStatusResolver::for()` prioriza: novedad **bloqueante** → etiqueta de **custodia** (`PostCustodyRole::label`) → novedad legada sin custodia → documentos/alertas → Asignada/Sin destino.
+2. **Al pintar el listado**, `WeaponListStatusResolver::for()` compone contexto operativo + alerta de revalidación (texto `Contexto — alerta`; color de fila según la severidad más alta).
 3. **Exportación XLSX/CSV** usa el mismo resolver en la columna Estado; la columna de novedad del export ignora tipos legados si ya no aplican.
 
 > 🧩 **Despliegue:** solo PHP, Blade y lang — **no** requiere `npm run build` ni subir `public/build/`.
