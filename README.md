@@ -25,7 +25,7 @@ Sistema web para **gestión de armamento**, **asignaciones operativas**, **trans
 - ✅ **Reportes — Novedades operativas** (`/reports/weapon-incidents`): solo tipos reportables (**hurtada**, **perdida**, **incautada**, **dar de baja**); mantenimiento/armerillo históricos quedan en notas de la ficha pero no suman en gráficos ni KPIs.
 - ✅ **Reportes — Custodia y taller** (`/reports/weapon-custody`): armas en puestos de armerillo, armerillo para mantenimiento o armero por responsable.
 - ✅ **Custodia en ficha del arma**: acciones **Enviar a mi armerillo** (operativa), **Para mantenimiento** y **Enviar a armero** (no operativas, sin novedad); un armerillo y armeros por responsable, ubicación inicial del cliente. Al mover custodia se cierran novedades legadas abiertas (`en_mantenimiento`, `para_mantenimiento`, `en_armerillo`) y el listado muestra **Estado** alineado con el puesto de custodia (`WeaponListStatusResolver`).
-- ✅ **Formatos** (`/formatos`): descarga de plantillas operativas listas para imprimir; **Revista mensual de armamento** (FO-OP-03) con descarga vacía o con relación de armas (tabla con filtros por columna, selección por checkbox y exportación solo de las marcadas); archivo **`FO-OP-03 Revista mensual de armamento.xlsx`**; 20 filas por hoja carta horizontal y paginación automática (`phpoffice/phpspreadsheet`).
+- ✅ **Formatos** (`/formatos`): descarga de plantillas operativas listas para imprimir; **Revista mensual de armamento** (FO-OP-03) con descarga vacía o con relación de armas (tabla con filtros por columna, selección por checkbox y exportación solo de las marcadas); archivo **`FO-OP-03 Revista mensual de armamento.xlsx`**; columnas Excel **Puesto** (`B`) desde asignación a puesto y **Responsable** / **Cédula** (`D`/`E`) desde el trabajador portador (vacías si el arma está solo en puesto); 20 filas por hoja carta horizontal y paginación automática (`phpoffice/phpspreadsheet`).
 
 ---
 
@@ -1121,8 +1121,13 @@ Formato inicial: **Revista mensual de armamento** (FO-OP-03):
 - **Descargar vacío**: plantilla con encabezado oficial, 20 filas numeradas y pie de diligenciamiento.
 - **Con relación de armas**: modal con tabla paginada (Cliente, Puesto, Responsable, Serie), filtros tipo Excel en encabezados (`col[cliente][]`, etc.), búsqueda general, inventario, destino y vencimiento. Checkbox por fila; **Seleccionar visibles** / **Limpiar selección**. Solo se exportan las armas marcadas (`weapon_ids[]`). Pie fijo con paginación y **Generar Excel**; solo el cuerpo de la tabla hace scroll (`x-modal` con `:bodyScroll="false"`).
 - Descarga con nombre **`FO-OP-03 Revista mensual de armamento.xlsx`** (vacío o con armas).
+- En el Excel, columnas **Responsable** (`D`) y **Cédula** (`E`) corresponden al **trabajador portador** (`activeWorkerAssignment`); si el arma está solo en **puesto**, esas columnas quedan vacías. La columna **Puesto** (`B`) usa `activePostAssignment`. El modal de selección sigue mostrando el responsable de cartera para filtrar.
 - Cada hoja Excel = **1 formulario carta horizontal** con **20 filas fijas**; si hay más armas seleccionadas, se agregan hojas adicionales (`Página X de Y`).
 - Vista previa JSON (`POST`): `formatos.revista-mensual.vista-previa` (`count`, `pages`, `rows_per_page`).
+
+Tests: `tests/Unit/MonthlyWeaponReviewRowMapperTest.php`, `MonthlyWeaponReviewSpreadsheetExporterTest.php`, `MonthlyWeaponReviewQueryServiceTest.php`, `tests/Feature/FormatControllerTest.php`.
+
+> 🧩 **Despliegue:** solo PHP y README — **no** requiere `npm run build` ni subir `public/build/`.
 
 Rutas:
 

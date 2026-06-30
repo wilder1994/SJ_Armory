@@ -15,15 +15,16 @@ class MonthlyWeaponReviewRowMapper
         $reviewDate ??= now();
         $internalAssignment = $weapon->activeWorkerAssignment ?? $weapon->activePostAssignment;
         $postName = (string) ($weapon->activePostAssignment?->post?->name ?? '');
-        $responsibleName = (string) ($weapon->operationalDisplayResponsible()?->name ?? '');
-        $workerDocument = (string) ($weapon->activeWorkerAssignment?->worker?->document ?? '');
+        $worker = $weapon->activeWorkerAssignment?->worker;
+        $holderName = $worker ? (string) $worker->name : '';
+        $holderDocument = $worker ? (string) ($worker->document ?? '') : '';
 
         return [
             (string) $rowNumber,
             $postName,
             $reviewDate->format('y-m-d'),
-            $responsibleName,
-            $workerDocument,
+            $holderName,
+            $holderDocument,
             (string) $weapon->weapon_type,
             (string) $weapon->serial_number,
             '',
