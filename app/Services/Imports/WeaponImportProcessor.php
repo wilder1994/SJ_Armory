@@ -140,7 +140,7 @@ class WeaponImportProcessor implements ImportBatchProcessor
         ];
     }
 
-    public function prepareRows(array $headers, array $rows): array
+    public function prepareRows(array $headers, array $rows, ?User $user = null): array
     {
         $columnMap = $this->resolveColumnMap($headers);
         $serialFrequency = [];

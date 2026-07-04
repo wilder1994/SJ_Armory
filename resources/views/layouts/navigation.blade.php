@@ -229,6 +229,11 @@
 
             <div class="sj-nav-main">
                 <div class="sj-nav-links">
+                    @can('viewAny', App\Models\Vest::class)
+                        <x-nav-link :href="route('vests.index')" :active="request()->routeIs('vests.*') || request()->routeIs('vest-imports.*')">
+                            {{ __('Chalecos') }}
+                        </x-nav-link>
+                    @endcan
                     @can('viewAny', App\Models\Weapon::class)
                         <x-nav-link :href="route('weapons.index')" :active="request()->routeIs('weapons.*')">
                             {{ __('Armamento') }}
@@ -401,6 +406,11 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Inicio') }}
             </x-responsive-nav-link>
+            @can('viewAny', App\Models\Vest::class)
+                <x-responsive-nav-link :href="route('vests.index')" :active="request()->routeIs('vests.*') || request()->routeIs('vest-imports.*')">
+                    {{ __('Chalecos') }}
+                </x-responsive-nav-link>
+            @endcan
             @can('viewAny', App\Models\Weapon::class)
                 <x-responsive-nav-link :href="route('weapons.index')" :active="request()->routeIs('weapons.*')">
                     {{ __('Armamento') }}

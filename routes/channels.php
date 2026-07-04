@@ -27,5 +27,6 @@ Broadcast::channel('incidents.updates', fn ($user) => true);
 Broadcast::channel('import-batches.updates', fn ($user) => true);
 Broadcast::channel('users.updates', fn ($user) => true);
 Broadcast::channel('workers.updates', fn ($user) => true);
+Broadcast::channel('vests.updates', fn ($user) => true);
 Broadcast::channel('maps.updates', fn ($user) => true);
 Broadcast::channel('posts.updates', fn ($user) => true);

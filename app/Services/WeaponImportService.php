@@ -8,6 +8,7 @@ use App\Models\WeaponImportBatch;
 use App\Models\WeaponImportRow;
 use App\Services\Imports\ClientImportProcessor;
 use App\Services\Imports\Contracts\ImportBatchProcessor;
+use App\Services\Imports\VestImportProcessor;
 use App\Services\Imports\WeaponImportProcessor;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
@@ -23,6 +24,7 @@ class WeaponImportService
         private readonly WeaponImportSpreadsheetReader $reader,
         private readonly WeaponImportProcessor $weaponProcessor,
         private readonly ClientImportProcessor $clientProcessor,
+        private readonly VestImportProcessor $vestProcessor,
     ) {
     }
 
@@ -37,7 +39,7 @@ class WeaponImportService
 
         try {
             $sheet = $this->reader->read($absolutePath, $uploadedFile->getClientOriginalExtension());
-            [$preparedRows, $counts] = $processor->prepareRows($sheet['headers'], $sheet['rows']);
+            [$preparedRows, $counts] = $processor->prepareRows($sheet['headers'], $sheet['rows'], $user);
         } catch (Throwable $exception) {
             Storage::disk('local')->delete($storedPath);
             throw $exception;
@@ -339,6 +341,7 @@ class WeaponImportService
         return match ($type) {
             WeaponImportBatch::TYPE_WEAPON => $this->weaponProcessor,
             WeaponImportBatch::TYPE_CLIENT => $this->clientProcessor,
+            WeaponImportBatch::TYPE_VEST => $this->vestProcessor,
             default => throw new RuntimeException('Tipo de importacion no soportado.'),
         };
     }
@@ -364,6 +367,7 @@ class WeaponImportService
                 ->orderBy('row_number'),
             'rows.weapon',
             'rows.client',
+            'rows.vest',
         ];
     }
 

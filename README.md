@@ -15,6 +15,7 @@ Sistema web para **gestión de armamento**, **asignaciones operativas**, **trans
 - ✅ **Transferencias**: listado **unificado** (pendientes y enviadas en una tabla; serie en columna arma; munición/proveedores opcionales en el envío; aceptación; **cancelación** con restauración cuando aplica); con transferencia **pendiente**, la ficha del arma muestra un **aviso** (usuario normal: mensaje genérico; **ADMIN**: quién **envió** y quién **debe aceptar**); botón **Historial** (modal, últimas participaciones).
 - ✅ **Clientes / Puestos / Trabajadores / Usuarios** (puestos y trabajadores: archivo, historial de cambios, políticas por rol)
 - ✅ **Cargas masivas**: validación previa, preview, ejecución por chunks y trazabilidad por lote para **armas** y **clientes**; solo **ADMIN**; descarga de plantillas Excel (hojas `Datos` + `Instructivo`); en **Cargas masivas**, el ADMIN también gestiona las plantillas globales de reverso autenticado (porte y tenencia) usadas en el PDF y en la ficha.
+- ✅ **Chalecos** (`/vests`): módulo paralelo al inventario de armas (tablas y rutas propias); listado con **KPIs clicables** por semaforización de vencimiento; ficha con datos, asignación (cliente / trabajador / puesto) y **4 fotos**; alta/edición manual; **import masivo** en `/subir-chalecos` con modal de subida (arrastrar, pegar Ctrl+V, seleccionar) y **validación en preview** de cliente, puesto y trabajador (cédula).
 - ✅ **Dashboard**: fila de **6 KPIs** (Total, No operativas, En inventario, Incautadas en trámite, Vencidos, Por vencer), gráficos y estado “as of”.
 - ✅ **Alertas documentales** (`/alerts/documents`): tarjetas vencidos / por vencer / sin alertas; filtro **multi-mes** con panel de checkboxes (varios meses y años); modales con **filtros por columna** tipo Excel (multi-selección en encabezado); exportación `.docx` y vista previa PDF con nombre `Revalidacion_{mes}_{año}`.
 - ✅ **Revista armas** (`/revista-armas`): acceso temporal (12 h) para colaboradores de campo; usuarios temporales reutilizables; **usuarios compartidos** (solo **ADMIN** autoriza supervisores multi-zona con acceso unificado y mismo código); tabla staff con columna **Cliente**; modal **Asignar acceso temporal** con tabla scrollable (**Cliente**, **Serie**, **Tipo**); subida de **4 fotos técnicas** a staging; el invitado solo entra con código vigente; staff al filtrar ve armas del **último acceso** (aunque haya vencido) para revisar fotos en staging (✓/✕, **Ver**, **Actualizar**); confirmaciones en **modales**; historial de notas en la ficha del arma; **ADMIN** con gestión global.
@@ -104,6 +105,14 @@ En **producción** (`APP_ENV=production`): `php artisan migrate --force`. Antes,
 
 Si `/reports/weapon-incidents` falla con `Unknown column 'is_reportable'`, falta ejecutar `migrate --force` tras `git pull`.
 
+**Módulo Chalecos (julio 2026):**
+
+- `2026_07_03_000001_create_vests_table.php` — tabla `vests`.
+- `2026_07_03_000002_create_vest_photos_table.php` — tabla `vest_photos`.
+- `2026_07_03_000003_add_vest_id_to_weapon_import_rows_table.php` — FK `vest_id` en filas de import.
+
+Tras desplegar código con chalecos: `php artisan migrate --force` (sin `migrate:fresh`). Ver **§5.16**.
+
 ### 4) Instalar y compilar frontend
 
 ```bash
@@ -155,8 +164,8 @@ composer reverb
 | Ruta | Propósito |
 |---|---|
 | `app/Http/Controllers` | Casos de uso (CRUD, asignaciones, transferencias, reportes) |
-| `app/Models` | Dominio / Eloquent (Weapon, Client, `Worker::roleLabels()` para cargos de trabajador, Assignments, Transfers, etc.) |
-| `app/Policies` | Autorización por rol/alcance (`WeaponPolicy`, `ClientPolicy`, etc.) |
+| `app/Models` | Dominio / Eloquent (Weapon, Vest, Client, `Worker::roleLabels()` para cargos de trabajador, Assignments, Transfers, etc.) |
+| `app/Policies` | Autorización por rol/alcance (`WeaponPolicy`, `VestPolicy`, `ClientPolicy`, etc.) |
 | `app/Services` | Lógica de negocio (métricas, importaciones, documentos, geocoding) |
 | `app/Support` | Helpers de dominio (p. ej. comprobación de coordenadas para mapa) |
 | `app/Events` | Eventos broadcast (Realtime) |
@@ -215,6 +224,13 @@ composer reverb
   - `update`: ADMIN, o RESPONSABLE **nivel 1** con el cliente en su cartera (misma regla que edición de puestos en cartera)
   - `create` / `delete`: solo ADMIN
 
+- `VestPolicy`
+  - `viewAny`: ADMIN / RESPONSABLE / AUDITOR
+  - `view`: ADMIN y AUDITOR global; RESPONSABLE solo si el cliente del chaleco está en su cartera
+  - `create` / `import`: ADMIN o RESPONSABLE **nivel 1**
+  - `update` / `updatePhotos`: ADMIN, o RESPONSABLE **nivel 1** con chaleco en cartera
+  - `delete`: **siempre false**
+
 ---
 
 ## 📡 Realtime (Reverb + Broadcasting)
@@ -240,6 +256,7 @@ composer reverb
 - `workers.updates`
 - `maps.updates`
 - `posts.updates`
+- `vests.updates`
 
 > **Nota:** la autorización de estos canales está configurada como `true` (cualquier usuario autenticado puede suscribirse). Si los eventos broadcast llevan **datos operativos sensibles**, conviene **acotar por rol o alcance** en `routes/channels.php` y revisar los payloads en `app/Events`. En despliegues muy exigentes, trátelo como deuda de seguridad conocida.
 
@@ -397,6 +414,16 @@ Acceso:
 - Modulo exclusivo para **ADMIN** (middleware en `WeaponImportController` y enlace de menu **Cargas masivas**).
 - **RESPONSABLE** y demas roles no acceden al centro ni a las descargas de plantilla.
 
+**Tipos de lote soportados hoy**
+
+| `type` | Módulo UI | Ruta base |
+|--------|-----------|-----------|
+| `weapon` | Subir armas | `/weapon-imports` |
+| `client` | (reservado en esquema) | — |
+| `vest` | Subir chalecos | `/subir-chalecos` |
+
+El import de **chalecos** reutiliza las tablas `weapon_import_batches` / `weapon_import_rows` (con `vest_id` en filas) pero tiene controlador, vistas y rutas propias (`vest-imports.*`). Ver **§5.17**.
+
 Flujo actual de armas:
 - Permite cargar archivos `.xlsx`, `.csv` y `.txt`.
 - El usuario sube el archivo desde modal:
@@ -535,9 +562,10 @@ Flujo actual de clientes:
 
 Notas de ampliacion:
 
-- `WeaponImportBatch::TYPE_WEAPON` y `WeaponImportBatch::TYPE_CLIENT` definen la tipologia del lote.
+- `WeaponImportBatch::TYPE_WEAPON`, `WeaponImportBatch::TYPE_CLIENT` y `WeaponImportBatch::TYPE_VEST` definen la tipología del lote.
 - `weapon_import_rows.client_id` asocia filas de lotes de clientes al registro comparado.
-- La UI y las rutas vigentes siguen centradas en `weapon-imports.*`.
+- `weapon_import_rows.vest_id` enlaza filas de lotes `vest` con el chaleco creado o actualizado.
+- La UI y las rutas vigentes de armas y clientes siguen centradas en `weapon-imports.*`; chalecos en `vest-imports.*`.
 
 ### 5.2 Asignacion a cliente (destino operativo)
 
@@ -1140,6 +1168,233 @@ Rutas:
 - `formatos.revista-mensual.vista-previa` (`POST`)
 - `formatos.revista-mensual.descargar` (`POST`, requiere `weapon_ids[]`)
 
+### 5.17 Módulo Chalecos
+
+Módulo de inventario de **chalecos balísticos**, diseñado en paralelo a armas (no mezcla datos en `weapons`). Expuesto en navegación como **Chalecos**.
+
+#### Acceso y políticas
+
+| Acción | ADMIN | RESPONSABLE N1 | RESPONSABLE N2 | AUDITOR |
+|--------|-------|----------------|----------------|---------|
+| Ver listado / ficha | ✅ | ✅ (cartera) | ✅ (cartera) | ✅ |
+| Crear / editar chaleco | ✅ | ✅ (cartera) | ❌ | ❌ |
+| Subir / reemplazar fotos | ✅ | ✅ (cartera) | ❌ | ❌ |
+| Import masivo Excel | ✅ | ✅ | ❌ | ❌ |
+| Eliminar chaleco | ❌ | ❌ | ❌ | ❌ |
+
+Política: `app/Policies/VestPolicy.php`. Alcance por cartera vía `Vest::scopeForUserPortfolio()` y `user_clients`.
+
+#### Rutas principales
+
+| Ruta | Nombre | Descripción |
+|------|--------|-------------|
+| `GET /vests` | `vests.index` | Listado, filtros y KPIs |
+| `GET /vests/create` | `vests.create` | Alta manual |
+| `POST /vests` | `vests.store` | Guardar chaleco |
+| `GET /vests/{vest}` | `vests.show` | Ficha de detalle |
+| `GET /vests/{vest}/edit` | `vests.edit` | Edición |
+| `PUT/PATCH /vests/{vest}` | `vests.update` | Actualizar |
+| `POST /vests/{vest}/photos` | `vests.photos.store` | Subir o reemplazar foto por slot |
+| `PATCH /vests/{vest}/photos/{photo}` | `vests.photos.update` | Reemplazo vía API (JSON) |
+| `DELETE /vests/{vest}/photos/{photo}` | `vests.photos.destroy` | Eliminar foto |
+| `GET /subir-chalecos` | `vest-imports.index` | Centro de cargas (historial) |
+| `POST /subir-chalecos/preview` | `vest-imports.preview` | Validar Excel y crear lote `draft` |
+| `GET /subir-chalecos/{batch}` | `vest-imports.show` | Detalle / preview del lote |
+| `POST /subir-chalecos/{batch}/execute/start` | `vest-imports.start` | Iniciar ejecución (JSON) |
+| `POST /subir-chalecos/{batch}/execute/process` | `vest-imports.process` | Procesar chunk (JSON) |
+| `GET /subir-chalecos/{batch}/execute/status` | `vest-imports.status` | Estado de progreso (JSON) |
+| `POST /subir-chalecos/{batch}/execute` | `vest-imports.execute` | Ejecutar lote (formulario clásico) |
+| `POST /subir-chalecos/{batch}/discard` | `vest-imports.discard` | Cancelar borrador |
+
+Controladores: `VestController`, `VestPhotoController`, `VestImportController`.  
+Servicios: `VestQueryService`, `Imports\VestImportProcessor` (inyectado en `WeaponImportService`).
+
+#### Modelo de datos
+
+Tablas (migraciones `2026_07_03_000001` … `000003`):
+
+- **`vests`**: `client_id`, `worker_id`, `post_id`, `serial_number` (**único**), `brand`, `batch`, `size`, `manufactured_at`, `expires_at`, `device_responsible`, `notes`.
+- **`vest_photos`**: `vest_id`, `file_id`, `description` (único por chaleco y slot).
+- **`weapon_import_rows.vest_id`**: trazabilidad fila ↔ chaleco en lotes `type = vest`.
+
+Modelos: `App\Models\Vest`, `App\Models\VestPhoto`.  
+Evento broadcast: `App\Events\VestChanged` → canal `vests.updates`.
+
+#### Listado e indicadores (KPIs)
+
+Vista: `resources/views/vests/index.blade.php`.  
+Servicio: `VestQueryService` + helper `App\Support\VestAlert`.
+
+Tarjetas clicables filtran la tabla con `?alert=`:
+
+| Clave | Significado | Regla (días hasta `expires_at`) |
+|-------|-------------|----------------------------------|
+| `all` | Todos | Sin filtro de alerta |
+| `vigent` | Vigentes | > 365 |
+| `preventive` | Preventivos | 180 – 365 |
+| `critical` | Críticos | 0 – 179 |
+| `expired` | Vencidos | < 0 |
+| `unassigned` | Sin asignar | Sin `worker_id` |
+
+Filtros adicionales: búsqueda (`q`), cliente, puesto, marca, asignación.
+
+#### Kit UI (`sj-ui-*`) — módulo Chalecos
+
+Estilos reutilizables en `resources/css/app.css` (variables `--sj-ui-*`: fondo translúcido, borde y glow tipo neón alineado a tablas/KPIs). Aplicados hoy en vistas de chalecos; pensados para extenderse a otros listados.
+
+| Clase | Uso |
+|-------|-----|
+| `.sj-ui-card` | Paneles y cards de contenido |
+| `.sj-ui-card--link` | Cards clicables (historial de lotes) |
+| `.sj-ui-card--dashed` | Empty state |
+| `.sj-ui-kpi` + `.sj-ui-kpi--{blue,green,amber,orange,red,slate}` | KPIs del listado (barra de acento superior) |
+| `.sj-ui-filter-bar` + `.sj-ui-field` | Barra de filtros (label uppercase + control 2.5rem) |
+| `.sj-ui-btn` + `--ghost` / `--primary` / `--sm` / `--xs` / `--block` / `--danger` | Botones de header, filtros y acciones |
+
+Vistas que usan el kit: `vests/index`, `vests/show`, `vests/create`, `vests/edit`, `vest-imports/center`, `vests/partials/photos`.
+
+Tras modificar `app.css`: compilar frontend (ver abajo).
+
+#### Compilación frontend (Chalecos / kit UI)
+
+En Laragon (Windows), desde la raíz del proyecto:
+
+```bash
+C:\laragon\bin\nodejs\node-v18\npm.cmd run build
+```
+
+Equivalente si `npm` está en PATH:
+
+```bash
+npm run build
+```
+
+Salida: `public/build/` (CSS principal `app-*.css`). Refrescar el navegador con **Ctrl+F5** tras compilar.
+
+Para hosting compartido: `npm run build:deploy` y subir `build_hosting/build/` → `public/build/` (ver §4 y §16).
+
+#### Ficha y formulario
+
+- **Show** (`vests/show`): datos del chaleco, asignación, badge de alerta, partial de fotos.
+- **Create / edit** (`vests/create`, `vests/edit`): formulario en `vests/partials/form.blade.php`; trabajadores y puestos dependen del cliente seleccionado.
+- Validación: `serial_number` obligatorio y **único** en `vests`.
+
+#### Fotos
+
+Controlador: `VestPhotoController` (mismo patrón seguro que armas: asignar nuevo `file_id` antes de borrar el archivo anterior).
+
+Slots fijos (`VestPhoto::DESCRIPTIONS`):
+
+| `description` | Etiqueta UI |
+|---------------|-------------|
+| `vista_completa_1` | Vista completa 1 |
+| `vista_completa_2` | Vista completa 2 |
+| `placa_serie_1` | Placa / serie 1 |
+| `placa_serie_2` | Placa / serie 2 |
+
+Almacenamiento: `storage/app/public/vests/{vest_id}/photos/` (disco `public`).
+
+> La UI actual de fotos en chalecos es **formulario directo** (subir/reemplazar/eliminar). El editor con Cropper y captura móvil de armas (`weapons/partials/photos.blade.php`) puede portarse en una fase posterior si se requiere paridad total.
+
+#### Import masivo (`/subir-chalecos`)
+
+Procesador: `app/Services/Imports/VestImportProcessor.php`.  
+Reutiliza el flujo de lotes de armas (`WeaponImportService`: preview, chunks, estados `draft` / `processing` / `executed` / `failed`).
+
+**Roles**
+
+- **ADMIN**: columna **Cliente** (o **Razón social**) **obligatoria** en cada fila.
+- **RESPONSABLE N1**: columna Cliente **opcional**; el cliente se infiere de la cartera del usuario cuando falta.
+
+**Columnas soportadas** (con alias en español; el Excel puede usar nombres alternativos):
+
+| Campo interno | Encabezados / alias habituales |
+|---------------|--------------------------------|
+| `worker_document` | Cédula del empleado |
+| `worker_name` | Nombres y apellidos |
+| `worker_role` | Cargo |
+| `client_name` | Cliente, Regional |
+| `client_legal_name` | Razón social, Razón social cliente |
+| `department` | Departamento |
+| `city` | Ciudad |
+| `post_name` | Puesto, Centro de costos |
+| `brand` | Marca, Marca chaleco |
+| `batch` | Lote |
+| `serial_number` | No. serie o código, Serie (**obligatorio**) |
+| `manufactured_at` | Fecha de fabricación |
+| `expires_at` | Fecha de vencimiento, Vence |
+| `size` | Talla |
+| `device_responsible` | Responsable dispositivo |
+
+**Comportamiento por fila**
+
+- Llave principal: `serial_number`.
+- Si la serie no existe → `create`; si existe y hay cambios → `update`; si no hay diferencias → `no_change`.
+- **Preview** valida cliente, puesto y trabajador antes de ejecutar (el usuario que sube el archivo se usa para cartera y reglas por rol).
+- **Cliente**: debe existir en el sistema (coincidencia exacta por nombre). ADMIN: obligatorio en cada fila. RESPONSABLE N1: obligatorio salvo inferencia por cartera única o cédula de trabajador en cartera. Nunca se crea cliente → si no coincide → `error`.
+- **Puesto**: si viene en el Excel, debe existir para ese cliente (activo). **No se crea al ejecutar** — debe darse de alta antes en Puestos → si no existe → `error`.
+- **Trabajador**: se valida por **cédula**. Si existe en el mismo cliente → se asigna el chaleco sin modificar datos del trabajador ni asignaciones de armamento. Si la cédula pertenece a **otro cliente** → `error`. Si no existe → se puede crear al ejecutar con nombre + cargo válidos.
+- Duplicados de serie en el mismo archivo → `error` (bloquea ejecución del lote si hay al menos una fila en error).
+
+**Mensajes de error frecuentes en preview**
+
+| Situación | Mensaje (resumen) |
+|-----------|-------------------|
+| Cliente vacío (ADMIN) | El cliente es obligatorio en cada fila. |
+| Cliente no registrado | Cliente no encontrado: {nombre}. |
+| Cliente fuera de cartera (RESPONSABLE) | El cliente no pertenece a su cartera. |
+| Puesto inexistente | Puesto no encontrado para el cliente. Debe crearlo antes en el sistema. |
+| Cédula en otro cliente | La cédula pertenece a otro cliente ({nombre}). |
+| Trabajador nuevo sin datos | Para crear el trabajador se requieren nombre y cargo válido. |
+
+**Flujo operativo recomendado**
+
+1. Tener **clientes** y **puestos** ya creados en el sistema (coincidencia exacta por nombre).
+2. En `/subir-chalecos`, pulsar **Subir Excel** (header) → elegir archivo en el modal → **Validar archivo**.
+3. Revisar preview del lote (filas rojas = corregir antes de ejecutar).
+4. Ejecutar lote solo si `error_count = 0`.
+
+**Centro de cargas (UI)**
+
+Vista: `resources/views/vest-imports/center.blade.php`.
+
+- **Header**: botón **Subir Excel** (abre modal) y **Volver al inventario**; la página muestra solo el **historial** de lotes ejecutados (sin bloque “Nueva carga” en el cuerpo).
+- **Modal de subida** (mismo patrón que Cargas masivas → armas): zona drag & drop, **Ctrl+V** para pegar archivo, selección manual, barra de progreso XHR al validar y redirección al preview del lote (`POST vest-imports.preview` con `Accept: application/json`).
+- Panel de ayuda dentro del modal: columnas soportadas y reglas por rol (ADMIN / responsable).
+
+**Implementación técnica**
+
+- `VestImportProcessor::prepareRows(..., ?User $user)` — validación en preview con cartera del usuario que sube.
+- `resolveClientStrict()`, `validatePost()`, `validateWorker()` — reglas compartidas con ejecución.
+- `ImportBatchProcessor::prepareRows` recibe `User` opcional; `WeaponImportService::createPreviewBatch` lo inyecta.
+
+**Vistas de import**
+
+- `resources/views/vest-imports/center.blade.php` — historial de lotes + modal pro de subida (header).
+- `resources/views/vest-imports/batch.blade.php` — detalle del lote, tabla preview y panel de progreso AJAX; columna **Observación** muestra `errors` o `summary` (sin duplicar).
+
+Auditoría en import: `vest_import_created`, `vest_import_updated` (además de `worker_created` cuando aplica).
+
+**Tests**
+
+- `tests/Feature/VestImportValidationTest.php` — preview (cliente, puesto, cédula en otro cliente, trabajador existente) y ejecución sin auto-crear puesto.
+
+#### Migraciones
+
+Ejecutar en entornos existentes (no destructivo):
+
+```bash
+php artisan migrate
+```
+
+Archivos:
+
+- `2026_07_03_000001_create_vests_table.php`
+- `2026_07_03_000002_create_vest_photos_table.php`
+- `2026_07_03_000003_add_vest_id_to_weapon_import_rows_table.php`
+
+> ⚠️ No usar `migrate:fresh` en bases con datos de producción o hosting importados.
+
 ## 6. Auditoria
 
 Tabla: `audit_logs`
@@ -1161,6 +1416,9 @@ Se registran, entre otros:
 - Solicitud, aceptación y **cancelación** de transferencias (registros antiguos pueden figurar como rechazados).
 - Cambios de cartera.
 - Cargas masivas de armas y clientes (`weapon_import_created`, `weapon_import_updated`).
+- CRUD de chalecos (`vest_created`, `vest_updated`).
+- Cargas masivas de chalecos (`vest_import_created`, `vest_import_updated`).
+- Fotos de chaleco (`upload_vest_photo`, `update_vest_photo`).
 
 ## 7. Modelo de datos (tablas)
 
@@ -1184,6 +1442,8 @@ Se registran, entre otros:
 - `workers` (incluye `archived_at`)
 - `worker_histories`
 - `weapons`
+- `vests`
+- `vest_photos`
 - `weapon_client_assignments`
 - `weapon_post_assignments`
 - `weapon_worker_assignments`
@@ -1195,18 +1455,21 @@ Se registran, entre otros:
 - `weapon_photos`
 - `weapon_documents`
 - `weapon_import_batches`
-- `weapon_import_rows`
+- `weapon_import_rows` (incluye `client_id`, `weapon_id`, `vest_id` según tipo de lote)
 - `audit_logs`
 
 ### Restricciones importantes
 
 - Unicidad de `users.email`.
 - Unicidad de `weapons.internal_code` y `weapons.serial_number`.
+- Unicidad de `vests.serial_number`.
+- Unicidad de foto por slot en chaleco: `vest_photos (vest_id, description)`.
 - Unicidad de `user_clients (user_id, client_id)`.
 - Unicidad de foto por tipo en arma: `weapon_photos (weapon_id, description)`.
 - `weapon_photos.file_id` → `files` con **`cascadeOnDelete`**: al borrar un `files` referenciado se elimina la fila `weapon_photos`; por eso `WeaponPhotoController::update`/`store` reemplazo deben actualizar `file_id` antes de borrar el archivo viejo.
-- `weapon_import_batches.type` clasifica el lote (`weapon`, `client`).
+- `weapon_import_batches.type` clasifica el lote (`weapon`, `client`, `vest`).
 - `weapon_import_rows.client_id` referencia opcional a `clients`.
+- `weapon_import_rows.vest_id` referencia opcional a `vests` (lotes de chalecos).
 - Indexado por lote/accion y lote/fila en `weapon_import_rows`.
 - Unicidad de activa por arma en asignaciones:
   - `weapon_client_assignments (weapon_id, is_active)`
@@ -1228,6 +1491,8 @@ Grupos funcionales:
   - `users.*`, `users.status`, `users.send-access-credentials` (POST: reenvío de credenciales por correo con contraseña temporal nueva, solo ADMIN desde el listado).
 - Operacion:
   - `weapons.*`
+  - `vests.*`, `vests.photos.*`
+  - `vest-imports.index`, `vest-imports.preview`, `vest-imports.show`, `vest-imports.start`, `vest-imports.process`, `vest-imports.status`, `vest-imports.execute`, `vest-imports.discard` (centro de cargas masivas de chalecos)
   - `weapon-imports.index`, `weapon-imports.templates.weapon`, `weapon-imports.templates.client`, `weapon-imports.preview`, `weapon-imports.start`, `weapon-imports.process`, `weapon-imports.status`, `weapon-imports.execute`, `weapon-imports.discard` (centro de cargas masivas: armas y clientes)
   - `weapons.client_assignments.store`
   - `weapons.internal_assignments.store/retire`
@@ -1272,6 +1537,13 @@ Caracteristicas:
   - `./resources/js/**/*.js`
 - Se usa `safelist` para clases dinamicas de estados documentales, de modo que los colores de alertas no se pierdan en el build.
 
+**Kit UI Chalecos (`sj-ui-*`)**
+
+- Definido en `resources/css/app.css` (bloque «Kit UI» tras `.sj-btn-secondary`).
+- Variables CSS: `--sj-ui-surface-bg`, `--sj-ui-neon-glow`, `--sj-ui-control-height` (2.5rem), etc.
+- Los KPIs del dashboard (`.sj-kpi-card`) comparten el mismo tratamiento de fondo translúcido y perímetro neón.
+- Tras editar estilos del módulo Chalecos: `npm run build` (local) o `npm run build:deploy` (hosting).
+
 ## 10. Archivos y almacenamiento
 
 Discos Laravel (`config/filesystems.php`):
@@ -1282,6 +1554,7 @@ Discos Laravel (`config/filesystems.php`):
 Rutas usadas por el dominio:
 
 - Fotos arma: `storage/app/public/weapons/{weapon_id}/photos`
+- Fotos chaleco: `storage/app/public/vests/{vest_id}/photos`
 - Permiso arma: `storage/app/weapons/{weapon_id}/permits`
 - Plantillas reverso autenticado (global, porte/tenencia): `storage/app/permit-authenticated-templates` (metadatos en `files` / `permit_authenticated_templates`)
 - Documentos arma: `storage/app/weapons/{weapon_id}/documents`
@@ -1296,7 +1569,7 @@ Rutas usadas por el dominio:
 - Fallback: `es`.
 - Middleware de locale: `App\Http\Middleware\SetLocale`.
 - Archivos:
-  - `resources/lang/es/*` (incluye `audit.php` y `alerts.php` para etiquetas de auditoría y alertas documentales)
+  - `resources/lang/es/*` (incluye `audit.php` y `alerts.php` para etiquetas de auditoría y alertas documentales; acciones de chaleco: `vest_created`, `vest_updated`, `vest_import_*`, `upload_vest_photo`, `update_vest_photo`)
   - `resources/lang/en.json`
 - **UTF-8 en todo el stack**: `.editorconfig` (`charset = utf-8`), Blade/PHP en UTF-8, MySQL `utf8mb4` / `utf8mb4_unicode_ci` (`config/database.php`), `<meta charset="utf-8">` en layouts.
 - **Textos visibles al usuario**: preferir `__('clave')` / `trans('archivo.clave')` en archivos `lang` en lugar de cadenas con tildes embebidas en controladores o Blade (evita mojibake tipo `relaciÃ³n` o `sesiÃ³n` si un archivo se guarda con encoding incorrecto).
@@ -1518,6 +1791,7 @@ Suite actual en `tests/`:
 - Unit basica.
 - Feature de autenticacion y perfil (Breeze).
 - Feature de `Subir armas` / cargas masivas, incluyendo preview, progreso/ejecucion de lote y descarga de plantillas Excel (`ImportTemplateExporterTest`).
+- Feature de import de **Chalecos** (`VestImportValidationTest`): validación en preview de cliente/puesto/trabajador.
 - Feature de inventario operativo (`WeaponOperationalInventoryTest`), incluyendo listado con transferencia pendiente y asignación de cliente legacy cerrada (`operationalDisplayClient`).
 
 Comando:

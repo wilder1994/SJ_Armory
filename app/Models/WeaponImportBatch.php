@@ -11,6 +11,7 @@ class WeaponImportBatch extends Model
 
     public const TYPE_WEAPON = 'weapon';
     public const TYPE_CLIENT = 'client';
+    public const TYPE_VEST = 'vest';
 
     protected $fillable = [
         'file_id',
@@ -94,10 +95,16 @@ class WeaponImportBatch extends Model
         return $this->type === self::TYPE_CLIENT;
     }
 
+    public function isVestImport(): bool
+    {
+        return $this->type === self::TYPE_VEST;
+    }
+
     public function typeLabel(): string
     {
         return match ($this->type ?: self::TYPE_WEAPON) {
             self::TYPE_CLIENT => 'Clientes',
+            self::TYPE_VEST => 'Chalecos',
             default => 'Armas',
         };
     }

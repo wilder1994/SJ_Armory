@@ -14,7 +14,7 @@ interface ImportBatchProcessor
      * @param  array<int, array{row_number:int, cells: array<int, string>}>  $rows
      * @return array{0: array<int, array<string, mixed>>, 1: array<string, int>}
      */
-    public function prepareRows(array $headers, array $rows): array;
+    public function prepareRows(array $headers, array $rows, ?User $user = null): array;
 
     public function executeRow(WeaponImportRow $row, User $user): void;
 }
