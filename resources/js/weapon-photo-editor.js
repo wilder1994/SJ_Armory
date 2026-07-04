@@ -12,7 +12,7 @@ function escapeHtml(value) {
 }
 
 function parseConfig(root) {
-    const raw = root.dataset.weaponPhotoEditorConfig;
+    const raw = root.dataset.weaponPhotoEditorConfig || root.dataset.photoSlotEditorConfig;
 
     if (!raw) {
         return null;
@@ -21,13 +21,13 @@ function parseConfig(root) {
     try {
         return JSON.parse(raw);
     } catch (error) {
-        console.error('weapon-photo-editor config', error);
+        console.error('photo-slot-editor config', error);
         return null;
     }
 }
 
 export function initWeaponPhotoEditor(root) {
-    if (!root || root.dataset.weaponPhotoEditorReady === '1') {
+    if (!root || root.dataset.photoSlotEditorReady === '1' || root.dataset.weaponPhotoEditorReady === '1') {
         return;
     }
 
@@ -37,16 +37,17 @@ export function initWeaponPhotoEditor(root) {
     }
 
     if (typeof window.Cropper === 'undefined') {
-        console.warn('Cropper.js is required for weapon-photo-editor');
+        console.warn('Cropper.js is required for photo-slot-editor');
         return;
     }
 
+    root.dataset.photoSlotEditorReady = '1';
     root.dataset.weaponPhotoEditorReady = '1';
 
-    const photoEditToggle = document.getElementById('photo_edit_toggle');
-    const photoGrid = document.getElementById('weapon-photo-grid');
-    const photoCards = Array.from(document.querySelectorAll('.weapon-photo-card[data-photo-editable]'));
-    const dropZones = Array.from(document.querySelectorAll('[data-drop-zone]'));
+    const photoEditToggle = root.querySelector('#photo_edit_toggle') || document.getElementById('photo_edit_toggle');
+    const photoGrid = root.querySelector('[data-photo-grid]') || document.getElementById('weapon-photo-grid');
+    const photoCards = Array.from(root.querySelectorAll('.weapon-photo-card[data-photo-editable]'));
+    const dropZones = Array.from(root.querySelectorAll('[data-drop-zone]'));
 
     const actionModal = document.getElementById('photo_action_modal');
     const actionCrop = document.getElementById('photo_action_crop');
@@ -225,6 +226,21 @@ export function initWeaponPhotoEditor(root) {
         wrap.classList.toggle('hidden', !isEditing);
     };
 
+    const syncPhotoCount = () => {
+        if (!config.photoCountSelector) {
+            return;
+        }
+
+        const counter = root.querySelector(config.photoCountSelector);
+        if (!counter) {
+            return;
+        }
+
+        const total = config.photoSlotTotal || photoCards.length;
+        const filled = photoCards.filter((card) => card.dataset.photoEmpty === '0').length;
+        counter.textContent = `${filled}/${total}`;
+    };
+
     const applySlotToCard = (card, slot) => {
         if (!card || !slot) {
             return;
@@ -255,6 +271,7 @@ export function initWeaponPhotoEditor(root) {
         }
 
         syncDeleteControl(card, slot);
+        syncPhotoCount();
     };
 
     const showPhotoAlert = (message) => new Promise((resolve) => {
@@ -611,7 +628,7 @@ export function initWeaponPhotoEditor(root) {
         let url = config.storeUrl;
         const method = 'POST';
 
-        if (activePhotoType === 'permit') {
+        if (activePhotoType === 'permit' && config.updatePermitUrl) {
             formData.append('_method', 'PATCH');
             url = config.updatePermitUrl;
         } else if (activePhotoId) {
@@ -781,6 +798,7 @@ export function initWeaponPhotoEditor(root) {
     };
 
     syncDeleteControlsVisibility();
+    syncPhotoCount();
 
     if (photoEditToggle) {
         photoEditToggle.setAttribute('role', 'switch');
@@ -1072,7 +1090,7 @@ export function initWeaponPhotoEditor(root) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('[data-weapon-photo-editor]').forEach((root) => {
+    document.querySelectorAll('[data-weapon-photo-editor], [data-photo-slot-editor]').forEach((root) => {
         initWeaponPhotoEditor(root);
     });
 });

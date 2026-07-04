@@ -189,6 +189,10 @@ export function initAssignmentComboboxes(scope = document) {
     const instances = [];
 
     scope.querySelectorAll('[data-assignment-combobox]').forEach((root) => {
+        if (root.closest('[data-vest-form]')) {
+            return;
+        }
+
         const instance = initAssignmentCombobox(root);
         if (instance) {
             instances.push(instance);

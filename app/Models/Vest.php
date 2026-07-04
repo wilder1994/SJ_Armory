@@ -78,4 +78,27 @@ class Vest extends Model
     {
         return $this->photosCount() >= count(VestPhoto::DESCRIPTIONS);
     }
+
+    public function displayDeviceResponsible(): ?string
+    {
+        if (filled($this->device_responsible)) {
+            return $this->device_responsible;
+        }
+
+        return self::clientDeviceResponsibleName($this->client_id);
+    }
+
+    public static function clientDeviceResponsibleName(?int $clientId): ?string
+    {
+        if (! $clientId) {
+            return null;
+        }
+
+        return User::query()
+            ->whereIn('role', ['RESPONSABLE', 'ADMIN'])
+            ->whereHas('clients', fn ($query) => $query->whereKey($clientId))
+            ->orderByRaw("CASE WHEN role = 'RESPONSABLE' THEN 0 WHEN role = 'ADMIN' THEN 1 ELSE 2 END")
+            ->orderBy('name')
+            ->value('name');
+    }
 }

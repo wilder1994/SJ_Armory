@@ -103,7 +103,7 @@
             'xl:grid-cols-7' => $compact,
             'xl:grid-cols-6' => ! $compact,
             'mt-0' => $compact,
-        ]) id="weapon-photo-grid">
+        ]) id="weapon-photo-grid" data-photo-grid>
             @foreach ($photoDescriptions as $description => $label)
                 @php
                     $photo = $photosByDescription->get($description);

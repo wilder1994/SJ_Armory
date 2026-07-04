@@ -110,6 +110,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/workers/{worker}/histories', [WorkerController::class, 'histories'])->name('workers.histories');
     Route::patch('/workers/{worker}/restore', [WorkerController::class, 'restore'])->name('workers.restore');
     Route::resource('workers', WorkerController::class)->except(['show']);
+    Route::get('/vests/form-options', [VestController::class, 'formOptionsJson'])->name('vests.form-options');
     Route::resource('vests', VestController::class);
     Route::post('/vests/{vest}/photos', [VestPhotoController::class, 'store'])->name('vests.photos.store');
     Route::patch('/vests/{vest}/photos/{photo}', [VestPhotoController::class, 'update'])->name('vests.photos.update');

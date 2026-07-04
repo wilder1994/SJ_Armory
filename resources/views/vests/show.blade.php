@@ -15,44 +15,77 @@
     </x-slot>
 
     <div class="py-6">
-        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="sj-page-shell sj-page-shell--wide">
             @if (session('status'))
                 <div class="rounded-lg bg-green-50 border border-green-200 p-4 mb-6 text-sm text-green-700">{{ session('status') }}</div>
             @endif
 
-            <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
-                <section class="sj-ui-card p-5">
-                    <h3 class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-4">{{ __('Datos del chaleco') }}</h3>
-                    <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-                        <div><dt class="text-gray-500">{{ __('Marca') }}</dt><dd class="font-medium text-gray-900">{{ $vest->brand ?: '—' }}</dd></div>
-                        <div><dt class="text-gray-500">{{ __('Lote') }}</dt><dd class="font-medium text-gray-900">{{ $vest->batch ?: '—' }}</dd></div>
-                        <div><dt class="text-gray-500">{{ __('Talla') }}</dt><dd class="font-medium text-gray-900">{{ $vest->size ?: '—' }}</dd></div>
-                        <div><dt class="text-gray-500">{{ __('Fabricación') }}</dt><dd class="font-medium text-gray-900">{{ $vest->manufactured_at?->format('d/m/Y') ?? '—' }}</dd></div>
-                        <div><dt class="text-gray-500">{{ __('Vencimiento') }}</dt><dd class="font-medium text-gray-900">{{ $vest->expires_at?->format('d/m/Y') ?? '—' }}</dd></div>
-                        <div><dt class="text-gray-500">{{ __('Días restantes') }}</dt><dd class="font-medium {{ $alert['text_class'] }}">{{ $alert['days_remaining'] ?? '—' }}</dd></div>
+            <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-stretch">
+                <section class="sj-ui-card flex h-full flex-col p-4">
+                    <h3 class="mb-3 shrink-0 text-sm font-semibold uppercase tracking-wide text-gray-500">{{ __('Datos del chaleco') }}</h3>
+                    <dl class="grid flex-1 grid-cols-1 gap-2.5 text-sm sm:grid-cols-2 sm:content-start">
+                        <div>
+                            <dt class="text-xs font-medium uppercase tracking-wide text-gray-500">{{ __('Marca') }}</dt>
+                            <dd class="mt-0.5 font-medium text-gray-900">{{ $vest->brand ?: '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-medium uppercase tracking-wide text-gray-500">{{ __('Lote') }}</dt>
+                            <dd class="mt-0.5 font-medium text-gray-900">{{ $vest->batch ?: '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-medium uppercase tracking-wide text-gray-500">{{ __('Talla') }}</dt>
+                            <dd class="mt-0.5 font-medium text-gray-900">{{ $vest->size ?: '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-medium uppercase tracking-wide text-gray-500">{{ __('Fabricación') }}</dt>
+                            <dd class="mt-0.5 font-medium text-gray-900">{{ $vest->manufactured_at?->format('d/m/Y') ?? '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-medium uppercase tracking-wide text-gray-500">{{ __('Vencimiento') }}</dt>
+                            <dd class="mt-0.5 font-medium text-gray-900">{{ $vest->expires_at?->format('d/m/Y') ?? '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-medium uppercase tracking-wide text-gray-500">{{ __('Días restantes') }}</dt>
+                            <dd class="mt-0.5 font-medium {{ $alert['text_class'] }}">{{ $alert['days_remaining'] ?? '—' }}</dd>
+                        </div>
                     </dl>
                 </section>
 
-                <section class="sj-ui-card p-5">
-                    <h3 class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-4">{{ __('Asignación') }}</h3>
-                    <dl class="grid grid-cols-1 gap-3 text-sm">
-                        <div><dt class="text-gray-500">{{ __('Cliente') }}</dt><dd class="font-medium text-gray-900">{{ $vest->client?->name ?? '—' }}</dd></div>
-                        <div><dt class="text-gray-500">{{ __('Trabajador') }}</dt><dd class="font-medium text-gray-900">{{ $vest->worker?->name ?? __('Sin asignar') }}</dd></div>
-                        <div><dt class="text-gray-500">{{ __('Cédula') }}</dt><dd class="font-medium text-gray-900">{{ $vest->worker?->document ?? '—' }}</dd></div>
-                        <div><dt class="text-gray-500">{{ __('Puesto') }}</dt><dd class="font-medium text-gray-900">{{ $vest->post?->name ?? '—' }}</dd></div>
-                        <div><dt class="text-gray-500">{{ __('Responsable dispositivo') }}</dt><dd class="font-medium text-gray-900">{{ $vest->device_responsible ?: '—' }}</dd></div>
+                <section class="sj-ui-card flex h-full flex-col p-4">
+                    <h3 class="mb-3 shrink-0 text-sm font-semibold uppercase tracking-wide text-gray-500">{{ __('Asignación') }}</h3>
+                    <dl class="grid flex-1 grid-cols-1 gap-2.5 text-sm sm:grid-cols-2 sm:content-start">
+                        <div class="sm:col-span-2">
+                            <dt class="text-xs font-medium uppercase tracking-wide text-gray-500">{{ __('Cliente') }}</dt>
+                            <dd class="mt-0.5 font-medium text-gray-900">{{ $vest->client?->name ?? '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-medium uppercase tracking-wide text-gray-500">{{ __('Trabajador') }}</dt>
+                            <dd class="mt-0.5 font-medium text-gray-900">{{ $vest->worker?->name ?? __('Sin asignar') }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-medium uppercase tracking-wide text-gray-500">{{ __('Cédula') }}</dt>
+                            <dd class="mt-0.5 font-medium text-gray-900">{{ $vest->worker?->document ?? '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-medium uppercase tracking-wide text-gray-500">{{ __('Puesto') }}</dt>
+                            <dd class="mt-0.5 font-medium text-gray-900">{{ $vest->post?->name ?? '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-medium uppercase tracking-wide text-gray-500">{{ __('Responsable dispositivo') }}</dt>
+                            <dd class="mt-0.5 font-medium text-gray-900">{{ $vest->displayDeviceResponsible() ?: '—' }}</dd>
+                        </div>
                     </dl>
                 </section>
             </div>
 
             @if ($vest->notes)
-                <section class="mt-5 sj-ui-card p-5">
-                    <h3 class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-2">{{ __('Notas') }}</h3>
+                <section class="mt-4 sj-ui-card p-4">
+                    <h3 class="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">{{ __('Notas') }}</h3>
                     <p class="text-sm text-gray-700 whitespace-pre-line">{{ $vest->notes }}</p>
                 </section>
             @endif
 
-            <div class="mt-6">
+            <div class="mt-4">
                 @include('vests.partials.photos')
             </div>
         </div>

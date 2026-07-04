@@ -6,14 +6,20 @@ use App\Models\AuditLog;
 use App\Models\File;
 use App\Models\Vest;
 use App\Models\VestPhoto;
+use App\Services\VestPhotoService;
+use App\Support\VestPhotoSlotPayload;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Throwable;
 
 class VestPhotoController extends Controller
 {
+    public function __construct(
+        private readonly VestPhotoService $photoService,
+    ) {
+    }
+
     public function store(Request $request, Vest $vest)
     {
         $this->authorize('updatePhotos', $vest);
@@ -24,60 +30,21 @@ class VestPhotoController extends Controller
             'description' => ['required', Rule::in($descriptions)],
         ]);
 
-        $file = $data['photo'];
-        $path = $file->store('vests/'.$vest->id.'/photos', 'public');
-
         try {
-            DB::transaction(function () use ($data, $file, $path, $request, $vest) {
-                $storedFile = File::create([
-                    'disk' => 'public',
-                    'path' => $path,
-                    'original_name' => $file->getClientOriginalName(),
-                    'mime_type' => $file->getClientMimeType(),
-                    'size' => $file->getSize(),
-                    'checksum' => hash_file('sha256', $file->getRealPath()),
-                    'uploaded_by' => $request->user()?->id,
-                ]);
-
-                $existingPhoto = $vest->photos()->with('file')
-                    ->where('description', $data['description'])
-                    ->first();
-
-                if ($existingPhoto) {
-                    $oldFile = $existingPhoto->file;
-                    $existingPhoto->update(['file_id' => $storedFile->id]);
-
-                    if ($oldFile) {
-                        Storage::disk($oldFile->disk)->delete($oldFile->path);
-                        $oldFile->delete();
-                    }
-
-                    $photo = $existingPhoto->fresh();
-                    $action = 'update_vest_photo';
-                } else {
-                    $photo = $vest->photos()->create([
-                        'file_id' => $storedFile->id,
-                        'description' => $data['description'],
-                    ]);
-                    $action = 'upload_vest_photo';
-                }
-
-                AuditLog::create([
-                    'user_id' => $request->user()?->id,
-                    'action' => $action,
-                    'auditable_type' => Vest::class,
-                    'auditable_id' => $vest->id,
-                    'before' => null,
-                    'after' => [
-                        'photo_id' => $photo->id,
-                        'file_id' => $storedFile->id,
-                        'description' => $photo->description,
-                    ],
-                ]);
-            });
+            $photo = $this->photoService->storeOrReplacePhoto(
+                $vest,
+                $data['description'],
+                $data['photo'],
+                $request->user()
+            );
         } catch (Throwable $e) {
-            Storage::disk('public')->delete($path);
             throw $e;
+        }
+
+        if ($request->expectsJson()) {
+            return VestPhotoSlotPayload::json(
+                VestPhotoSlotPayload::forVestPhoto($photo->load('file'))
+            );
         }
 
         return redirect()->route('vests.show', $vest)->with('status', __('Foto cargada.'));
@@ -95,51 +62,27 @@ class VestPhotoController extends Controller
             'photo' => ['required', 'image', 'max:5120'],
         ]);
 
-        $file = $data['photo'];
-        $path = $file->store('vests/'.$vest->id.'/photos', 'public');
-
         try {
-            DB::transaction(function () use ($file, $path, $request, $photo, $vest) {
-                $storedFile = File::create([
-                    'disk' => 'public',
-                    'path' => $path,
-                    'original_name' => $file->getClientOriginalName(),
-                    'mime_type' => $file->getClientMimeType(),
-                    'size' => $file->getSize(),
-                    'checksum' => hash_file('sha256', $file->getRealPath()),
-                    'uploaded_by' => $request->user()?->id,
-                ]);
-
-                $oldFile = $photo->file;
-                $photo->update(['file_id' => $storedFile->id]);
-
-                if ($oldFile) {
-                    Storage::disk($oldFile->disk)->delete($oldFile->path);
-                    $oldFile->delete();
-                }
-
-                AuditLog::create([
-                    'user_id' => $request->user()?->id,
-                    'action' => 'update_vest_photo',
-                    'auditable_type' => Vest::class,
-                    'auditable_id' => $vest->id,
-                    'before' => null,
-                    'after' => [
-                        'photo_id' => $photo->id,
-                        'file_id' => $storedFile->id,
-                        'description' => $photo->description,
-                    ],
-                ]);
-            });
+            $photo = $this->photoService->storeOrReplacePhoto(
+                $vest,
+                $photo->description,
+                $data['photo'],
+                $request->user()
+            );
         } catch (Throwable $e) {
-            Storage::disk('public')->delete($path);
             throw $e;
         }
 
-        return response()->json(['ok' => true]);
+        if ($request->expectsJson()) {
+            return VestPhotoSlotPayload::json(
+                VestPhotoSlotPayload::forVestPhoto($photo->fresh()->load('file'))
+            );
+        }
+
+        return redirect()->route('vests.show', $vest)->with('status', __('Foto actualizada.'));
     }
 
-    public function destroy(Vest $vest, VestPhoto $photo)
+    public function destroy(Request $request, Vest $vest, VestPhoto $photo)
     {
         $this->authorize('updatePhotos', $vest);
 
@@ -147,12 +90,30 @@ class VestPhotoController extends Controller
             abort(404);
         }
 
+        $description = $photo->description;
+        $label = VestPhoto::DESCRIPTIONS[$description] ?? $description;
+
         $file = $photo->file;
         $photo->delete();
 
         if ($file) {
             Storage::disk($file->disk)->delete($file->path);
             $file->delete();
+        }
+
+        AuditLog::create([
+            'user_id' => $request->user()?->id,
+            'action' => 'delete_vest_photo',
+            'auditable_type' => Vest::class,
+            'auditable_id' => $vest->id,
+            'before' => ['description' => $description],
+            'after' => null,
+        ]);
+
+        if ($request->expectsJson()) {
+            return VestPhotoSlotPayload::json(
+                VestPhotoSlotPayload::emptySlot($description, $label)
+            );
         }
 
         return redirect()->route('vests.show', $vest)->with('status', __('Foto eliminada.'));
