@@ -27,6 +27,7 @@ Sistema web para **gestión de armamento**, **asignaciones operativas**, **trans
 - ✅ **Reportes — Custodia y taller** (`/reports/weapon-custody`): armas en puestos de armerillo, armerillo para mantenimiento o armero por responsable.
 - ✅ **Custodia en ficha del arma**: acciones **Enviar a mi armerillo** (operativa), **Para mantenimiento** y **Enviar a armero** (no operativas, sin novedad); un armerillo y armeros por responsable, ubicación inicial del cliente. Al mover custodia se cierran novedades legadas abiertas (`en_mantenimiento`, `para_mantenimiento`, `en_armerillo`) y el listado muestra **Estado** alineado con el puesto de custodia (`WeaponListStatusResolver`).
 - ✅ **Formatos** (`/formatos`): catálogo en **tarjetas** (`sj-ui-card`, grid 1/2/4 columnas); **Revista mensual de armamento** (FO-OP-03) con descarga vacía o con relación de armas (tabla con filtros por columna, selección por checkbox y exportación solo de las marcadas); **plantilla carga masiva de chalecos** (tarjeta visible con permiso `import` en `Vest`); archivos en `resources/templates/`; revista usa `phpoffice/phpspreadsheet` (requiere `composer install` con PHP 8.2+).
+- ✅ **Kit UI global** (`sj-ui-*` en `resources/css/app.css`): interfaz unificada en listados, formularios, reportes, cargas masivas, auth guest, dashboard y detalle de armas/chalecos — headers (`sj-section-header`), tarjetas (`sj-ui-card`), KPIs (`sj-ui-kpi` / `sj-kpi-card`), filtros (`sj-ui-filter-bar`), botones (`sj-ui-btn` vía componentes Blade y vistas), enlaces de tabla (`sj-ui-link`). Tras cambios en `app.css`: `npm run build`.
 
 ---
 
@@ -1265,24 +1266,30 @@ Tarjetas clicables filtran la tabla con `?alert=`. Cada tarjeta muestra el **con
 
 Filtros adicionales: búsqueda (`q`), cliente, puesto, marca, asignación.
 
-#### Kit UI (`sj-ui-*`) — módulo Chalecos
+#### Kit UI (`sj-ui-*`) — sistema global
 
-Estilos reutilizables en `resources/css/app.css` (variables `--sj-ui-*`: fondo translúcido, borde y glow tipo neón alineado a tablas/KPIs). Aplicados hoy en vistas de chalecos; pensados para extenderse a otros listados.
+Estilos reutilizables en `resources/css/app.css` (variables `--sj-ui-*`: fondo translúcido, borde y glow tipo neón alineado a tablas/KPIs). Referencia de implementación: módulo **Chalecos**; extendido al resto de módulos operativos (julio 2026).
 
-| Clase | Uso |
-|-------|-----|
+| Clase / patrón | Uso |
+|----------------|-----|
+| `.sj-section-header` + `__main` / `__title` / `__subtitle` / `__actions` | Encabezado de página (barra azul izquierda) |
+| `.sj-page-shell` / `.sj-page-shell--wide` | Contenedor principal (max 1440px / 1680px) |
 | `.sj-ui-card` | Paneles y cards de contenido |
-| `.sj-ui-card--link` | Cards clicables (historial de lotes) |
+| `.sj-ui-card--link` | Cards clicables (reportes, historial de lotes) |
 | `.sj-ui-card--dashed` | Empty state |
-| `.sj-ui-kpi` + `.sj-ui-kpi--{blue,green,amber,orange,red,slate}` | KPIs del listado (barra `border-top` 3px + fila número/hint) |
+| `.sj-ui-kpi` + `.sj-ui-kpi--{blue,green,amber,orange,red,slate}` | KPIs clicables (barra `border-top` 3px + número/hint) — listado chalecos, alertas documentales |
+| `.sj-kpi-card` + tonos `--{slate,blue,amber,...}` | KPIs del **dashboard** (misma semántica visual que `.sj-ui-kpi`) |
 | `.sj-ui-filter-bar` + `.sj-ui-field` | Barra de filtros (label uppercase + control 2.5rem) |
-| `.sj-ui-btn` + `--ghost` / `--primary` / `--sm` / `--xs` / `--block` / `--danger` | Botones de header, filtros y acciones |
+| `.sj-ui-btn` + `--ghost` / `--primary` / `--sm` / `--xs` / `--block` / `--danger` | Botones; también en `<x-primary-button>`, `<x-secondary-button>`, `<x-danger-button>` |
+| `.sj-ui-link` + `--muted` / `--warn` / `--success` / `--danger` | Acciones en celdas de tabla (editar, archivar, historial) |
+| `.sj-panel` | Paneles del dashboard (superficie alineada al kit) |
+| `.sj-weapon-detail-section.sj-ui-card` | Secciones de la ficha de arma |
 
-Vistas que usan el kit: `vests/index`, `vests/show`, `vests/create`, `vests/edit`, `vest-imports/center`, `vests/partials/photos`, `vests/partials/form`, `vests/partials/form-photos`.
+**Módulos con kit UI aplicado (no exhaustivo):** Chalecos (`vests/*`, `vest-imports/*`), armas (`weapons/index|create|edit|show`), clientes/puestos/trabajadores/usuarios (CRUD + listados), transferencias, carteras, mapa, formatos, reportes y alertas, cargas masivas (`weapon-imports/*`), revista armas, auth guest (login, contraseña obligatoria), perfil.
 
-Tras modificar `app.css`: compilar frontend (ver abajo).
+Tras modificar `app.css` o vistas con clases nuevas: compilar frontend (ver abajo).
 
-#### Compilación frontend (Chalecos / kit UI)
+#### Compilación frontend (kit UI / assets Vite)
 
 En Laragon (Windows), desde la raíz del proyecto:
 
@@ -1574,13 +1581,14 @@ Caracteristicas:
   - `./resources/js/**/*.js`
 - Se usa `safelist` para clases dinamicas de estados documentales, de modo que los colores de alertas no se pierdan en el build.
 
-**Kit UI Chalecos (`sj-ui-*`)**
+**Kit UI (`sj-ui-*`)**
 
 - Definido en `resources/css/app.css` (bloque «Kit UI» tras `.sj-btn-secondary`).
 - Variables CSS: `--sj-ui-surface-bg`, `--sj-ui-neon-glow`, `--sj-ui-control-height` (2.5rem), etc.
-- Los KPIs del dashboard (`.sj-kpi-card`) comparten el mismo tratamiento de fondo translúcido y perímetro neón.
-- Tras editar estilos del módulo Chalecos: `npm run build` (local) o `npm run build:deploy` (hosting).
-- JS del módulo Chalecos (cargados vía `app.js` o `@vite` según vista): `vest-form.js`, `vest-form-photos.js`, `weapon-photo-editor.js` (ficha/editar fotos).
+- KPIs del dashboard (`.sj-kpi-card`) y paneles (`.sj-panel`) comparten superficie translúcida y perímetro neón con el kit.
+- Componentes Blade `<x-primary-button>`, `<x-secondary-button>` y `<x-danger-button>` delegan en `.sj-ui-btn`.
+- Tras editar `app.css` o clases en vistas: `npm run build` (local) o `npm run build:deploy` (hosting); refrescar con **Ctrl+F5**.
+- JS específico Chalecos (vía `app.js` o `@vite`): `vest-form.js`, `vest-form-photos.js`, `weapon-photo-editor.js`.
 
 ## 10. Archivos y almacenamiento
 

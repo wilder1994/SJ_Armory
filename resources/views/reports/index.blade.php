@@ -14,43 +14,43 @@
     <div class="py-8">
         <div class="sj-page-shell sj-page-shell--wide space-y-6">
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <a href="{{ route('reports.assignments') }}" class="sj-report-card">
+                <a href="{{ route('reports.assignments') }}" class="sj-ui-card sj-ui-card--link sj-report-card">
                     <span class="sj-report-card__eyebrow">{{ __('Consulta') }}</span>
                     <div class="sj-report-card__title">{{ __('Armas por cliente') }}</div>
                     <div class="sj-report-card__subtitle">{{ __('Destino activo y responsable asignado.') }}</div>
                 </a>
 
-                <a href="{{ route('reports.no_destination') }}" class="sj-report-card">
+                <a href="{{ route('reports.no_destination') }}" class="sj-ui-card sj-ui-card--link sj-report-card">
                     <span class="sj-report-card__eyebrow">{{ __('Control') }}</span>
                     <div class="sj-report-card__title">{{ __('Armas sin destino') }}</div>
                     <div class="sj-report-card__subtitle">{{ __('Inventario que requiere seguimiento operativo.') }}</div>
                 </a>
 
-                <a href="{{ route('reports.history') }}" class="sj-report-card">
+                <a href="{{ route('reports.history') }}" class="sj-ui-card sj-ui-card--link sj-report-card">
                     <span class="sj-report-card__eyebrow">{{ __('Seguimiento') }}</span>
                     <div class="sj-report-card__title">{{ __('Historial por arma') }}</div>
                     <div class="sj-report-card__subtitle">{{ __('Asignaciones, documentos y lectura de novedades.') }}</div>
                 </a>
 
-                <a href="{{ route('reports.audit') }}" class="sj-report-card">
+                <a href="{{ route('reports.audit') }}" class="sj-ui-card sj-ui-card--link sj-report-card">
                     <span class="sj-report-card__eyebrow">{{ __('Trazabilidad') }}</span>
                     <div class="sj-report-card__title">{{ __('Auditoria reciente') }}</div>
                     <div class="sj-report-card__subtitle">{{ __('Ultimos cambios y actividad del sistema.') }}</div>
                 </a>
 
-                <a href="{{ route('alerts.documents') }}" class="sj-report-card">
+                <a href="{{ route('alerts.documents') }}" class="sj-ui-card sj-ui-card--link sj-report-card">
                     <span class="sj-report-card__eyebrow">{{ __('Prevencion') }}</span>
                     <div class="sj-report-card__title">{{ __('Alertas documentales') }}</div>
                     <div class="sj-report-card__subtitle">{{ __('Vencimientos, revalidaciones y documentos vigentes.') }}</div>
                 </a>
 
-                <a href="{{ route('reports.weapon-incidents.index') }}" class="sj-report-card sj-report-card--accent">
+                <a href="{{ route('reports.weapon-incidents.index') }}" class="sj-ui-card sj-ui-card--link sj-report-card sj-report-card--accent">
                     <div class="sj-report-card__title">{{ __('Novedades operativas') }}</div>
                     <div class="sj-report-card__subtitle">{{ __('Hurtos, pérdidas, incautaciones y bajas. Excluye mantenimiento y armerillo.') }}</div>
                     <span class="sj-report-card__footer">{{ __('Ver análisis') }}</span>
                 </a>
 
-                <a href="{{ route('reports.weapon-custody.index') }}" class="sj-report-card">
+                <a href="{{ route('reports.weapon-custody.index') }}" class="sj-ui-card sj-ui-card--link sj-report-card">
                     <span class="sj-report-card__eyebrow">{{ __('Operación') }}</span>
                     <div class="sj-report-card__title">{{ __('Custodia y taller') }}</div>
                     <div class="sj-report-card__subtitle">{{ __('Armerillo, pendiente de mantenimiento y armeros por responsable.') }}</div>

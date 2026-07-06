@@ -1,4 +1,4 @@
-<section class="sj-weapon-detail-section">
+<section class="sj-ui-card sj-weapon-detail-section p-4">
     <h4 class="sj-weapon-detail-section__title">{{ __('Características') }}</h4>
     <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
         <x-weapon-detail-field :label="__('Tipo')">

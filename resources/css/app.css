@@ -616,6 +616,18 @@
         text-align: center;
     }
 
+    .sj-weapon-detail-section.sj-ui-card {
+        background:
+            radial-gradient(ellipse 120% 80% at 0% 0%, rgba(255, 255, 255, 0.42), transparent 55%),
+            linear-gradient(180deg, var(--sj-ui-surface-bg-strong) 0%, var(--sj-ui-surface-bg) 100%);
+        border: 1px solid var(--sj-ui-surface-border);
+        border-radius: 1rem;
+        box-shadow:
+            0 0 1px var(--sj-ui-neon-line),
+            0 0 8px var(--sj-ui-neon-glow),
+            0 14px 28px rgba(15, 23, 42, 0.06);
+    }
+
     .sj-ui-kpi-grid {
         display: grid;
         gap: 0.85rem;
@@ -875,6 +887,54 @@
 
     .sj-section-header__actions .sj-ui-btn {
         min-width: 7.5rem;
+    }
+
+    .sj-ui-link {
+        background: none;
+        border: none;
+        color: var(--sj-blue);
+        cursor: pointer;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        padding: 0;
+        text-decoration: none;
+    }
+
+    .sj-ui-link:hover {
+        color: var(--sj-blue-dark);
+        text-decoration: underline;
+    }
+
+    .sj-ui-link--muted {
+        color: #475569;
+    }
+
+    .sj-ui-link--muted:hover {
+        color: #0f172a;
+    }
+
+    .sj-ui-link--warn {
+        color: #b45309;
+    }
+
+    .sj-ui-link--warn:hover {
+        color: #92400e;
+    }
+
+    .sj-ui-link--success {
+        color: #15803d;
+    }
+
+    .sj-ui-link--success:hover {
+        color: #166534;
+    }
+
+    .sj-ui-link--danger {
+        color: #b91c1c;
+    }
+
+    .sj-ui-link--danger:hover {
+        color: #991b1b;
     }
 
     @media (max-width: 1280px) {
@@ -1421,28 +1481,24 @@
     }
 
     .sj-kpi-card {
+        --kpi-accent: #0b6fb6;
         background:
             radial-gradient(ellipse 100% 80% at 0% 0%, rgba(255, 255, 255, 0.5), transparent 60%),
             linear-gradient(180deg, rgba(255, 255, 255, 0.84) 0%, rgba(248, 251, 255, 0.62) 100%);
         border: 1px solid var(--sj-ui-surface-border, #d8e2ee);
-        border-radius: 1.15rem;
+        border-top: 3px solid var(--kpi-accent, #0b6fb6);
+        border-radius: 0.85rem;
         box-shadow:
             0 0 1px var(--sj-ui-neon-line, rgba(224, 247, 255, 0.92)),
-            0 0 6px var(--sj-ui-neon-glow, rgba(0, 123, 255, 0.16)),
-            0 14px 28px rgba(15, 23, 42, 0.06);
+            0 0 5px var(--sj-ui-neon-glow, rgba(0, 123, 255, 0.16));
         overflow: hidden;
-        padding: 1rem 1.05rem 1.1rem;
+        padding: 0.85rem 1.1rem 1rem;
         position: relative;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
     }
 
     .sj-kpi-card::before {
-        background: var(--kpi-accent, #0b6fb6);
-        content: '';
-        height: 3px;
-        left: 0;
-        position: absolute;
-        right: 0;
-        top: 0;
+        display: none;
     }
 
     .sj-kpi-card__label {
@@ -1480,10 +1536,14 @@
 
     /* KPI band: horizontal scroll below 1280px; single row of 6 at 1280px+ */
     .sj-dashboard-kpis--row-six {
-        background: linear-gradient(180deg, rgba(251, 253, 255, 0.98) 0%, rgba(243, 247, 252, 0.96) 100%);
-        border: 1px solid #d0dce8;
-        border-radius: 1.1rem;
-        box-shadow: 0 12px 26px rgba(11, 18, 60, 0.05);
+        background:
+            radial-gradient(ellipse 120% 80% at 0% 0%, rgba(255, 255, 255, 0.35), transparent 55%),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.78) 0%, rgba(248, 251, 255, 0.55) 100%);
+        border: 1px solid var(--sj-ui-surface-border);
+        border-radius: 1rem;
+        box-shadow:
+            0 0 1px var(--sj-ui-neon-line),
+            0 0 6px var(--sj-ui-neon-glow);
         display: flex;
         flex-wrap: nowrap;
         gap: 0.65rem;
@@ -1620,10 +1680,15 @@
     }
 
     .sj-panel {
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(250, 252, 255, 0.98) 100%);
-        border: 1px solid #d8e2ee;
-        border-radius: 1.25rem;
-        box-shadow: 0 18px 34px rgba(15, 23, 42, 0.06);
+        background:
+            radial-gradient(ellipse 120% 80% at 0% 0%, rgba(255, 255, 255, 0.42), transparent 55%),
+            linear-gradient(180deg, var(--sj-ui-surface-bg-strong) 0%, var(--sj-ui-surface-bg) 100%);
+        border: 1px solid var(--sj-ui-surface-border);
+        border-radius: 1rem;
+        box-shadow:
+            0 0 1px var(--sj-ui-neon-line),
+            0 0 8px var(--sj-ui-neon-glow),
+            0 14px 28px rgba(15, 23, 42, 0.06);
         overflow: hidden;
         padding: 1.15rem 1.15rem 1.2rem;
     }

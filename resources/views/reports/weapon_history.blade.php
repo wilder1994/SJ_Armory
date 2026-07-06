@@ -6,9 +6,7 @@
             </div>
 
             <div class="sj-section-header__actions">
-                <a href="{{ route('reports.index') }}" class="text-sm text-gray-600 hover:text-gray-900">
-                    {{ __('Volver') }}
-                </a>
+                <a href="{{ route('reports.index') }}" class="sj-ui-btn sj-ui-btn--ghost">{{ __('Volver') }}</a>
             </div>
         </div>
     </x-slot>

@@ -7,7 +7,7 @@
 
             <div class="sj-section-header__actions">
                 @can('create', App\Models\Post::class)
-                    <a href="{{ route('posts.create') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-900">
+                    <a href="{{ route('posts.create') }}" class="sj-ui-btn sj-ui-btn--primary">
                         {{ __('Nuevo puesto') }}
                     </a>
                 @endcan
@@ -52,51 +52,48 @@
                 </div>
             @endif
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    {{-- Siempre en una fila horizontal; scroll horizontal si el ancho no alcanza --}}
-                    <form method="GET" action="{{ route('posts.index') }}" class="mb-4 flex flex-nowrap items-end gap-3 sm:gap-4 overflow-x-auto pb-1">
-                        <div class="min-w-[11rem] sm:min-w-[13rem] w-44 sm:w-52 shrink-0">
-                            <label class="block text-sm text-gray-600 whitespace-nowrap">{{ __('Buscar') }}</label>
-                            <input type="text" name="q" value="{{ $search }}" class="mt-1 block w-full rounded-md border-gray-300 text-sm" placeholder="{{ __('Nombre o dirección') }}">
+            <div class="sj-ui-card overflow-hidden">
+                <div class="sj-ui-card__body p-6">
+                    <form method="GET" action="{{ route('posts.index') }}" class="sj-ui-filter-bar">
+                        <div class="sj-ui-filter-bar__fields">
+                            <div class="sj-ui-field min-w-[11rem] w-44 shrink-0 sm:w-52">
+                                <label for="posts-filter-q" class="sj-ui-field__label">{{ __('Buscar') }}</label>
+                                <input id="posts-filter-q" type="text" name="q" value="{{ $search }}" class="sj-ui-field__control" placeholder="{{ __('Nombre o dirección') }}">
+                            </div>
+                            <div class="sj-ui-field min-w-[10rem] w-40 shrink-0 sm:w-48">
+                                <label for="posts-filter-client" class="sj-ui-field__label">{{ __('Cliente') }}</label>
+                                <select id="posts-filter-client" name="client_id" class="sj-ui-field__control">
+                                    <option value="">{{ __('Todos') }}</option>
+                                    @foreach ($clients as $client)
+                                        <option value="{{ $client->id }}" @selected($clientId == $client->id)>{{ $client->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="sj-ui-field w-36 shrink-0 sm:w-44">
+                                <label for="posts-filter-archive" class="sj-ui-field__label">{{ __('Estado') }}</label>
+                                <select id="posts-filter-archive" name="archive" class="sj-ui-field__control">
+                                    <option value="active" @selected($archiveFilter === 'active')>{{ __('Solo activos') }}</option>
+                                    <option value="archived" @selected($archiveFilter === 'archived')>{{ __('Solo archivados') }}</option>
+                                    <option value="all" @selected($archiveFilter === 'all')>{{ __('Todos') }}</option>
+                                </select>
+                            </div>
+                            <p
+                                id="posts-global-total"
+                                class="sj-ui-field ml-auto shrink-0 self-end text-sm font-medium text-gray-700 whitespace-nowrap"
+                                aria-live="polite"
+                            >
+                                {{ __('Total') }}:
+                                <span class="tabular-nums text-gray-900">{{ number_format($postsGlobalTotal, 0, ',', '.') }}</span>
+                                {{ trans_choice('puesto|puestos', $postsGlobalTotal) }}
+                            </p>
+                            <div class="sj-ui-filter-bar__actions">
+                                <a href="{{ route('posts.index') }}" class="sj-ui-btn sj-ui-btn--ghost">{{ __('Limpiar') }}</a>
+                                <button type="submit" class="sj-ui-btn sj-ui-btn--primary">{{ __('Filtrar') }}</button>
+                            </div>
                         </div>
-                        <div class="min-w-[10rem] sm:min-w-[12rem] w-40 sm:w-48 shrink-0">
-                            <label class="block text-sm text-gray-600 whitespace-nowrap">{{ __('Cliente') }}</label>
-                            <select name="client_id" class="mt-1 block w-full rounded-md border-gray-300 text-sm">
-                                <option value="">{{ __('Todos') }}</option>
-                                @foreach ($clients as $client)
-                                    <option value="{{ $client->id }}" @selected($clientId == $client->id)>{{ $client->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="min-w-[9.5rem] w-36 sm:w-44 shrink-0">
-                            <label class="block text-sm text-gray-600 whitespace-nowrap">{{ __('Estado') }}</label>
-                            <select name="archive" class="mt-1 block w-full rounded-md border-gray-300 text-sm">
-                                <option value="active" @selected($archiveFilter === 'active')>{{ __('Solo activos') }}</option>
-                                <option value="archived" @selected($archiveFilter === 'archived')>{{ __('Solo archivados') }}</option>
-                                <option value="all" @selected($archiveFilter === 'all')>{{ __('Todos') }}</option>
-                            </select>
-                        </div>
-                        <div class="flex shrink-0 items-center gap-2 sm:gap-3 pb-0.5">
-                            <button type="submit" class="text-sm text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-2 rounded whitespace-nowrap">
-                                {{ __('Filtrar') }}
-                            </button>
-                            <a href="{{ route('posts.index') }}" class="text-sm text-gray-600 hover:text-gray-900 whitespace-nowrap">
-                                {{ __('Limpiar') }}
-                            </a>
-                        </div>
-                        <p
-                            id="posts-global-total"
-                            class="ml-auto shrink-0 self-end pb-0.5 text-sm font-medium text-gray-700 whitespace-nowrap"
-                            aria-live="polite"
-                        >
-                            {{ __('Total') }}:
-                            <span class="tabular-nums text-gray-900">{{ number_format($postsGlobalTotal, 0, ',', '.') }}</span>
-                            {{ trans_choice('puesto|puestos', $postsGlobalTotal) }}
-                        </p>
                     </form>
 
-                    <div class="overflow-x-auto sj-table-wrap">
+                    <div class="sj-table-wrap overflow-x-auto">
                     <table class="sj-table sj-table--align-left min-w-full text-sm">
                         <thead>
                             <tr>

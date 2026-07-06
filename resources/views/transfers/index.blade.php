@@ -6,16 +6,16 @@
             </div>
 
             <div class="sj-section-header__actions">
-                <a href="{{ route('dashboard') }}" class="text-sm text-gray-600 hover:text-gray-900">
+                <a href="{{ route('dashboard') }}" class="sj-ui-btn sj-ui-btn--ghost">
                     {{ __('Volver') }}
                 </a>
-                <button type="button" class="text-sm font-medium text-gray-700 hover:text-gray-900"
+                <button type="button" class="sj-ui-btn sj-ui-btn--ghost"
                     x-data
                     x-on:click.prevent="$dispatch('open-modal', 'transfer-history')">
                     {{ __('Historial') }}
                 </button>
                 @if ($canManageTransfers)
-                    <button type="button" class="text-sm font-medium text-indigo-600 hover:text-indigo-900"
+                    <button type="button" class="sj-ui-btn sj-ui-btn--primary"
                         x-data
                         x-on:click.prevent="$dispatch('open-modal', 'bulk-transfer')">
                         {{ __('Enviar') }}
@@ -64,29 +64,27 @@
                 </div>
             @endif
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <form method="GET" action="{{ route('transfers.index') }}" class="grid grid-cols-1 gap-3 md:grid-cols-3">
-                        <div>
-                            <label class="text-sm text-gray-600">{{ __('Buscar') }}</label>
-                            <input type="text" name="q" value="{{ $search }}" class="mt-1 block w-full rounded-md border-gray-300 text-sm" placeholder="{{ __('Código o cliente') }}">
-                        </div>
-                        <div>
-                            <label class="text-sm text-gray-600">{{ __('Estado') }}</label>
-                            <select name="status" class="mt-1 block w-full rounded-md border-gray-300 text-sm">
-                                <option value="pending" @selected($status === 'pending')>{{ __('Pendiente') }}</option>
-                                <option value="accepted" @selected($status === 'accepted')>{{ __('Aceptada') }}</option>
-                                <option value="rejected" @selected($status === 'rejected')>{{ __('Rechazada') }}</option>
-                                <option value="cancelled" @selected($status === 'cancelled')>{{ __('Cancelada') }}</option>
-                            </select>
-                        </div>
-                        <div class="flex items-end gap-2">
-                            <button type="submit" class="text-sm text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-2 rounded">
-                                {{ __('Filtrar') }}
-                            </button>
-                            <a href="{{ route('transfers.index') }}" class="text-sm text-gray-600 hover:text-gray-900">
-                                {{ __('Limpiar') }}
-                            </a>
+            <div class="sj-ui-card overflow-hidden">
+                <div class="sj-ui-card__body p-6">
+                    <form method="GET" action="{{ route('transfers.index') }}" class="sj-ui-filter-bar">
+                        <div class="sj-ui-filter-bar__fields">
+                            <div class="sj-ui-field min-w-0 flex-1">
+                                <label for="transfers-filter-q" class="sj-ui-field__label">{{ __('Buscar') }}</label>
+                                <input id="transfers-filter-q" type="text" name="q" value="{{ $search }}" class="sj-ui-field__control" placeholder="{{ __('Código o cliente') }}">
+                            </div>
+                            <div class="sj-ui-field w-44 shrink-0">
+                                <label for="transfers-filter-status" class="sj-ui-field__label">{{ __('Estado') }}</label>
+                                <select id="transfers-filter-status" name="status" class="sj-ui-field__control">
+                                    <option value="pending" @selected($status === 'pending')>{{ __('Pendiente') }}</option>
+                                    <option value="accepted" @selected($status === 'accepted')>{{ __('Aceptada') }}</option>
+                                    <option value="rejected" @selected($status === 'rejected')>{{ __('Rechazada') }}</option>
+                                    <option value="cancelled" @selected($status === 'cancelled')>{{ __('Cancelada') }}</option>
+                                </select>
+                            </div>
+                            <div class="sj-ui-filter-bar__actions">
+                                <a href="{{ route('transfers.index') }}" class="sj-ui-btn sj-ui-btn--ghost">{{ __('Limpiar') }}</a>
+                                <button type="submit" class="sj-ui-btn sj-ui-btn--primary">{{ __('Filtrar') }}</button>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -102,12 +100,12 @@
                 $statusLabel = $statusLabels[$status] ?? __('Pendientes');
             @endphp
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <h3 class="text-lg font-semibold">
+            <div class="sj-ui-card overflow-hidden">
+                <div class="sj-ui-card__body p-6">
+                    <h3 class="text-lg font-semibold text-slate-900">
                         {{ $status === 'pending' ? __('Pendientes por aceptar') : __('Transferencias') . ' — ' . $statusLabel }}
                     </h3>
-                    <div class="overflow-x-auto sj-table-wrap mt-3">
+                    <div class="sj-table-wrap overflow-x-auto mt-3">
                     <table class="sj-table sj-table--align-left min-w-full text-sm">
                         <thead>
                             @php

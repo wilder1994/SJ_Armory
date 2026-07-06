@@ -24,16 +24,15 @@
 @endpush
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-start justify-between gap-4">
-            <div>
-                <div class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Subir armas</div>
-                <h2 class="mt-1 text-xl font-semibold leading-tight text-gray-800">Detalle del lote</h2>
-                <p class="mt-1 text-sm text-gray-500">Revisa el resultado del lote y ejecuta o descarta cambios según el estado actual.</p>
+        <div class="sj-section-header">
+            <div class="sj-section-header__main">
+                <p class="sj-section-header__eyebrow">{{ __('Cargas masivas') }}</p>
+                <h2 class="sj-section-header__title">{{ __('Detalle del lote') }}</h2>
+                <p class="sj-section-header__subtitle">{{ __('Revisa el resultado del lote y ejecuta o descarta cambios según el estado actual.') }}</p>
             </div>
-            <a href="{{ route('weapon-imports.index') }}"
-                class="inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">
-                Volver a lotes
-            </a>
+            <div class="sj-section-header__actions">
+                <a href="{{ route('weapon-imports.index') }}" class="sj-ui-btn sj-ui-btn--ghost">{{ __('Volver a lotes') }}</a>
+            </div>
         </div>
     </x-slot>
 
@@ -55,7 +54,7 @@
         data-selected-batch-process-url="{{ route('weapon-imports.process', $selectedBatch) }}"
         data-selected-batch-status-url="{{ route('weapon-imports.status', $selectedBatch) }}"
         data-selected-batch-redirect-url="{{ route('weapon-imports.show', $selectedBatch) }}">
-        <div class="w-full px-4 pb-20 sm:px-6 lg:px-8">
+        <div class="sj-page-shell sj-page-shell--wide pb-20">
             @if (session('status'))
                 <div class="mb-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
                     {{ session('status') }}
@@ -68,7 +67,7 @@
                 </div>
             @endif
 
-            <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div class="sj-ui-card p-6">
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                         <h3 class="text-lg font-semibold text-gray-800">{{ $selectedBatch->source_name }}</h3>
@@ -92,7 +91,7 @@
                         </span>
                         @if ($selectedBatch->isDraft())
                             <a href="{{ route('weapon-imports.show', ['weaponImportBatch' => $selectedBatch->id, 'preview' => 1]) }}"
-                                class="inline-flex items-center rounded-md border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50">
+                                class="sj-ui-btn sj-ui-btn--ghost">
                                 Revisar lote
                             </a>
                             <form method="POST" action="{{ route('weapon-imports.execute', $selectedBatch) }}"
@@ -105,7 +104,7 @@
                                 data-redirect-url="{{ route('weapon-imports.show', $selectedBatch) }}">
                                 @csrf
                                 <button type="submit"
-                                    class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                                    class="sj-ui-btn sj-ui-btn--primary disabled:cursor-not-allowed disabled:opacity-50"
                                     @disabled($selectedBatch->hasErrors())>
                                     Ejecutar
                                 </button>
@@ -113,7 +112,7 @@
                             <form method="POST" action="{{ route('weapon-imports.discard', $selectedBatch) }}" class="weapon-import-discard-form">
                                 @csrf
                                 <button type="submit"
-                                    class="inline-flex items-center rounded-md border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50">
+                                    class="sj-ui-btn sj-ui-btn--ghost sj-ui-btn--danger">
                                     Cancelar carga
                                 </button>
                             </form>
@@ -227,7 +226,7 @@
                                         data-redirect-url="{{ route('weapon-imports.show', $selectedBatch) }}">
                                         @csrf
                                         <button type="submit"
-                                            class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                                            class="sj-ui-btn sj-ui-btn--primary disabled:cursor-not-allowed disabled:opacity-50"
                                             @disabled($selectedBatch->hasErrors())>
                                             Ejecutar
                                         </button>

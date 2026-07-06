@@ -1,15 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <div>
-                <h2 class="text-xl font-semibold text-gray-800">{{ __('Revista armas') }}</h2>
-                <p class="mt-1 text-sm text-slate-500">{{ __('Revise fotos en staging y asigne acceso temporal a colaboradores de campo.') }}</p>
+        <div class="sj-section-header">
+            <div class="sj-section-header__main">
+                <h2 class="sj-section-header__title">{{ __('Revista armas') }}</h2>
+                <p class="sj-section-header__subtitle">{{ __('Revise fotos en staging y asigne acceso temporal a colaboradores de campo.') }}</p>
             </div>
-            <div class="flex flex-wrap gap-2">
-                <a href="{{ route('revista-armas.temporary-users.index') }}" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+            <div class="sj-section-header__actions">
+                <a href="{{ route('revista-armas.temporary-users.index') }}" class="sj-ui-btn sj-ui-btn--ghost">
                     {{ __('Usuarios temporales') }}
                 </a>
-                <button type="button" id="revista-open-assign" class="rounded-lg bg-[#0b6fb6] px-3 py-2 text-sm font-bold text-white hover:bg-[#085a93]">
+                <button type="button" id="revista-open-assign" class="sj-ui-btn sj-ui-btn--primary">
                     {{ __('Asignar acceso temporal') }}
                 </button>
             </div>
@@ -17,7 +17,7 @@
     </x-slot>
 
     <div class="py-6">
-        <div class="mx-auto max-w-7xl space-y-4 sm:px-6 lg:px-8">
+        <div class="sj-page-shell sj-page-shell--wide space-y-4">
             @if (session('status'))
                 <div class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">{{ session('status') }}</div>
             @endif
@@ -28,11 +28,11 @@
                 </div>
             @endif
 
-            <form method="GET" class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div class="flex flex-wrap items-end gap-3">
-                    <div class="min-w-[12rem] flex-1 basis-[14rem] sm:max-w-[22rem]">
-                        <label for="temporary_photo_user_id" class="block text-sm font-medium text-slate-700">{{ __('Usuario temporal (columna Realizado)') }}</label>
-                        <select name="temporary_photo_user_id" id="temporary_photo_user_id" class="mt-1 h-10 w-full rounded-lg border-slate-300 text-sm">
+            <form method="GET" class="sj-ui-card sj-ui-filter-bar p-4">
+                <div class="sj-ui-filter-bar__fields">
+                    <div class="sj-ui-field min-w-[12rem] flex-1 basis-[14rem] sm:max-w-[22rem]">
+                        <label for="temporary_photo_user_id" class="sj-ui-field__label">{{ __('Usuario temporal (columna Realizado)') }}</label>
+                        <select name="temporary_photo_user_id" id="temporary_photo_user_id" class="sj-ui-field__control">
                             <option value="">{{ __('Seleccione...') }}</option>
                             @foreach ($temporaryUsers as $tu)
                                 <option value="{{ $tu->id }}" @selected($selectedTemporaryUserId === $tu->id)>
@@ -41,25 +41,25 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="min-w-[12rem] flex-[2] basis-[16rem]">
-                        <label for="revista-table-filter" class="block text-sm font-medium text-slate-700">{{ __('Buscar armas') }}</label>
+                    <div class="sj-ui-field min-w-[12rem] flex-[2] basis-[16rem]">
+                        <label for="revista-table-filter" class="sj-ui-field__label">{{ __('Buscar armas') }}</label>
                         <input
                             id="revista-table-filter"
                             type="search"
                             autocomplete="off"
-                            class="mt-1 h-10 w-full rounded-lg border-slate-300 text-sm shadow-sm"
+                            class="sj-ui-field__control"
                             placeholder="{{ __('Serie, código, marca, calibre, cliente, permiso...') }}"
                         >
                     </div>
-                    <button type="submit" class="h-10 shrink-0 self-end rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                        {{ __('Filtrar') }}
-                    </button>
+                    <div class="sj-ui-filter-bar__actions">
+                        <button type="submit" class="sj-ui-btn sj-ui-btn--primary">{{ __('Filtrar') }}</button>
+                    </div>
                 </div>
                 <p id="revista-table-filter-count" class="mt-2 text-xs text-slate-500"></p>
             </form>
 
-            <div class="overflow-hidden rounded-xl shadow-sm">
-                <div class="overflow-x-auto sj-table-wrap">
+            <div class="sj-ui-card overflow-hidden">
+                <div class="sj-table-wrap overflow-x-auto">
                     <table class="sj-table min-w-full text-sm">
                         <thead>
                             <tr>

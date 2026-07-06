@@ -23,7 +23,7 @@
                 <form method="POST" action="{{ route('locale.switch') }}" class="mb-4 flex justify-end">
                     @csrf
                     <label for="guest-locale-select" class="sr-only">{{ __('Idioma') }}</label>
-                    <select id="guest-locale-select" name="locale" class="rounded border-gray-300 text-sm" onchange="this.form.submit()">
+                    <select id="guest-locale-select" name="locale" class="sj-ui-field__control text-sm" onchange="this.form.submit()">
                         <option value="es" @selected(app()->getLocale() === 'es')>{{ __('Español') }}</option>
                         <option value="en" @selected(app()->getLocale() === 'en')>{{ __('Inglés') }}</option>
                     </select>
@@ -35,7 +35,7 @@
                 </a>
             </div>
 
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
+            <div class="w-full sm:max-w-md mt-6 px-6 py-4 sj-ui-card overflow-hidden">
                 {{ $slot }}
             </div>
         </div>

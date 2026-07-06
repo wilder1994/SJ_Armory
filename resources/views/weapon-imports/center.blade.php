@@ -534,25 +534,25 @@
 
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div class="min-w-0">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">Centro de cargas masivas</h2>
-                <p class="mt-1 text-sm text-gray-500">Carga y procesa informacion en lote</p>
+        <div class="sj-section-header">
+            <div class="sj-section-header__main">
+                <h2 class="sj-section-header__title">{{ __('Centro de cargas masivas') }}</h2>
+                <p class="sj-section-header__subtitle">{{ __('Carga y procesa información en lote') }}</p>
             </div>
-            <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap lg:justify-end">
-                <a href="{{ route('weapon-imports.templates.weapon') }}" class="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">
+            <div class="sj-section-header__actions">
+                <a href="{{ route('weapon-imports.templates.weapon') }}" class="sj-ui-btn sj-ui-btn--ghost">
                     {{ __('Descargar formato armas') }}
                 </a>
-                <a href="{{ route('weapon-imports.templates.client') }}" class="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">
+                <a href="{{ route('weapon-imports.templates.client') }}" class="sj-ui-btn sj-ui-btn--ghost">
                     {{ __('Descargar formato clientes') }}
                 </a>
-                <button type="button" data-import-trigger data-import-type="weapon" x-data="" x-on:click.prevent="$dispatch('open-modal', 'mass-import-upload')" class="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700">
+                <button type="button" data-import-trigger data-import-type="weapon" x-data="" x-on:click.prevent="$dispatch('open-modal', 'mass-import-upload')" class="sj-ui-btn sj-ui-btn--primary">
                     {{ __('Subir armas') }}
                 </button>
-                <button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'permit-authenticated-upload')" class="inline-flex items-center justify-center rounded-md border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-900 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-100">
+                <button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'permit-authenticated-upload')" class="sj-ui-btn sj-ui-btn--ghost">
                     {{ __('Cargar autenticación') }}
                 </button>
-                <button type="button" data-import-trigger data-import-type="client" x-data="" x-on:click.prevent="$dispatch('open-modal', 'mass-import-upload')" class="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">
+                <button type="button" data-import-trigger data-import-type="client" x-data="" x-on:click.prevent="$dispatch('open-modal', 'mass-import-upload')" class="sj-ui-btn sj-ui-btn--ghost">
                     {{ __('Subir clientes') }}
                 </button>
             </div>

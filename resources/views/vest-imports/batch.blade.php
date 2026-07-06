@@ -1,12 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-start justify-between gap-4">
-            <div>
-                <div class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">{{ __('Cargas masivas') }} — {{ $selectedBatch->typeLabel() }}</div>
-                <h2 class="mt-1 text-xl font-semibold leading-tight text-gray-800">{{ __('Detalle del lote') }}</h2>
-                <p class="mt-1 text-sm text-gray-500">{{ __('Revisa el resultado del lote y ejecuta o descarta cambios según el estado actual.') }}</p>
+        <div class="sj-section-header">
+            <div class="sj-section-header__main">
+                <p class="sj-section-header__eyebrow">{{ __('Cargas masivas') }} — {{ $selectedBatch->typeLabel() }}</p>
+                <h2 class="sj-section-header__title">{{ __('Detalle del lote') }}</h2>
+                <p class="sj-section-header__subtitle">{{ __('Revisa el resultado del lote y ejecuta o descarta cambios según el estado actual.') }}</p>
             </div>
-            <a href="{{ route('vest-imports.index') }}" class="inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">{{ __('Volver a lotes') }}</a>
+            <div class="sj-section-header__actions">
+                <a href="{{ route('vest-imports.index') }}" class="sj-ui-btn sj-ui-btn--ghost">{{ __('Volver a lotes') }}</a>
+            </div>
         </div>
     </x-slot>
 
@@ -29,7 +31,7 @@
         data-selected-batch-status-url="{{ route('vest-imports.status', $selectedBatch) }}"
         data-selected-batch-redirect-url="{{ route('vest-imports.show', $selectedBatch) }}"
     >
-        <div class="w-full px-4 pb-20 sm:px-6 lg:px-8">
+        <div class="sj-page-shell sj-page-shell--wide pb-20">
             @if (session('status'))
                 <div class="mb-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">{{ session('status') }}</div>
             @endif
@@ -38,7 +40,7 @@
                 <div class="mb-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700">{{ $errors->first('batch') }}</div>
             @endif
 
-            <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div class="sj-ui-card p-6">
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                         <div class="mb-2 flex flex-wrap gap-2">

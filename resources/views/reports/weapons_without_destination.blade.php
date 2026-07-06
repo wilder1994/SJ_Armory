@@ -1,20 +1,20 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Armas sin destino') }}
-            </h2>
-            <a href="{{ route('reports.index') }}" class="text-sm text-gray-600 hover:text-gray-900">
-                {{ __('Volver') }}
-            </a>
+        <div class="sj-section-header">
+            <div class="sj-section-header__main">
+                <h2 class="sj-section-header__title">{{ __('Armas sin destino') }}</h2>
+            </div>
+            <div class="sj-section-header__actions">
+                <a href="{{ route('reports.index') }}" class="sj-ui-btn sj-ui-btn--ghost">{{ __('Volver') }}</a>
+            </div>
         </div>
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <div class="overflow-x-auto sj-table-wrap">
+        <div class="sj-page-shell sj-page-shell--wide">
+            <div class="sj-ui-card overflow-hidden">
+                <div class="sj-ui-card__body p-6">
+                    <div class="sj-table-wrap overflow-x-auto">
                     <table class="sj-table sj-table--align-left min-w-full text-sm">
                         <thead>
                             <tr>
@@ -46,7 +46,3 @@
         </div>
     </div>
 </x-app-layout>
-
-
-
-

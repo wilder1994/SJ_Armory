@@ -207,7 +207,7 @@
                         {{ __('weapons.internal_assignment_retire') }}
                     </a>
                 @endif
-                <button type="submit" class="text-sm text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded" @disabled(!$weapon->activeClientAssignment)>
+                <button type="submit" class="sj-ui-btn sj-ui-btn--primary" @disabled(!$weapon->activeClientAssignment)>
                     {{ $weapon->activePostAssignment || $weapon->activeWorkerAssignment ? __('Reemplazar') : __('Asignar') }}
                 </button>
             </div>
@@ -251,7 +251,7 @@
                 </button>
                 <a
                     href="{{ $internalLocationModal['edit_url'] ?? '#' }}"
-                    class="inline-flex w-full items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 sm:w-auto"
+                    class="sj-ui-btn sj-ui-btn--primary w-full sm:w-auto"
                 >
                     {{ __('weapons.assign_location') }}
                 </a>

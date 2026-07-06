@@ -1,22 +1,20 @@
 <x-app-layout header-compact>
     <x-slot name="header">
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <h1 class="text-lg font-semibold leading-tight text-gray-900">{{ __('Detalle de arma') }}</h1>
+            <div class="flex flex-wrap items-center gap-2">
+                <h1 class="text-lg font-semibold leading-tight text-gray-900">{{ $weapon->internal_code ?? $weapon->serial_number }}</h1>
+            </div>
             <div class="flex flex-wrap items-center gap-2">
                 @can('update', $weapon)
-                    <a href="{{ route('weapons.edit', $weapon) }}" class="inline-flex items-center px-2.5 py-1 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition">
-                        {{ __('Editar arma') }}
-                    </a>
+                    <a href="{{ route('weapons.edit', $weapon) }}" class="sj-ui-btn sj-ui-btn--primary sj-ui-btn--sm">{{ __('Editar') }}</a>
                 @endcan
-                <a href="{{ route('weapons.index') }}" class="inline-flex items-center px-2.5 py-1 bg-white text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition border border-gray-300">
-                    {{ __('Volver al listado') }}
-                </a>
+                <a href="{{ route('weapons.index') }}" class="sj-ui-btn sj-ui-btn--ghost sj-ui-btn--sm">{{ __('Volver al listado') }}</a>
             </div>
         </div>
     </x-slot>
 
     <div class="py-6">
-        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="sj-page-shell sj-page-shell--wide">
             @if (session('status'))
                 <div class="rounded-lg bg-green-50 border border-green-200 p-4 mb-6 text-sm text-green-700">
                     {{ session('status') }}
@@ -62,12 +60,12 @@
 
                 <div class="sj-weapon-detail-col-right flex flex-col gap-5">
                     @if (Auth::user()->isAdmin() || Auth::user()->isResponsible())
-                        <section class="sj-weapon-detail-section">
+                        <section class="sj-ui-card sj-weapon-detail-section p-4">
                             <h4 class="sj-weapon-detail-section__title">{{ __('Destino operativo') }}</h4>
                             @include('weapons.partials.assignment_client')
                         </section>
 
-                        <section class="sj-weapon-detail-section">
+                        <section class="sj-ui-card sj-weapon-detail-section p-4">
                             <h4 class="sj-weapon-detail-section__title">{{ __('Asignación interna') }}</h4>
                             <div class="space-y-4">
                                 @include('weapons.partials.assignment_custody')

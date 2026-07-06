@@ -8,7 +8,7 @@
     };
 @endphp
 
-<section class="sj-weapon-detail-section">
+<section class="sj-ui-card sj-weapon-detail-section p-4">
     <h4 class="sj-weapon-detail-section__title">{{ __('Propiedad') }}</h4>
     <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
         <x-weapon-detail-field :label="__('Tipo de propiedad')">

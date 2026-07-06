@@ -83,7 +83,7 @@
             </div>
 
             <div class="md:col-span-3 flex md:justify-end">
-                <button type="submit" class="w-full md:w-auto text-sm text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-md">
+                <button type="submit" class="sj-ui-btn sj-ui-btn--primary w-full md:w-auto">
                     {{ __('Actualizar destino') }}
                 </button>
             </div>
@@ -102,7 +102,7 @@
         <h4 class="text-base font-semibold text-gray-900">{{ __('Atención') }}</h4>
         <p class="mt-2 text-sm text-gray-700">{{ __('Primero debe realizar la asignación del responsable.') }}</p>
         <div class="mt-4 flex justify-end">
-            <button type="button" id="missing-responsible-modal-close" class="rounded-md bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700">
+            <button type="button" id="missing-responsible-modal-close" class="sj-ui-btn sj-ui-btn--primary">
                 {{ __('Aceptar') }}
             </button>
         </div>

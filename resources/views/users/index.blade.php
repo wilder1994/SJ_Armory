@@ -6,7 +6,7 @@
             </div>
 
             <div class="sj-section-header__actions">
-                <a href="{{ route('users.create') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-900">
+                <a href="{{ route('users.create') }}" class="sj-ui-btn sj-ui-btn--primary">
                     {{ __('Nuevo usuario') }}
                 </a>
             </div>
@@ -84,9 +84,9 @@
                 </div>
             @endif
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <div class="overflow-x-auto sj-table-wrap">
+            <div class="sj-ui-card overflow-hidden">
+                <div class="sj-ui-card__body p-6">
+                    <div class="sj-table-wrap overflow-x-auto">
                         <table class="sj-table sj-table--align-left min-w-full text-sm">
                             <thead>
                                 <tr>
@@ -113,7 +113,7 @@
                                         <td class="px-3 py-2">
                                             <button
                                                 type="button"
-                                                class="text-xs font-medium text-indigo-600 hover:text-indigo-900"
+                                                class="sj-ui-link"
                                                 @click='openClientsModal(@json($user->name), @json($user->clients->pluck("name")->values()->all()))'
                                             >
                                                 {{ __('Ver clientes') }}
@@ -125,13 +125,13 @@
                                             </span>
                                         </td>
                                         <td class="px-3 py-2 text-right space-x-2">
-                                            <a href="{{ route('users.edit', $user) }}" class="text-indigo-600 hover:text-indigo-900">
+                                            <a href="{{ route('users.edit', $user) }}" class="sj-ui-link">
                                                 {{ __('Editar') }}
                                             </a>
                                             @if ($user->is_active)
                                                 <button
                                                     type="button"
-                                                    class="text-xs font-medium text-green-700 hover:text-green-900"
+                                                    class="sj-ui-link sj-ui-link--success"
                                                     @click='openSendCred({{ $user->id }}, @json($user->name), @json($user->email))'
                                                 >
                                                     {{ __('Enviar') }}
@@ -141,14 +141,14 @@
                                                 @csrf
                                                 @method('PATCH')
                                                 <input type="hidden" name="is_active" value="{{ $user->is_active ? 0 : 1 }}">
-                                                <button class="text-xs text-amber-600 hover:text-amber-900">
+                                                <button class="sj-ui-link sj-ui-link--warn">
                                                     {{ $user->is_active ? __('Desactivar') : __('Activar') }}
                                                 </button>
                                             </form>
                                             <form method="POST" action="{{ route('users.destroy', $user) }}" class="inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button class="text-xs text-red-600 hover:text-red-900" onclick="return confirm(@js(__('¿Eliminar usuario?')))">
+                                                <button class="sj-ui-link sj-ui-link--danger" onclick="return confirm(@js(__('¿Eliminar usuario?')))">
                                                     {{ __('Eliminar') }}
                                                 </button>
                                             </form>

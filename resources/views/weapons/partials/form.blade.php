@@ -205,13 +205,11 @@
     <x-input-error :messages="$errors->get('notes')" class="mt-2" />
 </div>
 
-<div class="md:col-span-2 flex justify-end gap-2">
-    <a href="{{ $cancelUrl }}" class="text-sm text-gray-600 hover:text-gray-900">
+<div class="md:col-span-2 sj-form-actions">
+    <a href="{{ $cancelUrl }}" class="sj-ui-btn sj-ui-btn--ghost">
         {{ __('Cancelar') }}
     </a>
-    <x-primary-button>
-        {{ $submitLabel }}
-    </x-primary-button>
+    <button type="submit" class="sj-ui-btn sj-ui-btn--primary">{{ $submitLabel }}</button>
 </div>
 
 <div id="weapon_photo_source_modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">

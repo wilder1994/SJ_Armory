@@ -2,17 +2,17 @@
     <div class="py-8">
         <div class="sj-page-shell sj-page-shell--wide">
             {{-- overflow-visible: overflow-hidden en el card recorta el repaint del cursor sobre Leaflet (tiles) en Chrome/Edge --}}
-            <div class="bg-white overflow-visible shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <div class="mb-4" id="weapons-map-search-shell">
-                        <label for="weapons-map-search" class="mb-1 block text-sm font-medium text-gray-700">
+            <div class="sj-ui-card overflow-visible">
+                <div class="sj-ui-card__body p-6 text-gray-900">
+                    <div class="mb-4 sj-ui-field" id="weapons-map-search-shell">
+                        <label for="weapons-map-search" class="sj-ui-field__label">
                             {{ __('Buscar arma por serie') }}
                         </label>
                         <div class="relative">
                             <input
                                 id="weapons-map-search"
                                 type="text"
-                                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                                class="sj-ui-field__control"
                                 placeholder="{{ __('Escribe la serie del arma') }}"
                                 autocomplete="off"
                             >

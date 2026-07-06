@@ -17,7 +17,7 @@
 
             <div class="sj-incident-header__side">
                 <div class="sj-incident-header__actions">
-                    <a href="{{ route('reports.index') }}" class="sj-incident-header__button sj-incident-header__button--ghost">
+                    <a href="{{ route('reports.index') }}" class="sj-ui-btn sj-ui-btn--ghost">
                         {{ __('Volver a reportes') }}
                     </a>
 
@@ -36,17 +36,17 @@
                             </select>
                         </div>
 
-                        <a href="{{ $selectedType ? route('reports.weapon-incidents.show', $selectedType) : route('reports.weapon-incidents.index') }}" class="sj-incident-header__button sj-incident-header__button--ghost">
+                        <a href="{{ $selectedType ? route('reports.weapon-incidents.show', $selectedType) : route('reports.weapon-incidents.index') }}" class="sj-ui-btn sj-ui-btn--ghost sj-ui-btn--sm">
                             {{ __('Limpiar') }}
                         </a>
-                        <button type="submit" class="sj-incident-header__button sj-incident-header__button--primary">
+                        <button type="submit" class="sj-ui-btn sj-ui-btn--primary sj-ui-btn--sm">
                             {{ __('Aplicar') }}
                         </button>
                     </form>
 
                     <button
                         type="button"
-                        class="sj-incident-header__button sj-incident-header__button--ghost"
+                        class="sj-ui-btn sj-ui-btn--ghost sj-ui-btn--sm"
                         x-data=""
                         x-on:click.prevent="$dispatch('open-modal', 'weapon-incidents-list')"
                     >
@@ -54,7 +54,7 @@
                     </button>
 
                     @can('create', App\Models\WeaponIncident::class)
-                        <button type="button" class="sj-incident-header__button sj-incident-header__button--accent" data-open-modal="weapon-incident-modal">
+                        <button type="button" class="sj-ui-btn sj-ui-btn--primary sj-ui-btn--sm" data-open-modal="weapon-incident-modal">
                             {{ __('Agregar reporte') }}
                         </button>
                     @endcan

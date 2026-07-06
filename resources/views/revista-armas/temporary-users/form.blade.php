@@ -1,12 +1,19 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="text-xl font-semibold text-gray-800">
-            {{ $temporaryPhotoUser->exists ? __('Editar usuario temporal') : __('Crear usuario temporal') }}
-        </h2>
+        <div class="sj-section-header">
+            <div class="sj-section-header__main">
+                <h2 class="sj-section-header__title">
+                    {{ $temporaryPhotoUser->exists ? __('Editar usuario temporal') : __('Crear usuario temporal') }}
+                </h2>
+            </div>
+            <div class="sj-section-header__actions">
+                <a href="{{ route('revista-armas.temporary-users.index') }}" class="sj-ui-btn sj-ui-btn--ghost">{{ __('Volver al listado') }}</a>
+            </div>
+        </div>
     </x-slot>
 
     <div class="py-6">
-        <div class="mx-auto max-w-lg sm:px-6 lg:px-8">
+        <div class="sj-page-shell">
             @if ($errors->any())
                 <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
                     <p class="font-semibold">{{ __('No se pudo guardar. Revise los campos.') }}</p>
@@ -18,7 +25,7 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ $temporaryPhotoUser->exists ? route('revista-armas.temporary-users.update', $temporaryPhotoUser) : route('revista-armas.temporary-users.store') }}" class="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <form method="POST" action="{{ $temporaryPhotoUser->exists ? route('revista-armas.temporary-users.update', $temporaryPhotoUser) : route('revista-armas.temporary-users.store') }}" class="sj-ui-card space-y-4 p-6">
                 @csrf
                 @if ($temporaryPhotoUser->exists)
                     @method('PUT')
@@ -99,9 +106,9 @@
                     @enderror
                 </div>
 
-                <div class="flex justify-end gap-2">
-                    <a href="{{ route('revista-armas.temporary-users.index') }}" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700">{{ __('Cancelar') }}</a>
-                    <button type="submit" class="rounded-lg bg-[#0b6fb6] px-3 py-2 text-sm font-bold text-white">{{ __('Guardar') }}</button>
+                <div class="sj-form-actions">
+                    <a href="{{ route('revista-armas.temporary-users.index') }}" class="sj-ui-btn sj-ui-btn--ghost">{{ __('Cancelar') }}</a>
+                    <button type="submit" class="sj-ui-btn sj-ui-btn--primary">{{ __('Guardar') }}</button>
                 </div>
             </form>
         </div>

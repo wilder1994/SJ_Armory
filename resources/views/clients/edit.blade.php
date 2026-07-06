@@ -1,14 +1,19 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Editar cliente') }}
-        </h2>
+        <div class="sj-section-header">
+            <div class="sj-section-header__main">
+                <h2 class="sj-section-header__title">{{ __('Editar cliente') }}</h2>
+                <p class="sj-section-header__subtitle">{{ $client->name }}</p>
+            </div>
+            <div class="sj-section-header__actions">
+                <a href="{{ route('clients.index') }}" class="sj-ui-btn sj-ui-btn--ghost">{{ __('Volver al listado') }}</a>
+            </div>
+        </div>
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
+        <div class="sj-page-shell sj-page-shell--wide">
+            <div class="sj-ui-card p-6">
                     <form method="POST" action="{{ route('clients.update', $client) }}" class="sj-form-panel" data-location-form>
                         <input type="hidden" name="coords_source" value="geocode" data-coords-source>
                         @csrf
@@ -102,15 +107,10 @@
                         </section>
 
                         <div class="sj-form-actions">
-                            <a href="{{ route('clients.index') }}" class="text-sm text-gray-600 hover:text-gray-900">
-                                {{ __('Cancelar') }}
-                            </a>
-                            <x-primary-button>
-                                {{ __('Guardar cambios') }}
-                            </x-primary-button>
+                            <a href="{{ route('clients.index') }}" class="sj-ui-btn sj-ui-btn--ghost">{{ __('Cancelar') }}</a>
+                            <button type="submit" class="sj-ui-btn sj-ui-btn--primary">{{ __('Guardar cambios') }}</button>
                         </div>
                     </form>
-                </div>
             </div>
         </div>
     </div>

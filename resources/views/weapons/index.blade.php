@@ -83,7 +83,7 @@
     </x-slot>
 
     <div class="py-8">
-        <div class="w-full px-4 sm:px-6 lg:px-8 pb-20">
+        <div class="sj-page-shell sj-page-shell--wide pb-20">
             @if (session('status'))
                 <div class="mb-4 rounded-xl bg-green-50 p-3 text-sm text-green-700">
                     {{ session('status') }}
@@ -96,8 +96,8 @@
                 </div>
             @endif
 
-            <div class="bg-white shadow-sm sm:rounded-2xl w-full border border-slate-200">
-                <div class="p-6 text-gray-900">
+            <div class="sj-ui-card overflow-hidden w-full">
+                <div class="sj-ui-card__body p-6 text-gray-900">
                     @php
                         $weaponTableColumns = [
                             ['key' => 'cliente', 'label' => __('Cliente'), 'class' => 'min-w-[200px]'],
@@ -323,100 +323,152 @@
 
     .weapon-toolbar__search-input {
         width: 100%;
-        height: 2.25rem;
-        border: 1px solid rgb(203 213 225);
-        border-radius: 0.55rem;
-        font-size: 0.82rem;
+        height: var(--sj-ui-control-height);
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid var(--sj-ui-surface-border);
+        border-radius: var(--sj-ui-control-radius);
+        box-shadow:
+            0 0 1px rgba(224, 247, 255, 0.75),
+            0 0 4px rgba(0, 123, 255, 0.08);
+        font-size: 0.875rem;
         padding: 0 0.75rem;
-        color: rgb(30 41 59);
+        color: #0f172a;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .weapon-toolbar__search-input:hover {
+        border-color: rgba(147, 197, 253, 0.85);
+    }
+
+    .weapon-toolbar__search-input:focus {
+        border-color: rgba(11, 111, 182, 0.65);
+        box-shadow:
+            0 0 1px var(--sj-ui-neon-line),
+            0 0 0 1px rgba(11, 111, 182, 0.12),
+            0 0 10px var(--sj-ui-neon-glow-hover);
+        outline: none;
     }
 
     .weapon-toolbar__chip {
         align-items: center;
-        border-radius: 0.5rem;
-        border: 1px solid rgb(226 232 240);
-        background: #fff;
-        color: rgb(51 65 85);
+        border-radius: var(--sj-ui-control-radius);
+        border: 1px solid var(--sj-ui-surface-border);
+        background:
+            radial-gradient(ellipse 100% 80% at 0% 0%, rgba(255, 255, 255, 0.5), transparent 60%),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.84) 0%, rgba(248, 251, 255, 0.62) 100%);
+        box-shadow:
+            0 0 1px var(--sj-ui-neon-line),
+            0 0 4px var(--sj-ui-neon-glow);
+        color: #334155;
         display: inline-flex;
         font-size: 0.78rem;
         font-weight: 600;
-        height: 2.25rem;
-        padding: 0 0.6rem;
+        height: var(--sj-ui-control-height);
+        padding: 0 0.75rem;
         white-space: nowrap;
     }
 
     .weapon-toolbar__scope {
         appearance: none;
-        background: #fff;
-        border: 1px solid rgb(226 232 240);
-        border-radius: 0.5rem;
-        color: rgb(51 65 85);
-        font-size: 0.78rem;
+        height: var(--sj-ui-control-height);
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid var(--sj-ui-surface-border);
+        border-radius: var(--sj-ui-control-radius);
+        box-shadow:
+            0 0 1px rgba(224, 247, 255, 0.75),
+            0 0 4px rgba(0, 123, 255, 0.08);
+        color: #334155;
+        font-size: 0.875rem;
         font-weight: 600;
-        height: 2.25rem;
-        padding: 0 1.8rem 0 0.6rem;
+        padding: 0 1.8rem 0 0.75rem;
         background-image:
             linear-gradient(45deg, transparent 50%, #64748b 50%),
-            linear-gradient(135deg, #64748b 50%, transparent 50%);
+            linear-gradient(135deg, #64748b 50%, transparent 50%),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 255, 255, 0.82) 100%);
         background-position:
             calc(100% - 0.8rem) calc(50% - 0.1rem),
-            calc(100% - 0.55rem) calc(50% - 0.1rem);
+            calc(100% - 0.55rem) calc(50% - 0.1rem),
+            0 0;
         background-repeat: no-repeat;
-        background-size: 0.3rem 0.3rem, 0.3rem 0.3rem;
+        background-size: 0.3rem 0.3rem, 0.3rem 0.3rem, auto;
     }
 
     .weapon-header__primary-action,
     .weapon-header__utility,
     .weapon-header__counter {
         align-items: center;
-        border-radius: 0.75rem;
+        border-radius: var(--sj-ui-control-radius);
         display: inline-flex;
         font-size: 0.875rem;
         font-weight: 600;
-        height: 2.25rem;
+        height: var(--sj-ui-control-height);
+        text-decoration: none;
+        transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease, transform 0.15s ease;
     }
 
     .weapon-header__primary-action {
-        background: rgb(37 99 235);
+        background: linear-gradient(180deg, #18a3db 0%, var(--sj-blue) 100%);
+        border: 1px solid rgba(11, 111, 182, 0.85);
+        box-shadow:
+            0 0 1px var(--sj-ui-neon-line),
+            0 0 8px var(--sj-ui-neon-glow-hover),
+            0 8px 18px rgba(11, 111, 182, 0.22);
         color: #fff;
         padding: 0 1rem;
-        transition: 150ms ease;
     }
 
     .weapon-header__primary-action:hover {
-        background: rgb(29 78 216);
+        background: linear-gradient(180deg, #1294c9 0%, var(--sj-blue-dark) 100%);
+        box-shadow:
+            0 0 1px var(--sj-ui-neon-line),
+            0 0 12px var(--sj-ui-neon-glow-active),
+            0 10px 20px rgba(11, 111, 182, 0.28);
     }
 
     .weapon-header__utility,
     .weapon-header__counter {
-        background: #fff;
-        border: 1px solid rgb(226 232 240);
-        color: rgb(51 65 85);
+        background: rgba(255, 255, 255, 0.78);
+        border: 1px solid var(--sj-ui-surface-border);
+        box-shadow:
+            0 0 1px rgba(224, 247, 255, 0.75),
+            0 0 4px rgba(0, 123, 255, 0.08);
+        color: #334155;
         padding: 0 1rem;
     }
 
     .weapon-header__utility:hover {
-        border-color: rgb(148 163 184);
-        background: rgb(248 250 252);
+        background: rgba(255, 255, 255, 0.95);
+        border-color: rgba(147, 197, 253, 0.9);
+        box-shadow:
+            0 0 1px var(--sj-ui-neon-line),
+            0 0 8px var(--sj-ui-neon-glow-hover);
     }
 
     .weapon-toolbar-action {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 0.75rem;
-        border: 1px solid rgb(203 213 225);
-        background: white;
-        padding: 0.5rem 1rem;
+        border-radius: var(--sj-ui-control-radius);
+        border: 1px solid var(--sj-ui-surface-border);
+        background: rgba(255, 255, 255, 0.78);
+        box-shadow:
+            0 0 1px rgba(224, 247, 255, 0.75),
+            0 0 4px rgba(0, 123, 255, 0.08);
+        padding: 0 1rem;
         font-size: 0.875rem;
         font-weight: 600;
-        color: rgb(30 41 59);
-        transition: 150ms ease;
+        height: var(--sj-ui-control-height);
+        color: #334155;
+        text-decoration: none;
+        transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
     .weapon-toolbar-action:hover {
-        border-color: rgb(148 163 184);
-        background: rgb(248 250 252);
+        background: rgba(255, 255, 255, 0.95);
+        border-color: rgba(147, 197, 253, 0.9);
+        box-shadow:
+            0 0 1px var(--sj-ui-neon-line),
+            0 0 8px var(--sj-ui-neon-glow-hover);
     }
 
     .weapon-toolbar-action-danger {

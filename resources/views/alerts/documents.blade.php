@@ -129,7 +129,7 @@
         <div id="alerts-toolbar-shell" class="alerts-toolbar-shell">
             <div class="alerts-toolbar">
                 <div class="alerts-toolbar__top">
-                    <h2 class="alerts-toolbar__title">{{ __('alerts.title') }}</h2>
+                    <h2 class="sj-section-header__title alerts-toolbar__title">{{ __('alerts.title') }}</h2>
                     <div class="alerts-toolbar__center">
                         <form id="alerts-filter-form" method="GET" action="{{ route('alerts.documents') }}" class="alerts-toolbar__filters">
                             <span class="alerts-period-picker__label">{{ __('alerts.months_label') }}</span>
@@ -208,27 +208,33 @@
 
     <div class="py-8" data-alerts-page>
         <div class="sj-page-shell sj-page-shell--wide space-y-6">
-            <section class="alerts-overview">
-                <button type="button" class="alerts-card alerts-card--expired" data-open-modal="expired">
-                    <span class="alerts-card__eyebrow">{{ $monthLabel }}</span>
-                    <span class="alerts-card__count">{{ $summaryCards['expired']['count'] }}</span>
-                    <span class="alerts-card__title">{{ $summaryCards['expired']['label'] }}</span>
-                    <span class="alerts-card__subtitle">{{ $summaryCards['expired']['subtitle'] }}</span>
-                    <span class="alerts-card__action">{{ __('alerts.open_detail') }}</span>
+            <section class="sj-ui-kpi-grid mb-0" style="grid-template-columns: repeat(3, minmax(0, 1fr));">
+                <button type="button" class="sj-ui-kpi sj-ui-kpi--red text-left" data-open-modal="expired">
+                    <span class="sj-ui-kpi__label">{{ $monthLabel }}</span>
+                    <div class="sj-ui-kpi__row">
+                        <span class="sj-ui-kpi__value">{{ $summaryCards['expired']['count'] }}</span>
+                    </div>
+                    <span class="text-sm font-semibold text-slate-900">{{ $summaryCards['expired']['label'] }}</span>
+                    <span class="text-xs leading-snug text-slate-500">{{ $summaryCards['expired']['subtitle'] }}</span>
+                    <span class="text-xs font-bold text-[#0b6fb6]">{{ __('alerts.open_detail') }}</span>
                 </button>
-                <button type="button" class="alerts-card alerts-card--expiring" data-open-modal="expiring">
-                    <span class="alerts-card__eyebrow">{{ $monthLabel }}</span>
-                    <span class="alerts-card__count">{{ $summaryCards['expiring']['count'] }}</span>
-                    <span class="alerts-card__title">{{ $summaryCards['expiring']['label'] }}</span>
-                    <span class="alerts-card__subtitle">{{ $summaryCards['expiring']['subtitle'] }}</span>
-                    <span class="alerts-card__action">{{ __('alerts.open_detail') }}</span>
+                <button type="button" class="sj-ui-kpi sj-ui-kpi--amber text-left" data-open-modal="expiring">
+                    <span class="sj-ui-kpi__label">{{ $monthLabel }}</span>
+                    <div class="sj-ui-kpi__row">
+                        <span class="sj-ui-kpi__value">{{ $summaryCards['expiring']['count'] }}</span>
+                    </div>
+                    <span class="text-sm font-semibold text-slate-900">{{ $summaryCards['expiring']['label'] }}</span>
+                    <span class="text-xs leading-snug text-slate-500">{{ $summaryCards['expiring']['subtitle'] }}</span>
+                    <span class="text-xs font-bold text-[#0b6fb6]">{{ __('alerts.open_detail') }}</span>
                 </button>
-                <button type="button" class="alerts-card alerts-card--safe" data-open-modal="no_alerts">
-                    <span class="alerts-card__eyebrow">{{ $monthLabel }}</span>
-                    <span class="alerts-card__count">{{ $summaryCards['no_alerts']['count'] }}</span>
-                    <span class="alerts-card__title">{{ $summaryCards['no_alerts']['label'] }}</span>
-                    <span class="alerts-card__subtitle">{{ $summaryCards['no_alerts']['subtitle'] }}</span>
-                    <span class="alerts-card__action">{{ __('alerts.open_detail') }}</span>
+                <button type="button" class="sj-ui-kpi sj-ui-kpi--green text-left" data-open-modal="no_alerts">
+                    <span class="sj-ui-kpi__label">{{ $monthLabel }}</span>
+                    <div class="sj-ui-kpi__row">
+                        <span class="sj-ui-kpi__value">{{ $summaryCards['no_alerts']['count'] }}</span>
+                    </div>
+                    <span class="text-sm font-semibold text-slate-900">{{ $summaryCards['no_alerts']['label'] }}</span>
+                    <span class="text-xs leading-snug text-slate-500">{{ $summaryCards['no_alerts']['subtitle'] }}</span>
+                    <span class="text-xs font-bold text-[#0b6fb6]">{{ __('alerts.open_detail') }}</span>
                 </button>
             </section>
 

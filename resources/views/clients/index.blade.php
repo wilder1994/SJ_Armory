@@ -25,7 +25,7 @@
 
                     <div class="client-directory-header__actions">
                         @can('create', App\Models\Client::class)
-                            <a href="{{ route('clients.create') }}" class="client-directory-header__primary-action">
+                            <a href="{{ route('clients.create') }}" class="sj-ui-btn sj-ui-btn--primary client-directory-header__primary-action">
                                 {{ __('Nuevo cliente') }}
                             </a>
                         @endcan
@@ -39,7 +39,7 @@
                             type="search"
                             name="q"
                             value="{{ $search }}"
-                            class="h-10 w-full rounded-xl border-slate-300 text-sm shadow-sm"
+                            class="sj-ui-field__control h-10 w-full"
                             placeholder="{{ __('Buscar por razón social, NIT, contacto, correo o ciudad...') }}"
                         >
                     </form>
@@ -70,7 +70,7 @@
                 </div>
             @endif
 
-            <section class="sj-panel sj-client-panel">
+            <section class="sj-ui-card overflow-hidden sj-client-panel">
                 <div id="clients-results">
                     @include('clients.partials.index_results', ['clients' => $clients, 'search' => $search])
                 </div>

@@ -1,15 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="sj-incident-header">
-            <div class="sj-incident-header__main">
-                <p class="sj-incident-header__eyebrow">{{ __('Centro de reportes') }}</p>
-                <h2 class="sj-incident-header__title">{{ __('Custodia y taller') }}</h2>
-                <p class="sj-incident-header__subtitle">
+        <div class="sj-section-header">
+            <div class="sj-section-header__main">
+                <p class="sj-section-header__eyebrow">{{ __('Centro de reportes') }}</p>
+                <h2 class="sj-section-header__title">{{ __('Custodia y taller') }}</h2>
+                <p class="sj-section-header__subtitle">
                     {{ __('Armas ubicadas en armerillo, pendientes de mantenimiento o en armero. No son novedades operativas.') }}
                 </p>
             </div>
-            <div class="sj-incident-header__side">
-                <a href="{{ route('reports.index') }}" class="sj-incident-header__button sj-incident-header__button--ghost">
+            <div class="sj-section-header__actions">
+                <a href="{{ route('reports.index') }}" class="sj-ui-btn sj-ui-btn--ghost">
                     {{ __('Volver a reportes') }}
                 </a>
             </div>
@@ -20,14 +20,17 @@
         <div class="sj-page-shell sj-page-shell--wide space-y-6">
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 @foreach ($roleLabels as $role => $label)
-                    <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                        <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ $label }}</div>
-                        <div class="mt-2 text-3xl font-bold text-slate-900 tabular-nums">{{ $counts[$role] ?? 0 }}</div>
+                    <div class="sj-ui-kpi sj-ui-kpi--blue">
+                        <span class="sj-ui-kpi__label">{{ $label }}</span>
+                        <div class="sj-ui-kpi__row">
+                            <span class="sj-ui-kpi__value">{{ $counts[$role] ?? 0 }}</span>
+                        </div>
                     </div>
                 @endforeach
             </div>
 
-            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div class="sj-ui-card overflow-hidden">
+                <div class="sj-table-wrap overflow-x-auto">
                 <table class="sj-table min-w-full text-sm">
                     <thead>
                         <tr>
@@ -60,6 +63,7 @@
                         @endforelse
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     </div>

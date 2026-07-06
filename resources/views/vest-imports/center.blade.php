@@ -22,7 +22,7 @@
         <div class="sj-section-header">
             <div class="sj-section-header__main">
                 <h2 class="sj-section-header__title">{{ __('Subir chalecos') }}</h2>
-                <p class="mt-1 text-sm text-gray-500">{{ __('Carga masiva desde Excel con validación previa') }}</p>
+                <p class="sj-section-header__subtitle">{{ __('Carga masiva desde Excel con validación previa') }}</p>
             </div>
             <div class="sj-section-header__actions">
                 <a href="{{ route('vest-imports.templates.vest') }}" class="sj-ui-btn sj-ui-btn--ghost">

@@ -34,7 +34,7 @@
                 </div>
             @endif
 
-            <section class="portfolio-panel">
+            <section class="sj-ui-card overflow-hidden portfolio-panel">
                 <div class="sj-table-wrap portfolio-table-shell">
                     <table class="sj-table sj-table--align-left portfolio-table">
                         <thead>
@@ -72,7 +72,7 @@
                                         </div>
                                     </td>
                                     <td class="portfolio-table__actions">
-                                        <a href="{{ route('portfolios.edit', $responsible) }}" class="portfolio-action">
+                                        <a href="{{ route('portfolios.edit', $responsible) }}" class="sj-ui-link">
                                             {{ __('Gestionar') }}
                                         </a>
                                     </td>

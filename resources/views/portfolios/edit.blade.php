@@ -22,7 +22,7 @@
                     <strong>{{ $availableCount }}</strong>
                     {{ __('disponibles') }}
                 </span>
-                <a href="{{ route('portfolios.index') }}" class="portfolio-edit-header__back">
+                <a href="{{ route('portfolios.index') }}" class="sj-ui-btn sj-ui-btn--ghost portfolio-edit-header__back">
                     {{ __('Volver al tablero') }}
                 </a>
             </div>

@@ -180,7 +180,7 @@
                             <td class="px-3 py-2 {{ $alert['text_class'] }}">{{ $alert['state'] }}</td>
                             <td class="px-3 py-2 {{ $alert['text_class'] }}">{{ $alert['observation'] }}</td>
                             <td class="px-3 py-2 text-right space-x-2">
-                                <a href="{{ route('weapons.documents.download', [$weapon, $document]) }}" class="text-indigo-600 hover:text-indigo-900">
+                                <a href="{{ route('weapons.documents.download', [$weapon, $document]) }}" class="sj-ui-link">
                                     {{ __('Descargar') }}
                                 </a>
                             </td>

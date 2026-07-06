@@ -1,24 +1,25 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <div>
-                <h2 class="text-xl font-semibold text-gray-800">{{ __('Usuarios temporales') }}</h2>
-                <p class="mt-1 text-sm text-slate-500">{{ __('Perfiles reutilizables para acceso de campo a Revista armas.') }}</p>
+        <div class="sj-section-header">
+            <div class="sj-section-header__main">
+                <h2 class="sj-section-header__title">{{ __('Usuarios temporales') }}</h2>
+                <p class="sj-section-header__subtitle">{{ __('Perfiles reutilizables para acceso de campo a Revista armas.') }}</p>
             </div>
-            <div class="flex gap-2">
-                <a href="{{ route('revista-armas.index') }}" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700">{{ __('Revista armas') }}</a>
-                <a href="{{ route('revista-armas.temporary-users.create') }}" class="rounded-lg bg-[#0b6fb6] px-3 py-2 text-sm font-bold text-white">{{ __('Crear usuario') }}</a>
+            <div class="sj-section-header__actions">
+                <a href="{{ route('revista-armas.index') }}" class="sj-ui-btn sj-ui-btn--ghost">{{ __('Revista armas') }}</a>
+                <a href="{{ route('revista-armas.temporary-users.create') }}" class="sj-ui-btn sj-ui-btn--primary">{{ __('Crear usuario') }}</a>
             </div>
         </div>
     </x-slot>
 
     <div class="py-6">
-        <div class="mx-auto max-w-5xl sm:px-6 lg:px-8">
+        <div class="sj-page-shell sj-page-shell--wide">
             @if (session('status'))
                 <div class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">{{ session('status') }}</div>
             @endif
 
-            <div class="overflow-hidden rounded-xl shadow-sm sj-table-wrap">
+            <div class="sj-ui-card overflow-hidden">
+                <div class="sj-table-wrap overflow-x-auto">
                 <table class="sj-table sj-table--align-left min-w-full text-sm">
                     <thead>
                         <tr>
@@ -64,6 +65,7 @@
                         @endforelse
                     </tbody>
                 </table>
+                </div>
             </div>
             <div class="mt-4">{{ $users->links() }}</div>
         </div>
