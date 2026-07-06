@@ -15,7 +15,7 @@ Sistema web para **gestión de armamento**, **asignaciones operativas**, **trans
 - ✅ **Transferencias**: listado **unificado** (pendientes y enviadas en una tabla; serie en columna arma; munición/proveedores opcionales en el envío; aceptación; **cancelación** con restauración cuando aplica); con transferencia **pendiente**, la ficha del arma muestra un **aviso** (usuario normal: mensaje genérico; **ADMIN**: quién **envió** y quién **debe aceptar**); botón **Historial** (modal, últimas participaciones).
 - ✅ **Clientes / Puestos / Trabajadores / Usuarios** (puestos y trabajadores: archivo, historial de cambios, políticas por rol)
 - ✅ **Cargas masivas**: validación previa, preview, ejecución por chunks y trazabilidad por lote para **armas** y **clientes**; solo **ADMIN**; descarga de plantillas Excel (hojas `Datos` + `Instructivo`); en **Cargas masivas**, el ADMIN también gestiona las plantillas globales de reverso autenticado (porte y tenencia) usadas en el PDF y en la ficha.
-- ✅ **Chalecos** (`/vests`): módulo paralelo al inventario de armas (tablas y rutas propias); listado con **KPIs clicables** (barra de acento superior + hint contextual por categoría) y **filas de tabla coloreadas** con la misma semaforización (verde / ámbar / naranja / rojo); ficha compacta (datos + asignación en dos columnas, misma altura); formularios **create/edit pro** con comboboxes buscables (cliente, trabajador, puesto), **responsable dispositivo** derivado del cliente (o auto para responsable N1); **4 fotos** con editor pro en ficha/editar (clic, arrastrar, pegar, Cropper, JSON sin recarga) y pickers embebidos al **crear**; **import masivo** en `/subir-chalecos` con modal de subida (drag & drop, pegar, XHR) y **validación en preview** de cliente, puesto y trabajador (cédula).
+- ✅ **Chalecos** (`/vests`): módulo paralelo al inventario de armas (tablas y rutas propias); listado con **KPIs clicables** (barra de acento superior + hint contextual por categoría) y **filas de tabla coloreadas** con la misma semaforización (verde / ámbar / naranja / rojo); ficha compacta (datos + asignación en dos columnas, misma altura); formularios **create/edit pro** con comboboxes buscables (cliente, trabajador, puesto), **responsable dispositivo** derivado del cliente (o auto para responsable N1); **4 fotos** con editor pro en ficha/editar (clic, arrastrar, pegar, Cropper, JSON sin recarga) y pickers embebidos al **crear**; **import masivo** en `/subir-chalecos` con modal de subida (drag & drop, pegar, XHR), **descarga de plantilla** (`resources/templates/Chalecos.xlsx` + hoja `Instructivo`) y **validación en preview** de cliente, puesto y trabajador (cédula); columna **Cargo** alineada a los roles de `Worker`.
 - ✅ **Dashboard**: fila de **6 KPIs** (Total, No operativas, En inventario, Incautadas en trámite, Vencidos, Por vencer), gráficos y estado “as of”.
 - ✅ **Alertas documentales** (`/alerts/documents`): tarjetas vencidos / por vencer / sin alertas; filtro **multi-mes** con panel de checkboxes (varios meses y años); modales con **filtros por columna** tipo Excel (multi-selección en encabezado); exportación `.docx` y vista previa PDF con nombre `Revalidacion_{mes}_{año}`.
 - ✅ **Revista armas** (`/revista-armas`): acceso temporal (12 h) para colaboradores de campo; usuarios temporales reutilizables; **usuarios compartidos** (solo **ADMIN** autoriza supervisores multi-zona con acceso unificado y mismo código); tabla staff con columna **Cliente**; modal **Asignar acceso temporal** con tabla scrollable (**Cliente**, **Serie**, **Tipo**); subida de **4 fotos técnicas** a staging; el invitado solo entra con código vigente; staff al filtrar ve armas del **último acceso** (aunque haya vencido) para revisar fotos en staging (✓/✕, **Ver**, **Actualizar**); confirmaciones en **modales**; historial de notas en la ficha del arma; **ADMIN** con gestión global.
@@ -26,7 +26,7 @@ Sistema web para **gestión de armamento**, **asignaciones operativas**, **trans
 - ✅ **Reportes — Novedades operativas** (`/reports/weapon-incidents`): solo tipos reportables (**hurtada**, **perdida**, **incautada**, **dar de baja**); mantenimiento/armerillo históricos quedan en notas de la ficha pero no suman en gráficos ni KPIs.
 - ✅ **Reportes — Custodia y taller** (`/reports/weapon-custody`): armas en puestos de armerillo, armerillo para mantenimiento o armero por responsable.
 - ✅ **Custodia en ficha del arma**: acciones **Enviar a mi armerillo** (operativa), **Para mantenimiento** y **Enviar a armero** (no operativas, sin novedad); un armerillo y armeros por responsable, ubicación inicial del cliente. Al mover custodia se cierran novedades legadas abiertas (`en_mantenimiento`, `para_mantenimiento`, `en_armerillo`) y el listado muestra **Estado** alineado con el puesto de custodia (`WeaponListStatusResolver`).
-- ✅ **Formatos** (`/formatos`): descarga de plantillas operativas listas para imprimir; **Revista mensual de armamento** (FO-OP-03) con descarga vacía o con relación de armas (tabla con filtros por columna, selección por checkbox y exportación solo de las marcadas); archivo **`FO-OP-03 Revista mensual de armamento.xlsx`**; columnas Excel **Puesto** (`B`) desde asignación a puesto y **Responsable** / **Cédula** (`D`/`E`) desde el trabajador portador (vacías si el arma está solo en puesto); 20 filas por hoja carta horizontal y paginación automática (`phpoffice/phpspreadsheet`).
+- ✅ **Formatos** (`/formatos`): catálogo en **tarjetas** (`sj-ui-card`, grid 1/2/4 columnas); **Revista mensual de armamento** (FO-OP-03) con descarga vacía o con relación de armas (tabla con filtros por columna, selección por checkbox y exportación solo de las marcadas); **plantilla carga masiva de chalecos** (tarjeta visible con permiso `import` en `Vest`); archivos en `resources/templates/`; revista usa `phpoffice/phpspreadsheet` (requiere `composer install` con PHP 8.2+).
 
 ---
 
@@ -73,6 +73,8 @@ git clone <repo-url>
 cd SJ_Armory
 composer install
 ```
+
+> En Laragon use **PHP 8.2+** al ejecutar Composer (`phpoffice/phpspreadsheet`, Laravel Reverb). Si `composer install` falla por versión de PHP, active PHP 8.2 en Laragon o invoque explícitamente `C:\laragon\bin\php\php-8.2.x\php.exe` con `composer.phar install`.
 
 ### 2) Configurar `.env`
 
@@ -1142,11 +1144,13 @@ Comportamiento relevante:
 Controlador: `app/Http/Controllers/FormatController.php`  
 Servicios: `app/Services/Formats/MonthlyWeaponReviewQueryService.php`, `MonthlyWeaponReviewRowMapper.php`, `MonthlyWeaponReviewSpreadsheetExporter.php`
 
-Plantilla oficial: `resources/templates/Revista_mensual_armamento.xlsx` (FO-OP-03). El exportador **copia la plantilla** y solo rellena mes (`Q2`), paginación (`Q4`) y filas de datos (`A7:Q26`, 20 por hoja). Dependencia: `phpoffice/phpspreadsheet`.
+Vista: `resources/views/formats/index.blade.php` — grid de tarjetas (1 col móvil, 2 en `md`, 4 en `xl`); header solo con título (sin subtítulo ni acciones sueltas).
+
+**Revista mensual de armamento (FO-OP-03)**
+
+Plantilla oficial: `resources/templates/Revista_mensual_armamento.xlsx`. El exportador **copia la plantilla** y solo rellena mes (`Q2`), paginación (`Q4`) y filas de datos (`A7:Q26`, 20 por hoja). Dependencia: `phpoffice/phpspreadsheet` (instalar con `composer install` usando **PHP 8.2+**).
 
 Acceso: **ADMIN**, **RESPONSABLE** y **AUDITOR** (`WeaponPolicy::viewAny`).
-
-Formato inicial: **Revista mensual de armamento** (FO-OP-03):
 
 - **Descargar vacío**: plantilla con encabezado oficial, 20 filas numeradas y pie de diligenciamiento.
 - **Con relación de armas**: modal con tabla paginada (Cliente, Puesto, Responsable, Serie), filtros tipo Excel en encabezados (`col[cliente][]`, etc.), búsqueda general, inventario, destino y vencimiento. Checkbox por fila; **Seleccionar visibles** / **Limpiar selección**. Solo se exportan las armas marcadas (`weapon_ids[]`). Pie fijo con paginación y **Generar Excel**; solo el cuerpo de la tabla hace scroll (`x-modal` con `:bodyScroll="false"`).
@@ -1155,9 +1159,18 @@ Formato inicial: **Revista mensual de armamento** (FO-OP-03):
 - Cada hoja Excel = **1 formulario carta horizontal** con **20 filas fijas**; si hay más armas seleccionadas, se agregan hojas adicionales (`Página X de Y`).
 - Vista previa JSON (`POST`): `formatos.revista-mensual.vista-previa` (`count`, `pages`, `rows_per_page`).
 
-Tests: `tests/Unit/MonthlyWeaponReviewRowMapperTest.php`, `MonthlyWeaponReviewSpreadsheetExporterTest.php`, `MonthlyWeaponReviewQueryServiceTest.php`, `tests/Feature/FormatControllerTest.php`.
+**Carga masiva de chalecos (plantilla Excel)**
 
-> 🧩 **Despliegue:** solo PHP y README — **no** requiere `npm run build` ni subir `public/build/`.
+- Tarjeta en `/formatos` y botón **Descargar formato** en `/subir-chalecos` (header).
+- Ruta: `GET /subir-chalecos/plantilla` → `vest-imports.templates.vest`.
+- Servicio: `App\Services\Imports\VestImportTemplateExporter` — copia `resources/templates/Chalecos.xlsx` y agrega hoja **`Instructivo`** vía `SimpleSpreadsheetExporter::appendInstructionSheet()` (sin PhpSpreadsheet).
+- Acceso: `VestPolicy::import` (ADMIN y RESPONSABLE N1).
+- Archivo descargado: `formato-carga-chalecos.xlsx`.
+- Columna **Cargo** del Excel debe coincidir con los roles de `Worker::roleLabels()` (Escolta, Supervisor, Guarda, Motorizado, Guarda de infraestructura); el import valida contra `VestImportProcessor::WORKER_ROLE_MAP`.
+
+Tests: `tests/Unit/MonthlyWeaponReviewRowMapperTest.php`, `MonthlyWeaponReviewSpreadsheetExporterTest.php`, `MonthlyWeaponReviewQueryServiceTest.php`, `tests/Feature/FormatControllerTest.php`, `ImportTemplateExporterTest` (plantilla chalecos), `VestImportValidationTest` (descarga plantilla).
+
+> 🧩 **Despliegue:** revista mensual requiere `composer install` (PhpSpreadsheet). La plantilla de chalecos no. La vista Formatos no requiere `npm run build` salvo cambios en assets.
 
 Rutas:
 
@@ -1167,6 +1180,7 @@ Rutas:
 - `formatos.revista-mensual.column-options` (`GET`, opciones cascada por columna)
 - `formatos.revista-mensual.vista-previa` (`POST`)
 - `formatos.revista-mensual.descargar` (`POST`, requiere `weapon_ids[]`)
+- `vest-imports.templates.vest` (`GET /subir-chalecos/plantilla`, plantilla Excel chalecos)
 
 ### 5.17 Módulo Chalecos
 
@@ -1199,6 +1213,7 @@ Política: `app/Policies/VestPolicy.php`. Alcance por cartera vía `Vest::scopeF
 | `PATCH /vests/{vest}/photos/{photo}` | `vests.photos.update` | Reemplazo vía API (JSON) |
 | `DELETE /vests/{vest}/photos/{photo}` | `vests.photos.destroy` | Eliminar foto |
 | `GET /subir-chalecos` | `vest-imports.index` | Centro de cargas (historial) |
+| `GET /subir-chalecos/plantilla` | `vest-imports.templates.vest` | Descargar plantilla Excel (`Chalecos.xlsx` + `Instructivo`) |
 | `POST /subir-chalecos/preview` | `vest-imports.preview` | Validar Excel y crear lote `draft` |
 | `GET /subir-chalecos/{batch}` | `vest-imports.show` | Detalle / preview del lote |
 | `POST /subir-chalecos/{batch}/execute/start` | `vest-imports.start` | Iniciar ejecución (JSON) |
@@ -1208,8 +1223,8 @@ Política: `app/Policies/VestPolicy.php`. Alcance por cartera vía `Vest::scopeF
 | `POST /subir-chalecos/{batch}/discard` | `vest-imports.discard` | Cancelar borrador |
 
 Controladores: `VestController`, `VestPhotoController`, `VestImportController`.  
-Servicios: `VestQueryService`, `VestPhotoService`, `Imports\VestImportProcessor` (inyectado en `WeaponImportService`).  
-Soporte: `App\Support\VestAlert`, `App\Support\VestPhotoSlotPayload`.
+Servicios: `VestQueryService`, `VestPhotoService`, `Imports\VestImportProcessor` (inyectado en `WeaponImportService`), `Imports\VestImportTemplateExporter`.  
+Soporte: `App\Support\VestAlert`, `App\Support\VestPhotoSlotPayload`, `App\Support\SimpleSpreadsheetExporter` (hoja `Instructivo` en plantilla).
 
 #### Modelo de datos
 
@@ -1380,7 +1395,7 @@ Reutiliza el flujo de lotes de armas (`WeaponImportService`: preview, chunks, es
 
 Vista: `resources/views/vest-imports/center.blade.php`.
 
-- **Header**: botón **Subir Excel** (abre modal) y **Volver al inventario**; la página muestra solo el **historial** de lotes ejecutados (sin bloque “Nueva carga” en el cuerpo).
+- **Header**: botones **Descargar formato**, **Subir Excel** (abre modal) y **Volver al inventario**; la página muestra solo el **historial** de lotes ejecutados (sin bloque “Nueva carga” en el cuerpo).
 - **Modal de subida** (mismo patrón que Cargas masivas → armas): zona drag & drop, **Ctrl+V** para pegar archivo, selección manual, barra de progreso XHR al validar y redirección al preview del lote (`POST vest-imports.preview` con `Accept: application/json`). El JS del modal va en `@push('scripts')` **dentro** de `<x-app-layout>` para que `@stack('scripts')` lo renderice.
 - Panel de ayuda dentro del modal: columnas soportadas y reglas por rol (ADMIN / responsable).
 
@@ -1514,7 +1529,7 @@ Grupos funcionales:
 - Operacion:
   - `weapons.*`
   - `vests.*`, `vests.form-options`, `vests.photos.*`
-  - `vest-imports.index`, `vest-imports.preview`, `vest-imports.show`, `vest-imports.start`, `vest-imports.process`, `vest-imports.status`, `vest-imports.execute`, `vest-imports.discard` (centro de cargas masivas de chalecos)
+  - `vest-imports.index`, `vest-imports.templates.vest`, `vest-imports.preview`, `vest-imports.show`, `vest-imports.start`, `vest-imports.process`, `vest-imports.status`, `vest-imports.execute`, `vest-imports.discard` (centro de cargas masivas de chalecos)
   - `weapon-imports.index`, `weapon-imports.templates.weapon`, `weapon-imports.templates.client`, `weapon-imports.preview`, `weapon-imports.start`, `weapon-imports.process`, `weapon-imports.status`, `weapon-imports.execute`, `weapon-imports.discard` (centro de cargas masivas: armas y clientes)
   - `weapons.client_assignments.store`
   - `weapons.internal_assignments.store/retire`
@@ -1532,7 +1547,7 @@ Grupos funcionales:
 - Reportes y alertas:
   - `reports.*`, `reports.weapon-incidents.*`, `reports.weapon-custody.index`, `alerts.documents`, `alerts.documents.preview`, `alerts.documents.download`.
 - Formatos:
-  - `formatos.index`, `formatos.revista-mensual.vacio`, `formatos.revista-mensual.armas`, `formatos.revista-mensual.column-options`, `formatos.revista-mensual.vista-previa`, `formatos.revista-mensual.descargar`.
+  - `formatos.index`, `formatos.revista-mensual.vacio`, `formatos.revista-mensual.armas`, `formatos.revista-mensual.column-options`, `formatos.revista-mensual.vista-previa`, `formatos.revista-mensual.descargar`, `vest-imports.templates.vest` (plantilla chalecos también desde tarjeta en Formatos).
 - Dashboard:
   - `dashboard`, `dashboard.metrics`.
 - Mapa:

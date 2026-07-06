@@ -25,6 +25,9 @@
                 <p class="mt-1 text-sm text-gray-500">{{ __('Carga masiva desde Excel con validación previa') }}</p>
             </div>
             <div class="sj-section-header__actions">
+                <a href="{{ route('vest-imports.templates.vest') }}" class="sj-ui-btn sj-ui-btn--ghost">
+                    {{ __('Descargar formato') }}
+                </a>
                 <button
                     type="button"
                     x-data=""

@@ -141,6 +141,40 @@ class VestImportValidationTest extends TestCase
         $this->assertSame(0, Post::query()->where('name', 'Puesto Inexistente')->count());
     }
 
+    public function test_admin_can_download_vest_import_template(): void
+    {
+        $admin = User::factory()->create(['role' => 'ADMIN']);
+
+        $this->actingAs($admin)
+            ->get(route('vest-imports.templates.vest'))
+            ->assertOk()
+            ->assertHeader(
+                'content-type',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            );
+    }
+
+    public function test_responsible_n1_can_download_vest_import_template(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'RESPONSABLE',
+            'responsibility_level_id' => 1,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('vest-imports.templates.vest'))
+            ->assertOk();
+    }
+
+    public function test_auditor_cannot_download_vest_import_template(): void
+    {
+        $user = User::factory()->create(['role' => 'AUDITOR']);
+
+        $this->actingAs($user)
+            ->get(route('vest-imports.templates.vest'))
+            ->assertForbidden();
+    }
+
     /**
      * @return array<int, string>
      */

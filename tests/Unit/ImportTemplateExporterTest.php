@@ -4,6 +4,8 @@ namespace Tests\Unit;
 
 use App\Services\Imports\ClientImportProcessor;
 use App\Services\Imports\ImportTemplateExporter;
+use App\Services\Imports\VestImportProcessor;
+use App\Services\Imports\VestImportTemplateExporter;
 use App\Services\Imports\WeaponImportProcessor;
 use App\Support\SimpleSpreadsheetExporter;
 use Tests\TestCase;
@@ -74,5 +76,44 @@ class ImportTemplateExporterTest extends TestCase
         foreach (ClientImportProcessor::templateHeaders() as $header) {
             $this->assertStringContainsString($header, $sheetXml);
         }
+    }
+
+    public function test_vest_template_preserves_data_sheet_and_adds_instruction_sheet(): void
+    {
+        $templatePath = base_path(VestImportTemplateExporter::TEMPLATE_PATH);
+        if (! is_file($templatePath)) {
+            $this->markTestSkipped('Plantilla Chalecos.xlsx no disponible en el entorno de pruebas.');
+        }
+
+        $exporter = new VestImportTemplateExporter(new SimpleSpreadsheetExporter);
+        $response = $exporter->stream();
+
+        ob_start();
+        $response->sendContent();
+        $binary = ob_get_clean();
+
+        $this->assertNotFalse($binary);
+        $this->assertStringStartsWith('PK', $binary);
+
+        $temporaryPath = tempnam(sys_get_temp_dir(), 'vest-template-test-');
+        file_put_contents($temporaryPath, $binary);
+
+        $zip = new ZipArchive;
+        $this->assertTrue($zip->open($temporaryPath) === true);
+
+        $workbookXml = $zip->getFromName('xl/workbook.xml');
+        $dataSheetXml = $zip->getFromName('xl/worksheets/sheet1.xml');
+        $instructionXml = $zip->getFromName('xl/worksheets/sheet2.xml');
+        $zip->close();
+        @unlink($temporaryPath);
+
+        $this->assertIsString($workbookXml);
+        $this->assertStringContainsString('name="Hoja1"', $workbookXml);
+        $this->assertStringContainsString('name="Instructivo"', $workbookXml);
+        $this->assertIsString($dataSheetXml);
+        $this->assertStringContainsString('<sheetData>', $dataSheetXml);
+        $this->assertIsString($instructionXml);
+        $this->assertStringContainsString('Clave principal del lote', $instructionXml);
+        $this->assertStringContainsString(VestImportProcessor::templateInstructions()[0][0], $instructionXml);
     }
 }

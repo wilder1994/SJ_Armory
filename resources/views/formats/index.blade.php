@@ -4,9 +4,6 @@
             <div class="sj-section-header__main">
                 <p class="sj-section-header__eyebrow">{{ __('Documentos operativos') }}</p>
                 <h2 class="sj-section-header__title">{{ __('Formatos') }}</h2>
-                <p class="sj-section-header__subtitle">
-                    {{ __('Descarga plantillas oficiales listas para imprimir en carta horizontal.') }}
-                </p>
             </div>
         </div>
     </x-slot>
@@ -17,31 +14,46 @@
                 <div class="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ session('status') }}</div>
             @endif
 
-            <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <div class="flex flex-col gap-4">
-                        <div>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <article class="sj-ui-card">
+                    <div class="sj-ui-card__body flex h-full min-h-[11.5rem] flex-col gap-4 p-5">
+                        <div class="min-h-0 flex-1">
                             <p class="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-700">FO-OP-03</p>
-                            <h3 class="mt-2 text-xl font-semibold text-slate-900">{{ __('Revista mensual de armamento') }}</h3>
-                            <p class="mt-2 text-sm text-slate-600">
-                                {{ __('Formato oficial con 20 filas por hoja. Seleccione las armas que desea incluir en el Excel.') }}
-                            </p>
+                            <h3 class="mt-2 text-lg font-semibold leading-snug text-slate-900">{{ __('Revista mensual de armamento') }}</h3>
                         </div>
 
-                        <div class="grid gap-3 sm:grid-cols-2">
-                            <a href="{{ route('formatos.revista-mensual.vacio') }}"
-                               class="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">
+                        <div class="mt-auto flex flex-col gap-2.5">
+                            <a href="{{ route('formatos.revista-mensual.vacio') }}" class="sj-ui-btn sj-ui-btn--ghost w-full justify-center">
                                 {{ __('Descargar vacío') }}
                             </a>
-                            <button type="button"
-                                    x-data=""
-                                    x-on:click.prevent="$dispatch('open-modal', 'monthly-review-filters')"
-                                    class="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700">
+                            <button
+                                type="button"
+                                x-data=""
+                                x-on:click.prevent="$dispatch('open-modal', 'monthly-review-filters')"
+                                class="sj-ui-btn sj-ui-btn--primary w-full justify-center"
+                            >
                                 {{ __('Con relación de armas') }}
                             </button>
                         </div>
                     </div>
                 </article>
+
+                @can('import', App\Models\Vest::class)
+                    <article class="sj-ui-card">
+                        <div class="sj-ui-card__body flex h-full min-h-[11.5rem] flex-col gap-4 p-5">
+                            <div class="min-h-0 flex-1">
+                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">{{ __('Carga · Chalecos') }}</p>
+                                <h3 class="mt-2 text-lg font-semibold leading-snug text-slate-900">{{ __('Carga masiva de chalecos') }}</h3>
+                            </div>
+
+                            <div class="mt-auto">
+                                <a href="{{ route('vest-imports.templates.vest') }}" class="sj-ui-btn sj-ui-btn--primary w-full justify-center">
+                                    {{ __('Descargar formato') }}
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                @endcan
             </div>
         </div>
     </div>

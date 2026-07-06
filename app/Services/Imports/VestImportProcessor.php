@@ -104,6 +104,27 @@ class VestImportProcessor implements ImportBatchProcessor
         return WeaponImportBatch::TYPE_VEST;
     }
 
+    /**
+     * @return array<int, array<int, string>>
+     */
+    public static function templateInstructions(): array
+    {
+        return [
+            ['No. serie o código', 'Sí', 'Texto', 'Clave principal del lote. Si la serie ya existe, se actualiza; si no, se crea el chaleco.'],
+            ['Cédula del empleado', 'No', 'Texto', 'Debe existir en el sistema y pertenecer al cliente de la fila.'],
+            ['Nombres y apellidos', 'No', 'Texto', 'Referencia informativa; la validación usa la cédula.'],
+            ['Cargo', 'No', 'Texto', 'Valores aceptados: Escolta, Supervisor, Guarda, Motorizado, Guarda infraestructura.'],
+            ['Razón social cliente', 'Condicional', 'Texto', 'ADMIN: obligatorio en cada fila. RESPONSABLE N1: opcional (se infiere de cartera). Debe existir en el sistema; no se crea en la carga.'],
+            ['Puesto', 'Condicional', 'Texto', 'Si se informa, debe existir previamente para el cliente. No se crea en la carga.'],
+            ['Marca chaleco', 'No', 'Texto', 'Marca del chaleco.'],
+            ['Lote', 'No', 'Texto', 'Lote del fabricante.'],
+            ['Fecha de fabricación', 'No', 'Fecha dd/mm/aaaa', ''],
+            ['Fecha de vencimiento', 'No', 'Fecha dd/mm/aaaa', 'Usada para la semaforización del inventario.'],
+            ['Talla', 'No', 'Texto', ''],
+            ['Responsable dispositivo', 'No', 'Texto', 'Opcional; si se omite puede resolverse desde el cliente.'],
+        ];
+    }
+
     public function prepareRows(array $headers, array $rows, ?User $user = null): array
     {
         $columnMap = $this->resolveColumnMap($headers);

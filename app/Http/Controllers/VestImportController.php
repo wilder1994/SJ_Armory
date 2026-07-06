@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\WeaponImportBatch;
+use App\Services\Imports\VestImportTemplateExporter;
 use App\Services\WeaponImportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 class VestImportController extends Controller
@@ -34,6 +36,13 @@ class VestImportController extends Controller
             ->get();
 
         return view('vest-imports.center', compact('batches'));
+    }
+
+    public function downloadTemplate(VestImportTemplateExporter $templateExporter): StreamedResponse
+    {
+        $this->authorize('import', \App\Models\Vest::class);
+
+        return $templateExporter->stream();
     }
 
     public function show(Request $request, WeaponImportBatch $vestImportBatch)

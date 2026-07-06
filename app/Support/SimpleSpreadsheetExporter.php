@@ -70,6 +70,102 @@ class SimpleSpreadsheetExporter
         ]);
     }
 
+    /**
+     * @param  array<int, string>  $instructionHeaders
+     * @param  array<int, array<int, string>>  $instructionRows
+     * @param  array<int, float>|null  $instructionColumnWidths
+     */
+    public function appendInstructionSheet(
+        string $workbookPath,
+        string $instructionSheetName,
+        array $instructionHeaders,
+        array $instructionRows,
+        ?array $instructionColumnWidths = null,
+    ): void {
+        $zip = new ZipArchive;
+        if ($zip->open($workbookPath) !== true) {
+            throw new \RuntimeException('No se pudo abrir la plantilla Excel.');
+        }
+
+        $sheetNumber = 1;
+        while ($zip->locateName('xl/worksheets/sheet'.$sheetNumber.'.xml') !== false) {
+            $sheetNumber++;
+        }
+
+        $sheetPath = 'xl/worksheets/sheet'.$sheetNumber.'.xml';
+        $zip->addFromString(
+            $sheetPath,
+            $this->worksheetXml(
+                $instructionHeaders,
+                $instructionRows,
+                $instructionColumnWidths,
+                freezeHeader: true,
+                autoFilter: false,
+            ),
+        );
+
+        $workbookXml = $zip->getFromName('xl/workbook.xml');
+        $workbookRelsXml = $zip->getFromName('xl/_rels/workbook.xml.rels');
+        $contentTypesXml = $zip->getFromName('[Content_Types].xml');
+
+        if ($workbookXml === false || $workbookRelsXml === false || $contentTypesXml === false) {
+            $zip->close();
+            throw new \RuntimeException('La plantilla Excel no tiene la estructura esperada.');
+        }
+
+        $nextRelId = $this->nextRelationshipId($workbookRelsXml);
+        $nextSheetId = $this->nextSheetId($workbookXml);
+        $escapedSheetName = $this->escapeXml($instructionSheetName);
+        $sheetOverride = '/xl/worksheets/sheet'.$sheetNumber.'.xml';
+
+        if (! str_contains($workbookXml, 'name="'.$escapedSheetName.'"')) {
+            $workbookXml = str_replace(
+                '</sheets>',
+                '<sheet name="'.$escapedSheetName.'" sheetId="'.$nextSheetId.'" r:id="rId'.$nextRelId.'"/></sheets>',
+                $workbookXml,
+            );
+        }
+
+        if (! str_contains($workbookRelsXml, 'Target="worksheets/sheet'.$sheetNumber.'.xml"')) {
+            $workbookRelsXml = str_replace(
+                '</Relationships>',
+                '<Relationship Id="rId'.$nextRelId.'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'.$sheetNumber.'.xml"/></Relationships>',
+                $workbookRelsXml,
+            );
+        }
+
+        if (! str_contains($contentTypesXml, 'PartName="'.$sheetOverride.'"')) {
+            $contentTypesXml = str_replace(
+                '</Types>',
+                '<Override PartName="'.$sheetOverride.'" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>',
+                $contentTypesXml,
+            );
+        }
+
+        $zip->addFromString('xl/workbook.xml', $workbookXml);
+        $zip->addFromString('xl/_rels/workbook.xml.rels', $workbookRelsXml);
+        $zip->addFromString('[Content_Types].xml', $contentTypesXml);
+        $zip->close();
+    }
+
+    private function nextRelationshipId(string $workbookRelsXml): int
+    {
+        preg_match_all('/Id="rId(\d+)"/', $workbookRelsXml, $matches);
+
+        $ids = array_map('intval', $matches[1] ?? []);
+
+        return ($ids === [] ? 0 : max($ids)) + 1;
+    }
+
+    private function nextSheetId(string $workbookXml): int
+    {
+        preg_match_all('/sheetId="(\d+)"/', $workbookXml, $matches);
+
+        $ids = array_map('intval', $matches[1] ?? []);
+
+        return ($ids === [] ? 0 : max($ids)) + 1;
+    }
+
     private function contentTypesXml(): string
     {
         return <<<'XML'

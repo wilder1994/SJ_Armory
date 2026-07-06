@@ -116,6 +116,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/vests/{vest}/photos/{photo}', [VestPhotoController::class, 'update'])->name('vests.photos.update');
     Route::delete('/vests/{vest}/photos/{photo}', [VestPhotoController::class, 'destroy'])->name('vests.photos.destroy');
     Route::get('/subir-chalecos', [VestImportController::class, 'index'])->name('vest-imports.index');
+    Route::get('/subir-chalecos/plantilla', [VestImportController::class, 'downloadTemplate'])->name('vest-imports.templates.vest');
     Route::post('/subir-chalecos/preview', [VestImportController::class, 'preview'])->name('vest-imports.preview');
     Route::get('/subir-chalecos/{vestImportBatch}', [VestImportController::class, 'show'])->name('vest-imports.show');
     Route::post('/subir-chalecos/{vestImportBatch}/execute/start', [VestImportController::class, 'startExecution'])->name('vest-imports.start');
