@@ -44,7 +44,10 @@
                     @endphp
                     <a href="{{ $href }}" class="sj-ui-kpi {{ $toneClass }} @if($isActive) is-active @endif">
                         <span class="sj-ui-kpi__label">{{ $label }}</span>
-                        <span class="sj-ui-kpi__value">{{ $kpiCounts[$key] ?? 0 }}</span>
+                        <div class="sj-ui-kpi__row">
+                            <span class="sj-ui-kpi__value">{{ $kpiCards[$key]['count'] ?? 0 }}</span>
+                            <span class="sj-ui-kpi__hint">{{ $kpiCards[$key]['hint'] ?? '' }}</span>
+                        </div>
                     </a>
                 @endforeach
             </div>

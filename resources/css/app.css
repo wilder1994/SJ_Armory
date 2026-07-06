@@ -628,6 +628,7 @@
             radial-gradient(ellipse 100% 80% at 0% 0%, rgba(255, 255, 255, 0.5), transparent 60%),
             linear-gradient(180deg, rgba(255, 255, 255, 0.84) 0%, rgba(248, 251, 255, 0.62) 100%);
         border: 1px solid var(--sj-ui-surface-border);
+        border-top: 3px solid var(--sj-ui-accent);
         border-radius: 0.85rem;
         box-shadow:
             0 0 1px var(--sj-ui-neon-line),
@@ -636,25 +637,16 @@
         display: flex;
         flex-direction: column;
         gap: 0.35rem;
-        padding: 1rem 1.1rem;
+        overflow: hidden;
+        padding: 0.85rem 1.1rem 1rem;
         position: relative;
         text-decoration: none;
         transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
     }
 
-    .sj-ui-kpi::before {
-        background: var(--sj-ui-accent);
-        border-radius: 0.85rem 0.85rem 0 0;
-        content: '';
-        height: 3px;
-        left: 0;
-        position: absolute;
-        right: 0;
-        top: 0;
-    }
-
     .sj-ui-kpi:hover {
         border-color: color-mix(in srgb, var(--sj-ui-accent) 45%, var(--sj-ui-surface-border));
+        border-top-color: var(--sj-ui-accent);
         box-shadow:
             0 0 1px var(--sj-ui-neon-line),
             0 0 10px var(--sj-ui-neon-glow-hover),
@@ -664,6 +656,7 @@
 
     .sj-ui-kpi.is-active {
         border-color: color-mix(in srgb, var(--sj-ui-accent) 55%, white);
+        border-top-color: var(--sj-ui-accent);
         box-shadow:
             0 0 1px var(--sj-ui-neon-line),
             0 0 0 1px color-mix(in srgb, var(--sj-ui-accent) 25%, transparent),
@@ -678,11 +671,29 @@
         text-transform: uppercase;
     }
 
+    .sj-ui-kpi__row {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: flex-start;
+        margin-top: 0.15rem;
+    }
+
     .sj-ui-kpi__value {
         color: #0f172a;
+        flex-shrink: 0;
         font-size: 1.65rem;
         font-weight: 800;
         line-height: 1;
+    }
+
+    .sj-ui-kpi__hint {
+        color: #64748b;
+        font-size: 0.65rem;
+        font-weight: 600;
+        line-height: 1.25;
+        max-width: 8.5rem;
     }
 
     .sj-ui-kpi--blue { --sj-ui-accent: #0b6fb6; }

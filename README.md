@@ -15,7 +15,7 @@ Sistema web para **gestión de armamento**, **asignaciones operativas**, **trans
 - ✅ **Transferencias**: listado **unificado** (pendientes y enviadas en una tabla; serie en columna arma; munición/proveedores opcionales en el envío; aceptación; **cancelación** con restauración cuando aplica); con transferencia **pendiente**, la ficha del arma muestra un **aviso** (usuario normal: mensaje genérico; **ADMIN**: quién **envió** y quién **debe aceptar**); botón **Historial** (modal, últimas participaciones).
 - ✅ **Clientes / Puestos / Trabajadores / Usuarios** (puestos y trabajadores: archivo, historial de cambios, políticas por rol)
 - ✅ **Cargas masivas**: validación previa, preview, ejecución por chunks y trazabilidad por lote para **armas** y **clientes**; solo **ADMIN**; descarga de plantillas Excel (hojas `Datos` + `Instructivo`); en **Cargas masivas**, el ADMIN también gestiona las plantillas globales de reverso autenticado (porte y tenencia) usadas en el PDF y en la ficha.
-- ✅ **Chalecos** (`/vests`): módulo paralelo al inventario de armas (tablas y rutas propias); listado con **KPIs clicables** por semaforización de vencimiento; ficha compacta (datos + asignación en dos columnas, misma altura); formularios **create/edit pro** con comboboxes buscables (cliente, trabajador, puesto), **responsable dispositivo** derivado del cliente (o auto para responsable N1); **4 fotos** con editor pro en ficha/editar (clic, arrastrar, pegar, Cropper, JSON sin recarga) y pickers embebidos al **crear**; **import masivo** en `/subir-chalecos` con modal de subida y **validación en preview** de cliente, puesto y trabajador (cédula).
+- ✅ **Chalecos** (`/vests`): módulo paralelo al inventario de armas (tablas y rutas propias); listado con **KPIs clicables** (barra de acento superior + hint contextual por categoría) y **filas de tabla coloreadas** con la misma semaforización (verde / ámbar / naranja / rojo); ficha compacta (datos + asignación en dos columnas, misma altura); formularios **create/edit pro** con comboboxes buscables (cliente, trabajador, puesto), **responsable dispositivo** derivado del cliente (o auto para responsable N1); **4 fotos** con editor pro en ficha/editar (clic, arrastrar, pegar, Cropper, JSON sin recarga) y pickers embebidos al **crear**; **import masivo** en `/subir-chalecos` con modal de subida (drag & drop, pegar, XHR) y **validación en preview** de cliente, puesto y trabajador (cédula).
 - ✅ **Dashboard**: fila de **6 KPIs** (Total, No operativas, En inventario, Incautadas en trámite, Vencidos, Por vencer), gráficos y estado “as of”.
 - ✅ **Alertas documentales** (`/alerts/documents`): tarjetas vencidos / por vencer / sin alertas; filtro **multi-mes** con panel de checkboxes (varios meses y años); modales con **filtros por columna** tipo Excel (multi-selección en encabezado); exportación `.docx` y vista previa PDF con nombre `Revalidacion_{mes}_{año}`.
 - ✅ **Revista armas** (`/revista-armas`): acceso temporal (12 h) para colaboradores de campo; usuarios temporales reutilizables; **usuarios compartidos** (solo **ADMIN** autoriza supervisores multi-zona con acceso unificado y mismo código); tabla staff con columna **Cliente**; modal **Asignar acceso temporal** con tabla scrollable (**Cliente**, **Serie**, **Tipo**); subida de **4 fotos técnicas** a staging; el invitado solo entra con código vigente; staff al filtrar ve armas del **último acceso** (aunque haya vencido) para revisar fotos en staging (✓/✕, **Ver**, **Actualizar**); confirmaciones en **modales**; historial de notas en la ficha del arma; **ADMIN** con gestión global.
@@ -1225,18 +1225,28 @@ Evento broadcast: `App\Events\VestChanged` → canal `vests.updates`.
 #### Listado e indicadores (KPIs)
 
 Vista: `resources/views/vests/index.blade.php`.  
-Servicio: `VestQueryService` + helper `App\Support\VestAlert`.
+Servicio: `VestQueryService::kpiCards()` (conteo + hint) y `App\Support\VestAlert` (estado por fila).
 
-Tarjetas clicables filtran la tabla con `?alert=`:
+Tarjetas clicables filtran la tabla con `?alert=`. Cada tarjeta muestra el **conteo** y un **hint** contextual (p. ej. «Faltan X días para vencer» en críticos/preventivos, «Vencidos hace X días» en vencidos). La barra de acento superior usa `border-top` integrado al borde de la tarjeta (clases `.sj-ui-kpi--{blue,green,amber,orange,red,slate}`).
 
-| Clave | Significado | Regla (días hasta `expires_at`) |
-|-------|-------------|----------------------------------|
-| `all` | Todos | Sin filtro de alerta |
-| `vigent` | Vigentes | > 365 |
-| `preventive` | Preventivos | 180 – 365 |
-| `critical` | Críticos | 0 – 179 |
-| `expired` | Vencidos | < 0 |
-| `unassigned` | Sin asignar | Sin `worker_id` |
+| Clave | Significado | Regla (días hasta `expires_at`) | Hint (resumen) |
+|-------|-------------|----------------------------------|----------------|
+| `all` | Todos | Sin filtro de alerta | Inventario total |
+| `vigent` | Vigentes | > 365 | Más de 1 año para vencer |
+| `preventive` | Preventivos | 180 – 365 | Faltan X días (el más próximo) o «Entre 6 y 12 meses» si vacío |
+| `critical` | Críticos | 0 – 179 | Faltan X días (el más urgente) |
+| `expired` | Vencidos | < 0 | Vencidos hace X días (el más reciente) |
+| `unassigned` | Sin asignar | Sin `worker_id` | Sin trabajador asignado / Todos asignados |
+
+**Semaforización en tabla** (`VestAlert::forVest()`): fondos `bg-*-200` alineados a las tarjetas KPI (misma familia de color que armas en alertas documentales):
+
+| Estado | Fila | Tarjeta KPI |
+|--------|------|-------------|
+| Vigente | `bg-green-200` | Verde |
+| Preventivo | `bg-amber-200` | Ámbar |
+| Crítico | `bg-orange-200` | Naranja |
+| Vencido | `bg-red-200` | Rojo |
+| Sin fecha | `bg-slate-200` | Neutro |
 
 Filtros adicionales: búsqueda (`q`), cliente, puesto, marca, asignación.
 
@@ -1249,7 +1259,7 @@ Estilos reutilizables en `resources/css/app.css` (variables `--sj-ui-*`: fondo t
 | `.sj-ui-card` | Paneles y cards de contenido |
 | `.sj-ui-card--link` | Cards clicables (historial de lotes) |
 | `.sj-ui-card--dashed` | Empty state |
-| `.sj-ui-kpi` + `.sj-ui-kpi--{blue,green,amber,orange,red,slate}` | KPIs del listado (barra de acento superior) |
+| `.sj-ui-kpi` + `.sj-ui-kpi--{blue,green,amber,orange,red,slate}` | KPIs del listado (barra `border-top` 3px + fila número/hint) |
 | `.sj-ui-filter-bar` + `.sj-ui-field` | Barra de filtros (label uppercase + control 2.5rem) |
 | `.sj-ui-btn` + `--ghost` / `--primary` / `--sm` / `--xs` / `--block` / `--danger` | Botones de header, filtros y acciones |
 
@@ -1371,7 +1381,7 @@ Reutiliza el flujo de lotes de armas (`WeaponImportService`: preview, chunks, es
 Vista: `resources/views/vest-imports/center.blade.php`.
 
 - **Header**: botón **Subir Excel** (abre modal) y **Volver al inventario**; la página muestra solo el **historial** de lotes ejecutados (sin bloque “Nueva carga” en el cuerpo).
-- **Modal de subida** (mismo patrón que Cargas masivas → armas): zona drag & drop, **Ctrl+V** para pegar archivo, selección manual, barra de progreso XHR al validar y redirección al preview del lote (`POST vest-imports.preview` con `Accept: application/json`).
+- **Modal de subida** (mismo patrón que Cargas masivas → armas): zona drag & drop, **Ctrl+V** para pegar archivo, selección manual, barra de progreso XHR al validar y redirección al preview del lote (`POST vest-imports.preview` con `Accept: application/json`). El JS del modal va en `@push('scripts')` **dentro** de `<x-app-layout>` para que `@stack('scripts')` lo renderice.
 - Panel de ayuda dentro del modal: columnas soportadas y reglas por rol (ADMIN / responsable).
 
 **Implementación técnica**

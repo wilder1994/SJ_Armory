@@ -33,8 +33,8 @@ class VestAlert
                 'key' => self::ALERT_ALL,
                 'state' => 'Sin fecha',
                 'days_remaining' => null,
-                'row_class' => '',
-                'text_class' => 'text-slate-600',
+                'row_class' => 'bg-slate-200',
+                'text_class' => 'text-slate-700',
                 'badge_class' => 'bg-slate-100 text-slate-700',
             ];
         }
@@ -46,8 +46,8 @@ class VestAlert
                 'key' => self::ALERT_EXPIRED,
                 'state' => 'Vencido',
                 'days_remaining' => $daysRemaining,
-                'row_class' => 'bg-red-50',
-                'text_class' => 'text-red-700',
+                'row_class' => 'bg-red-200',
+                'text_class' => 'text-red-800',
                 'badge_class' => 'bg-red-100 text-red-800',
             ];
         }
@@ -57,9 +57,9 @@ class VestAlert
                 'key' => self::ALERT_CRITICAL,
                 'state' => 'Crítico',
                 'days_remaining' => $daysRemaining,
-                'row_class' => 'bg-red-50',
-                'text_class' => 'text-red-700',
-                'badge_class' => 'bg-red-100 text-red-800',
+                'row_class' => 'bg-orange-200',
+                'text_class' => 'text-orange-800',
+                'badge_class' => 'bg-orange-100 text-orange-800',
             ];
         }
 
@@ -68,8 +68,8 @@ class VestAlert
                 'key' => self::ALERT_PREVENTIVE,
                 'state' => 'Preventivo',
                 'days_remaining' => $daysRemaining,
-                'row_class' => 'bg-amber-50',
-                'text_class' => 'text-amber-800',
+                'row_class' => 'bg-amber-200',
+                'text_class' => 'text-amber-900',
                 'badge_class' => 'bg-amber-100 text-amber-900',
             ];
         }
@@ -78,9 +78,9 @@ class VestAlert
             'key' => self::ALERT_VIGENT,
             'state' => 'Vigente',
             'days_remaining' => $daysRemaining,
-            'row_class' => 'bg-emerald-50',
-            'text_class' => 'text-emerald-800',
-            'badge_class' => 'bg-emerald-100 text-emerald-900',
+            'row_class' => 'bg-green-200',
+            'text_class' => 'text-green-800',
+            'badge_class' => 'bg-green-100 text-green-800',
         ];
     }
 

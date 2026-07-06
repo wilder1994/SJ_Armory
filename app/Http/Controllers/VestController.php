@@ -50,7 +50,7 @@ class VestController extends Controller
         return view('vests.index', [
             'vests' => $vests,
             'filters' => $filters,
-            'kpiCounts' => $this->queryService->kpiCounts($user),
+            'kpiCards' => $this->queryService->kpiCards($user),
             'clients' => $clients,
             'alertLabels' => VestAlert::ALERT_LABELS,
         ]);

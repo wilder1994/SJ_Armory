@@ -15,10 +15,20 @@ class VestQueryService
      */
     public function kpiCounts(User $user): array
     {
+        return collect($this->kpiCards($user))
+            ->map(fn (array $card) => $card['count'])
+            ->all();
+    }
+
+    /**
+     * @return array<string, array{count: int, hint: string}>
+     */
+    public function kpiCards(User $user): array
+    {
         $base = Vest::query()->forUserPortfolio($user);
         $today = now()->startOfDay();
 
-        return [
+        $counts = [
             VestAlert::ALERT_ALL => (clone $base)->count(),
             VestAlert::ALERT_VIGENT => (clone $base)->whereDate('expires_at', '>', $today->copy()->addDays(365))->count(),
             VestAlert::ALERT_PREVENTIVE => (clone $base)
@@ -32,6 +42,99 @@ class VestQueryService
             VestAlert::ALERT_EXPIRED => (clone $base)->whereDate('expires_at', '<', $today)->count(),
             VestAlert::ALERT_UNASSIGNED => (clone $base)->whereNull('worker_id')->count(),
         ];
+
+        return [
+            VestAlert::ALERT_ALL => [
+                'count' => $counts[VestAlert::ALERT_ALL],
+                'hint' => __('Inventario total'),
+            ],
+            VestAlert::ALERT_VIGENT => [
+                'count' => $counts[VestAlert::ALERT_VIGENT],
+                'hint' => $counts[VestAlert::ALERT_VIGENT] > 0
+                    ? __('Más de 1 año para vencer')
+                    : __('Ninguno en esta ventana'),
+            ],
+            VestAlert::ALERT_PREVENTIVE => [
+                'count' => $counts[VestAlert::ALERT_PREVENTIVE],
+                'hint' => $this->preventiveKpiHint($base, $today, $counts[VestAlert::ALERT_PREVENTIVE]),
+            ],
+            VestAlert::ALERT_CRITICAL => [
+                'count' => $counts[VestAlert::ALERT_CRITICAL],
+                'hint' => $this->criticalKpiHint($base, $today, $counts[VestAlert::ALERT_CRITICAL]),
+            ],
+            VestAlert::ALERT_EXPIRED => [
+                'count' => $counts[VestAlert::ALERT_EXPIRED],
+                'hint' => $this->expiredKpiHint($base, $today, $counts[VestAlert::ALERT_EXPIRED]),
+            ],
+            VestAlert::ALERT_UNASSIGNED => [
+                'count' => $counts[VestAlert::ALERT_UNASSIGNED],
+                'hint' => $counts[VestAlert::ALERT_UNASSIGNED] > 0
+                    ? __('Sin trabajador asignado')
+                    : __('Todos asignados'),
+            ],
+        ];
+    }
+
+    private function preventiveKpiHint(Builder $base, Carbon $today, int $count): string
+    {
+        if ($count === 0) {
+            return __('Entre 6 y 12 meses');
+        }
+
+        $expiresAt = (clone $base)
+            ->whereDate('expires_at', '>', $today->copy()->addDays(180))
+            ->whereDate('expires_at', '<=', $today->copy()->addDays(365))
+            ->orderBy('expires_at')
+            ->value('expires_at');
+
+        if ($expiresAt === null) {
+            return __('Entre 6 y 12 meses');
+        }
+
+        $days = $today->diffInDays(Carbon::parse($expiresAt)->startOfDay(), false);
+
+        return __('Faltan :days días para vencer', ['days' => $days]);
+    }
+
+    private function criticalKpiHint(Builder $base, Carbon $today, int $count): string
+    {
+        if ($count === 0) {
+            return __('Sin alertas críticas');
+        }
+
+        $expiresAt = (clone $base)
+            ->whereDate('expires_at', '>=', $today)
+            ->whereDate('expires_at', '<=', $today->copy()->addDays(179))
+            ->orderBy('expires_at')
+            ->value('expires_at');
+
+        if ($expiresAt === null) {
+            return __('Sin alertas críticas');
+        }
+
+        $days = $today->diffInDays(Carbon::parse($expiresAt)->startOfDay(), false);
+
+        return __('Faltan :days días para vencer', ['days' => $days]);
+    }
+
+    private function expiredKpiHint(Builder $base, Carbon $today, int $count): string
+    {
+        if ($count === 0) {
+            return __('Sin vencidos');
+        }
+
+        $expiresAt = (clone $base)
+            ->whereDate('expires_at', '<', $today)
+            ->orderByDesc('expires_at')
+            ->value('expires_at');
+
+        if ($expiresAt === null) {
+            return __('Sin vencidos');
+        }
+
+        $days = $today->diffInDays(Carbon::parse($expiresAt)->startOfDay());
+
+        return __('Vencidos hace :days días', ['days' => $days]);
     }
 
     public function buildIndexQuery(User $user, array $filters): Builder

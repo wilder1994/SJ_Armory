@@ -165,8 +165,6 @@
             </form>
         </div>
     </x-modal>
-</x-app-layout>
-
 @push('scripts')
 <script>
 (() => {
@@ -407,3 +405,5 @@
 })();
 </script>
 @endpush
+
+</x-app-layout>
