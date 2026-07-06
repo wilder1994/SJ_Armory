@@ -11,7 +11,9 @@ class PositionSeeder extends Seeder
     public function run(): void
     {
         $positions = [
+            ['name' => 'Almacén', 'description' => 'Gestión del inventario de chalecos en almacén.'],
             ['name' => 'Analista de Operaciones', 'description' => 'Analiza procesos operativos y soporte de decisiones.'],
+            ['name' => 'Auditor', 'description' => 'Revisión y consulta de inventario y reportes.'],
             ['name' => 'Coordinador de Operaciones', 'description' => 'Coordina operaciones y seguimiento de equipos.'],
             ['name' => 'Director de Gestion del Riesgo', 'description' => 'Define controles y politicas de gestion del riesgo.'],
             ['name' => 'Gerencia General', 'description' => 'Direccion estrategica y supervision integral.'],

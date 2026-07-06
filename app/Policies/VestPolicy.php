@@ -9,12 +9,12 @@ class VestPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isAdmin() || $user->isResponsible() || $user->isAuditor();
+        return $user->canAccessVestModule();
     }
 
     public function view(User $user, Vest $vest): bool
     {
-        if ($user->isAdmin() || $user->isAuditor()) {
+        if ($user->hasGlobalVestScope()) {
             return true;
         }
 
@@ -27,12 +27,12 @@ class VestPolicy
 
     public function create(User $user): bool
     {
-        return $user->isAdmin() || $user->isResponsibleLevelOne();
+        return $user->canManageAllVests() || $user->isResponsibleLevelOne();
     }
 
     public function update(User $user, Vest $vest): bool
     {
-        if ($user->isAdmin()) {
+        if ($user->canManageAllVests()) {
             return true;
         }
 
@@ -51,7 +51,7 @@ class VestPolicy
 
     public function import(User $user): bool
     {
-        return $user->isAdmin() || $user->isResponsibleLevelOne();
+        return $user->canManageAllVests() || $user->isResponsibleLevelOne();
     }
 
     private function vestInPortfolio(User $user, Vest $vest): bool

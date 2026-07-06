@@ -21,7 +21,7 @@ final class ForcedPasswordChangeController extends Controller
     public function update(Request $request): RedirectResponse
     {
         if (!$request->user()->must_change_password) {
-            return redirect()->intended(RouteServiceProvider::HOME);
+            return redirect()->intended(RouteServiceProvider::homeFor($request->user()));
         }
 
         $validated = $request->validate([
@@ -42,6 +42,6 @@ final class ForcedPasswordChangeController extends Controller
             'after' => null,
         ]);
 
-        return redirect()->intended(RouteServiceProvider::HOME);
+        return redirect()->intended(RouteServiceProvider::homeFor($user));
     }
 }

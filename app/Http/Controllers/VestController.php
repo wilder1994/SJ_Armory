@@ -26,7 +26,7 @@ class VestController extends Controller
     ) {
         $this->middleware(function ($request, $next) {
             $user = $request->user();
-            abort_unless($user && ($user->isAdmin() || $user->isResponsible() || $user->isAuditor()), 403);
+            abort_unless($user && $user->canAccessVestModule(), 403);
 
             return $next($request);
         });
@@ -43,7 +43,7 @@ class VestController extends Controller
             ->withQueryString();
 
         $user = $request->user();
-        $clients = $user->isAdmin() || $user->isAuditor()
+        $clients = $user->hasGlobalVestScope()
             ? Client::orderBy('name')->get(['id', 'name'])
             : $user->clients()->orderBy('name')->get(['clients.id', 'clients.name']);
 
@@ -172,7 +172,7 @@ class VestController extends Controller
     private function formOptions(Request $request, ?Vest $vest = null): array
     {
         $user = $request->user();
-        $clients = $user->isAdmin()
+        $clients = $user->canManageAllVests()
             ? Client::orderBy('name')->get(['id', 'name'])
             : $user->clients()->orderBy('name')->get(['clients.id', 'clients.name']);
 
@@ -184,7 +184,7 @@ class VestController extends Controller
             ? Post::query()->where('client_id', $clientId)->whereNull('archived_at')->orderBy('name')->get(['id', 'name', 'address'])
             : collect();
 
-        $lockDeviceResponsible = $user && ! $user->isAdmin() && $user->isResponsibleLevelOne();
+        $lockDeviceResponsible = $user && ! $user->canManageAllVests() && $user->isResponsibleLevelOne();
         $clientResponsibleMap = $this->buildClientResponsibleMap($clients);
 
         return compact('clients', 'workers', 'posts', 'clientId', 'lockDeviceResponsible', 'clientResponsibleMap');
@@ -282,7 +282,7 @@ class VestController extends Controller
         $user = $request->user();
 
         $clientRules = ['required', 'exists:clients,id'];
-        if ($user->isResponsibleLevelOne() && ! $user->isAdmin()) {
+        if ($user->isResponsibleLevelOne() && ! $user->canManageAllVests()) {
             $clientRules[] = Rule::in($user->clients()->pluck('clients.id')->all());
         }
 
@@ -351,11 +351,11 @@ class VestController extends Controller
 
     private function resolveDeviceResponsible(User $user, int $clientId): ?string
     {
-        if ($user->isResponsibleLevelOne() && ! $user->isAdmin()) {
+        if ($user->isResponsibleLevelOne() && ! $user->canManageAllVests()) {
             return $user->name;
         }
 
-        if ($user->isAdmin()) {
+        if ($user->canManageAllVests()) {
             return Vest::clientDeviceResponsibleName($clientId);
         }
 
@@ -364,7 +364,7 @@ class VestController extends Controller
 
     private function assertClientInPortfolio($user, int $clientId): void
     {
-        if ($user->isAdmin() || $user->isAuditor()) {
+        if ($user->hasGlobalVestScope()) {
             return;
         }
 

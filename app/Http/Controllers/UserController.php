@@ -256,6 +256,7 @@ class UserController extends Controller
             'ADMIN' => 'Administrador',
             'RESPONSABLE' => 'Responsable',
             'AUDITOR' => 'Auditor',
+            'ALMACEN' => 'Almacén (Chalecos)',
         ];
     }
 }

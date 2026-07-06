@@ -56,7 +56,7 @@ class Vest extends Model
 
     public function scopeForUserPortfolio(Builder $query, User $user): Builder
     {
-        if ($user->isAdmin() || $user->isAuditor()) {
+        if ($user->hasGlobalVestScope()) {
             return $query;
         }
 

@@ -18,7 +18,7 @@ class VestImportController extends Controller
     {
         $this->middleware(function (Request $request, $next) {
             $user = $request->user();
-            abort_unless($user?->isAdmin() || $user?->isResponsibleLevelOne(), 403);
+            abort_unless($user?->canManageAllVests() || $user?->isResponsibleLevelOne(), 403);
 
             return $next($request);
         });
@@ -151,7 +151,7 @@ class VestImportController extends Controller
         abort_unless(
             $vestImportBatch->uploaded_by === null
             || $vestImportBatch->uploaded_by === $request->user()?->id
-            || $request->user()?->isAdmin(),
+            || $request->user()?->canManageAllVests(),
             403
         );
 

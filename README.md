@@ -13,9 +13,9 @@ Sistema web para **gestión de armamento**, **asignaciones operativas**, **trans
   - **Operativa** (arma ↔ cliente/responsable)
   - **Interna** (arma ↔ puesto y/o trabajador; ubicación en mapa prioriza puesto si existe; la columna de destino en el listado refleja principalmente al trabajador cuando hay trabajador activo)
 - ✅ **Transferencias**: listado **unificado** (pendientes y enviadas en una tabla; serie en columna arma; munición/proveedores opcionales en el envío; aceptación; **cancelación** con restauración cuando aplica); con transferencia **pendiente**, la ficha del arma muestra un **aviso** (usuario normal: mensaje genérico; **ADMIN**: quién **envió** y quién **debe aceptar**); botón **Historial** (modal, últimas participaciones).
-- ✅ **Clientes / Puestos / Trabajadores / Usuarios** (puestos y trabajadores: archivo, historial de cambios, políticas por rol)
+- ✅ **Clientes / Puestos / Trabajadores / Usuarios** (puestos y trabajadores: archivo, historial de cambios, políticas por rol; rol **ALMACEN** para personal de almacén con acceso solo a Chalecos)
 - ✅ **Cargas masivas**: validación previa, preview, ejecución por chunks y trazabilidad por lote para **armas** y **clientes**; solo **ADMIN**; descarga de plantillas Excel (hojas `Datos` + `Instructivo`); en **Cargas masivas**, el ADMIN también gestiona las plantillas globales de reverso autenticado (porte y tenencia) usadas en el PDF y en la ficha.
-- ✅ **Chalecos** (`/vests`): módulo paralelo al inventario de armas (tablas y rutas propias); listado con **KPIs clicables** (barra de acento superior + hint contextual por categoría) y **filas de tabla coloreadas** con la misma semaforización (verde / ámbar / naranja / rojo); ficha compacta (datos + asignación en dos columnas, misma altura); formularios **create/edit pro** con comboboxes buscables (cliente, trabajador, puesto), **responsable dispositivo** derivado del cliente (o auto para responsable N1); **4 fotos** con editor pro en ficha/editar (clic, arrastrar, pegar, Cropper, JSON sin recarga) y pickers embebidos al **crear**; **import masivo** en `/subir-chalecos` con modal de subida (drag & drop, pegar, XHR), **descarga de plantilla** (`resources/templates/Chalecos.xlsx` + hoja `Instructivo`) y **validación en preview** de cliente, puesto y trabajador (cédula); columna **Cargo** alineada a los roles de `Worker`.
+- ✅ **Chalecos** (`/vests`): módulo paralelo al inventario de armas (tablas y rutas propias); listado con **KPIs clicables** (barra de acento superior + hint contextual por categoría) y **filas de tabla coloreadas** con la misma semaforización (verde / ámbar / naranja / rojo); ficha compacta (datos + asignación en dos columnas, misma altura); formularios **create/edit pro** con comboboxes buscables (cliente, trabajador, puesto), **responsable dispositivo** derivado del cliente (o auto para responsable N1); **4 fotos** con editor pro en ficha/editar (clic, arrastrar, pegar, Cropper, JSON sin recarga) y pickers embebidos al **crear**; **import masivo** en `/subir-chalecos` con modal de subida (drag & drop, pegar, XHR), **descarga de plantilla** (`resources/templates/Chalecos.xlsx` + hoja `Instructivo`) y **validación en preview** de cliente, puesto y trabajador (cédula); columna **Cargo** alineada a los roles de `Worker`; rol **ALMACEN** (administrador exclusivo del módulo, inventario global, login directo a `/vests`).
 - ✅ **Dashboard**: fila de **6 KPIs** (Total, No operativas, En inventario, Incautadas en trámite, Vencidos, Por vencer), gráficos y estado “as of”.
 - ✅ **Alertas documentales** (`/alerts/documents`): tarjetas vencidos / por vencer / sin alertas; filtro **multi-mes** con panel de checkboxes (varios meses y años); modales con **filtros por columna** tipo Excel (multi-selección en encabezado); exportación `.docx` y vista previa PDF con nombre `Revalidacion_{mes}_{año}`.
 - ✅ **Revista armas** (`/revista-armas`): acceso temporal (12 h) para colaboradores de campo; usuarios temporales reutilizables; **usuarios compartidos** (solo **ADMIN** autoriza supervisores multi-zona con acceso unificado y mismo código); tabla staff con columna **Cliente**; modal **Asignar acceso temporal** con tabla scrollable (**Cliente**, **Serie**, **Tipo**); subida de **4 fotos técnicas** a staging; el invitado solo entra con código vigente; staff al filtrar ve armas del **último acceso** (aunque haya vencido) para revisar fotos en staging (✓/✕, **Ver**, **Actualizar**); confirmaciones en **modales**; historial de notas en la ficha del arma; **ADMIN** con gestión global.
@@ -113,8 +113,9 @@ Si `/reports/weapon-incidents` falla con `Unknown column 'is_reportable'`, falta
 - `2026_07_03_000001_create_vests_table.php` — tabla `vests`.
 - `2026_07_03_000002_create_vest_photos_table.php` — tabla `vest_photos`.
 - `2026_07_03_000003_add_vest_id_to_weapon_import_rows_table.php` — FK `vest_id` en filas de import.
+- `2026_07_06_000001_add_almacen_role_to_users_table.php` — amplía `users.role` (`ENUM`) con valor **`ALMACEN`**.
 
-Tras desplegar código con chalecos: `php artisan migrate --force` (sin `migrate:fresh`). Ver **§5.16**.
+Tras desplegar código con chalecos o rol almacén: `php artisan migrate --force` (sin `migrate:fresh`). Ver **§5.16** y **§5.17**.
 
 ### 4) Instalar y compilar frontend
 
@@ -201,6 +202,12 @@ composer reverb
 - 🟨 **AUDITOR**
   - Consulta (inventario/reportes/alertas), sin administración operativa.
 
+- 🟧 **ALMACEN**
+  - Acceso **exclusivo al módulo Chalecos** (`/vests`, `/subir-chalecos`): inventario global (todos los clientes), alta, edición, fotos e importación Excel.
+  - Sin acceso a dashboard, armas, clientes, reportes ni demás módulos (middleware `RestrictAlmacenToVestModule`).
+  - Tras login redirige a `/vests` (`RouteServiceProvider::homeFor()`). Solo un **ADMIN** puede crear usuarios con este rol.
+  - En formulario de usuario, conviene asignar **cargo** `Almacén` (`positions`) además del rol; rol y cargo son campos independientes.
+
 ### 🧩 Niveles de responsabilidad (`responsibility_levels.level`)
 
 - **Nivel 1**: responsable operativo con gestión.
@@ -228,10 +235,10 @@ composer reverb
   - `create` / `delete`: solo ADMIN
 
 - `VestPolicy`
-  - `viewAny`: ADMIN / RESPONSABLE / AUDITOR
-  - `view`: ADMIN y AUDITOR global; RESPONSABLE solo si el cliente del chaleco está en su cartera
-  - `create` / `import`: ADMIN o RESPONSABLE **nivel 1**
-  - `update` / `updatePhotos`: ADMIN, o RESPONSABLE **nivel 1** con chaleco en cartera
+  - `viewAny`: ADMIN / RESPONSABLE / AUDITOR / **ALMACEN**
+  - `view`: ADMIN, AUDITOR y **ALMACEN** global; RESPONSABLE solo si el cliente del chaleco está en su cartera
+  - `create` / `import`: ADMIN, **ALMACEN** o RESPONSABLE **nivel 1**
+  - `update` / `updatePhotos`: ADMIN, **ALMACEN**, o RESPONSABLE **nivel 1** con chaleco en cartera
   - `delete`: **siempre false**
 
 ---
@@ -338,7 +345,7 @@ Tras escanear `app/`, `database/` y `resources/views/` **no se encontró** imple
 - facturación/subscripciones/invoices.
 
 Lo que **sí existe** hoy es control de acceso por:
-- roles (`ADMIN`, `RESPONSABLE`, `AUDITOR`),
+- roles (`ADMIN`, `RESPONSABLE`, `AUDITOR`, `ALMACEN`),
 - nivel de responsabilidad,
 - policies por módulo (weapons/clients/posts/workers/incidents),
 - cartera de clientes (`user_clients`) para restringir alcance.
@@ -1189,15 +1196,16 @@ Módulo de inventario de **chalecos balísticos**, diseñado en paralelo a armas
 
 #### Acceso y políticas
 
-| Acción | ADMIN | RESPONSABLE N1 | RESPONSABLE N2 | AUDITOR |
-|--------|-------|----------------|----------------|---------|
-| Ver listado / ficha | ✅ | ✅ (cartera) | ✅ (cartera) | ✅ |
-| Crear / editar chaleco | ✅ | ✅ (cartera) | ❌ | ❌ |
-| Subir / reemplazar fotos | ✅ | ✅ (cartera) | ❌ | ❌ |
-| Import masivo Excel | ✅ | ✅ | ❌ | ❌ |
-| Eliminar chaleco | ❌ | ❌ | ❌ | ❌ |
+| Acción | ADMIN | ALMACEN | RESPONSABLE N1 | RESPONSABLE N2 | AUDITOR |
+|--------|-------|---------|----------------|----------------|---------|
+| Ver listado / ficha | ✅ | ✅ (global) | ✅ (cartera) | ✅ (cartera) | ✅ |
+| Crear / editar chaleco | ✅ | ✅ (global) | ✅ (cartera) | ❌ | ❌ |
+| Subir / reemplazar fotos | ✅ | ✅ (global) | ✅ (cartera) | ❌ | ❌ |
+| Import masivo Excel | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Eliminar chaleco | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Resto del sistema | ✅ | ❌ (solo Chalecos + perfil) | según cartera | según cartera | consulta |
 
-Política: `app/Policies/VestPolicy.php`. Alcance por cartera vía `Vest::scopeForUserPortfolio()` y `user_clients`.
+Política: `app/Policies/VestPolicy.php`. Alcance por cartera vía `Vest::scopeForUserPortfolio()` y `user_clients` (ADMIN, AUDITOR y **ALMACEN** ven inventario global en Chalecos). Middleware de aislamiento: `app/Http/Middleware/RestrictAlmacenToVestModule.php` (grupo `web`).
 
 #### Rutas principales
 
@@ -1436,6 +1444,7 @@ Archivos:
 - `2026_07_03_000001_create_vests_table.php`
 - `2026_07_03_000002_create_vest_photos_table.php`
 - `2026_07_03_000003_add_vest_id_to_weapon_import_rows_table.php`
+- `2026_07_06_000001_add_almacen_role_to_users_table.php`
 
 > ⚠️ No usar `migrate:fresh` en bases con datos de producción o hosting importados.
 
@@ -1468,8 +1477,8 @@ Se registran, entre otros:
 
 ### Catalogos y seguridad
 
-- `users` (incluye `must_change_password` y flujo de cambio forzado de contraseña)
-- `positions`
+- `users` (incluye `must_change_password`, flujo de cambio forzado de contraseña y `role` ENUM: `ADMIN`, `RESPONSABLE`, `AUDITOR`, `ALMACEN`)
+- `positions` (catálogo de **cargos** en formulario de usuario; ver `PositionSeeder`)
 - `responsibility_levels`
 - `user_clients` (pivot cartera)
 - `password_reset_tokens`
@@ -1815,7 +1824,7 @@ Importante para entorno real:
 
 `DatabaseSeeder` ejecuta:
 
-- `PositionSeeder`
+- `PositionSeeder` — catálogo de cargos (`positions.name`): Almacén, Analista de Operaciones, Auditor, Coordinador de Operaciones, Director de Gestion del Riesgo, Gerencia General, Jefe de Operaciones, Supervisor. Para refrescar en un entorno existente: `php artisan db:seed --class=PositionSeeder`.
 - `ResponsibilityLevelSeeder`
 - `AdminUserSeeder`
 
@@ -1838,6 +1847,7 @@ Suite actual en `tests/`:
 - Feature de autenticacion y perfil (Breeze).
 - Feature de `Subir armas` / cargas masivas, incluyendo preview, progreso/ejecucion de lote y descarga de plantillas Excel (`ImportTemplateExporterTest`).
 - Feature de import de **Chalecos** (`VestImportValidationTest`): validación en preview de cliente/puesto/trabajador.
+- Feature de rol **ALMACEN** (`AlmacenRoleTest`): acceso a Chalecos, bloqueo del resto de módulos, redirect post-login y alta de usuario por ADMIN.
 - Feature de inventario operativo (`WeaponOperationalInventoryTest`), incluyendo listado con transferencia pendiente y asignación de cliente legacy cerrada (`operationalDisplayClient`).
 
 Comando:

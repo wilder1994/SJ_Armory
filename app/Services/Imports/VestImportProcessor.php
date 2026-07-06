@@ -347,7 +347,7 @@ class VestImportProcessor implements ImportBatchProcessor
             $clientLabel = trim((string) ($payload['client_legal_name'] ?? ''));
         }
 
-        if ($user->isAdmin()) {
+        if ($user->canManageAllVests()) {
             if ($clientLabel === '') {
                 return [null, ['El cliente es obligatorio en cada fila.']];
             }
@@ -527,7 +527,7 @@ class VestImportProcessor implements ImportBatchProcessor
                 ->first();
         }
 
-        $responsibleId = $user->isAdmin()
+        $responsibleId = $user->canManageAllVests()
             ? ($worker?->responsible_user_id)
             : $user->id;
 

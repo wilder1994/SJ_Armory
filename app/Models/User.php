@@ -12,6 +12,14 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    public const ROLE_ADMIN = 'ADMIN';
+
+    public const ROLE_RESPONSABLE = 'RESPONSABLE';
+
+    public const ROLE_AUDITOR = 'AUDITOR';
+
+    public const ROLE_ALMACEN = 'ALMACEN';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -68,17 +76,40 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->role === 'ADMIN';
+        return $this->role === self::ROLE_ADMIN;
     }
 
     public function isResponsible(): bool
     {
-        return $this->role === 'RESPONSABLE';
+        return $this->role === self::ROLE_RESPONSABLE;
     }
 
     public function isAuditor(): bool
     {
-        return $this->role === 'AUDITOR';
+        return $this->role === self::ROLE_AUDITOR;
+    }
+
+    public function isAlmacen(): bool
+    {
+        return $this->role === self::ROLE_ALMACEN;
+    }
+
+    public function canAccessVestModule(): bool
+    {
+        return $this->isAdmin()
+            || $this->isResponsible()
+            || $this->isAuditor()
+            || $this->isAlmacen();
+    }
+
+    public function hasGlobalVestScope(): bool
+    {
+        return $this->isAdmin() || $this->isAuditor() || $this->isAlmacen();
+    }
+
+    public function canManageAllVests(): bool
+    {
+        return $this->isAdmin() || $this->isAlmacen();
     }
 
     public function responsibilityLevelNumber(): ?int

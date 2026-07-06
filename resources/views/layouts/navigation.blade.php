@@ -210,19 +210,25 @@
     }"
     class="sj-nav"
 >
+    @php
+        $navHomeUrl = Auth::user()?->isAlmacen() ? route('vests.index') : route('dashboard');
+        $isAlmacenUser = Auth::user()?->isAlmacen();
+    @endphp
     <!-- Primary Navigation Menu -->
     <div class="sj-nav-inner">
         <div class="hidden sm:flex sj-nav-desktop">
             <div class="sj-nav-left">
                 <div class="shrink-0 flex items-center sj-nav-brand-shift">
-                    <a href="{{ route('dashboard') }}">
+                    <a href="{{ $navHomeUrl }}">
                         <x-application-logo class="block" />
                     </a>
                 </div>
 
+                @unless ($isAlmacenUser)
                 <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="sj-nav-home-link sj-nav-home-shift">
                     {{ __('Inicio') }}
                 </x-nav-link>
+                @endunless
             </div>
 
             <div class="sj-nav-fade" aria-hidden="true"></div>
@@ -296,7 +302,7 @@
                 </div>
 
                 <div class="sj-nav-user flex items-center gap-2 shrink-0">
-                    @if ($notificationBellEnabled ?? false)
+                    @if (($notificationBellEnabled ?? false) && ! $isAlmacenUser)
                         <button
                             type="button"
                             @click="openNotificationsModal()"
@@ -336,7 +342,7 @@
                                 </select>
                             </form>
 
-                            @if ($notificationBellEnabled ?? false)
+                            @if (($notificationBellEnabled ?? false) && ! $isAlmacenUser)
                                 <button
                                     type="button"
                                     class="block w-full px-4 py-2 text-start text-sm leading-5 text-gray-900 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 transition duration-150 ease-in-out sj-dropdown-link border-0 bg-white w-full"
@@ -373,7 +379,7 @@
             </div>
 
             <div class="me-2 flex items-center gap-2 sm:hidden">
-                @if ($notificationBellEnabled ?? false)
+                @if (($notificationBellEnabled ?? false) && ! $isAlmacenUser)
                     <button
                         type="button"
                         @click="openNotificationsModal()"
@@ -403,9 +409,11 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': menuOpen, 'hidden': ! menuOpen}" class="sj-mobile-menu hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
+            @unless ($isAlmacenUser)
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Inicio') }}
             </x-responsive-nav-link>
+            @endunless
             @can('viewAny', App\Models\Vest::class)
                 <x-responsive-nav-link :href="route('vests.index')" :active="request()->routeIs('vests.*') || request()->routeIs('vest-imports.*')">
                     {{ __('Chalecos') }}
@@ -488,7 +496,7 @@
                     </select>
                 </form>
 
-                @if ($notificationBellEnabled ?? false)
+                @if (($notificationBellEnabled ?? false) && ! $isAlmacenUser)
                     <button
                         type="button"
                         class="block w-full px-4 py-2 text-start text-base text-slate-100 hover:bg-white/10 border-0 bg-transparent"
@@ -515,7 +523,7 @@
         </div>
     </div>
 
-    @if ($notificationBellEnabled ?? false)
+    @if (($notificationBellEnabled ?? false) && ! $isAlmacenUser)
         <div
             x-show="notificationsOpen"
             x-cloak
