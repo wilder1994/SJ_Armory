@@ -15,13 +15,13 @@
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @stack('styles')
     </head>
-    <body class="sj-app sj-has-nav sj-form-compact font-sans antialiased">
+    <body class="sj-app sj-has-nav sj-has-sidebar sj-form-compact font-sans antialiased">
         <div class="sj-shell">
             <div class="sj-fixed-header">
                 @include('layouts.navigation')

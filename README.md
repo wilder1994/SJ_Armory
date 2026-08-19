@@ -1,6 +1,6 @@
 # 🛡️ SJ Armory
 
-Sistema web para **gestión de armamento**, **asignaciones operativas**, **transferencias**, **documentación**, **trazabilidad** y **auditoría**, con foco en operación diaria (dashboard, mapa, alertas) y control de acceso por rol/nivel.
+Sistema web para **gestión de armamento**, **dotación (chalecos)**, **asignaciones operativas**, **transferencias**, **documentación**, **trazabilidad** y **auditoría**, con foco en operación diaria (dashboard, mapa, alertas) y control de acceso por rol/nivel. La UI autenticada se organiza en **módulos** (sidebar) y **vistas** (pestañas).
 
 > ✅ Este `README.md` está generado a partir del análisis del codebase (Laravel 10, Reverb, policies, controllers y `.env.example`).
 
@@ -19,14 +19,15 @@ Sistema web para **gestión de armamento**, **asignaciones operativas**, **trans
 - ✅ **Dashboard**: fila de **6 KPIs** (Total, No operativas, En inventario, Incautadas en trámite, Vencidos, Por vencer), gráficos y estado “as of”.
 - ✅ **Alertas documentales** (`/alerts/documents`): tarjetas vencidos / por vencer / sin alertas; filtro **multi-mes** con panel de checkboxes (varios meses y años); modales con **filtros por columna** tipo Excel (multi-selección en encabezado); exportación `.docx` y vista previa PDF con nombre `Revalidacion_{mes}_{año}`.
 - ✅ **Revista armas** (`/revista-armas`): acceso temporal (12 h) para colaboradores de campo; usuarios temporales reutilizables; **usuarios compartidos** (solo **ADMIN** autoriza supervisores multi-zona con acceso unificado y mismo código); tabla staff con columna **Cliente**; modal **Asignar acceso temporal** con tabla scrollable (**Cliente**, **Serie**, **Tipo**); subida de **4 fotos técnicas** a staging; el invitado solo entra con código vigente; staff al filtrar ve armas del **último acceso** (aunque haya vencido) para revisar fotos en staging (✓/✕, **Ver**, **Actualizar**); confirmaciones en **modales**; historial de notas en la ficha del arma; **ADMIN** con gestión global.
-- ✅ **Mapa**: geocodificación y visualización operativa; solo inventario operativo (sin novedad bloqueante ni custodia en taller / para mantenimiento).
+- ✅ **Mapa**: geocodificación y visualización operativa de **armas**; pestaña del módulo **Armamento**; solo inventario operativo (sin novedad bloqueante ni custodia en taller / para mantenimiento).
 - ✅ **Auditoría**: registro de cambios y acciones críticas; etiquetas legibles en español vía `resources/lang/es/audit.php`.
 - ✅ **Realtime (Broadcasting)**: Laravel Reverb + Echo (WebSockets) para sincronización en tiempo real.
 - ✅ **Notificaciones**: campana en barra superior con **solo no leídas**; menú de usuario con **Historial de notificaciones** (leídas y no leídas, mismo modal con `?history=1`); textos con actor y contexto (arma, cliente, puesto, etc.).
 - ✅ **Reportes — Novedades operativas** (`/reports/weapon-incidents`): solo tipos reportables (**hurtada**, **perdida**, **incautada**, **dar de baja**); mantenimiento/armerillo históricos quedan en notas de la ficha pero no suman en gráficos ni KPIs.
 - ✅ **Reportes — Custodia y taller** (`/reports/weapon-custody`): armas en puestos de armerillo, armerillo para mantenimiento o armero por responsable.
 - ✅ **Custodia en ficha del arma**: acciones **Enviar a mi armerillo** (operativa), **Para mantenimiento** y **Enviar a armero** (no operativas, sin novedad); un armerillo y armeros por responsable, ubicación inicial del cliente. Al mover custodia se cierran novedades legadas abiertas (`en_mantenimiento`, `para_mantenimiento`, `en_armerillo`) y el listado muestra **Estado** alineado con el puesto de custodia (`WeaponListStatusResolver`).
-- ✅ **Formatos** (`/formatos`): catálogo en **tarjetas** (`sj-ui-card`, grid 1/2/4 columnas); **Revista mensual de armamento** (FO-OP-03) con descarga vacía o con relación de armas (tabla con filtros por columna, selección por checkbox y exportación solo de las marcadas); **plantilla carga masiva de chalecos** (tarjeta visible con permiso `import` en `Vest`); archivos en `resources/templates/`; revista usa `phpoffice/phpspreadsheet` (requiere `composer install` con PHP 8.2+).
+- ✅ **Formatos** (`/formatos`): catálogo en **tarjetas** (`sj-ui-card`, grid 1/2/4 columnas); **Revista mensual de armamento** (FO-OP-03) con descarga vacía o con relación de armas (tabla con filtros por columna, selección por checkbox y exportación solo de las marcadas); **plantilla carga masiva de chalecos** (tarjeta visible con permiso `import` en `Vest`); archivos en `resources/templates/`; revista usa `phpoffice/phpspreadsheet` (requiere `composer install` con PHP 8.2+). Pestaña **Formatos** en el módulo **Plataforma** (no es un menú desplegable).
+- ✅ **Shell de navegación**: sidebar con **Armamento**, **Dotación**, **Supervisión** y **Plataforma**; pestañas del módulo activo en la barra superior (navy, misma altura); el sidebar se oculta con el botón hamburguesa (`localStorage`). **Mapa** vive en Armamento. **Cargas masivas** abre `/subir-armas` (ADMIN) o `/subir-chalecos` (quien solo importa chalecos). **Supervisión** (`/supervision`) es placeholder de patrulla. Árbol filtrado por rol en `App\Support\Navigation\ModuleNavBuilder`.
 - ✅ **Kit UI global** (`sj-ui-*` en `resources/css/app.css`): interfaz unificada en listados, formularios, reportes, cargas masivas, auth guest, dashboard y detalle de armas/chalecos — headers (`sj-section-header`), tarjetas (`sj-ui-card`), KPIs (`sj-ui-kpi` / `sj-kpi-card`), filtros (`sj-ui-filter-bar`), botones (`sj-ui-btn` vía componentes Blade y vistas), enlaces de tabla (`sj-ui-link`). Tras cambios en `app.css`: `npm run build`.
 
 ---
@@ -421,7 +422,7 @@ Flujos operativos implementados:
 
 Acceso:
 
-- Modulo exclusivo para **ADMIN** (middleware en `WeaponImportController` y enlace de menu **Cargas masivas**).
+- Modulo exclusivo para **ADMIN** (middleware en `WeaponImportController`). En el shell, la pestaña **Cargas masivas** del módulo **Plataforma** abre este centro (`/subir-armas`); no es un desplegable de subítems.
 - **RESPONSABLE** y demas roles no acceden al centro ni a las descargas de plantilla.
 
 **Tipos de lote soportados hoy**
@@ -1192,7 +1193,7 @@ Rutas:
 
 ### 5.17 Módulo Chalecos
 
-Módulo de inventario de **chalecos balísticos**, diseñado en paralelo a armas (no mezcla datos en `weapons`). Expuesto en navegación como **Chalecos**.
+Módulo de inventario de **chalecos balísticos**, diseñado en paralelo a armas (no mezcla datos en `weapons`). En el shell: módulo **Dotación** → pestaña **Chalecos**. La pestaña **Cargas masivas** (Plataforma) lleva a `/subir-chalecos` cuando el usuario no es ADMIN pero sí puede importar chalecos.
 
 #### Acceso y políticas
 
@@ -1556,6 +1557,8 @@ Grupos funcionales:
   - `weapons.imprints.toggle`
 - Maestros:
   - `clients.*`, `posts.*`, `workers.*`.
+- Supervisión:
+  - `supervision.index` (`GET /supervision`, placeholder de recorrido de patrulla; ADMIN / RESPONSABLE / AUDITOR).
 - Transferencias:
   - `transfers.index`, `transfers.bulk`, `transfers.accept`, `transfers.cancel`.
 - Cartera:
@@ -1580,7 +1583,14 @@ Entradas Vite:
 
 Caracteristicas:
 
-- Navegacion responsive por rol en `resources/views/layouts/navigation.blade.php`.
+- **Shell autenticado**: sidebar de módulos + pestañas de vistas (`resources/views/layouts/navigation.blade.php`, `layouts/partials/sidebar.blade.php`, `layouts/partials/module-tabs.blade.php`).
+- Árbol y visibilidad por rol/policy: `app/Support/Navigation/ModuleNavBuilder.php` (composer en `layouts.app`).
+  - **Armamento**: Inicio, Armas, Revista, Mapa, Transferencias, Asignaciones, Reportes, Alertas.
+  - **Dotación**: Chalecos.
+  - **Supervisión**: Patrulla (próximamente) vía `/supervision`.
+  - **Plataforma**: Clientes, Puestos, Trabajadores, Usuarios, Cargas masivas, Formatos.
+- Sidebar ocultable (hamburguesa; estado en `localStorage` `sj-sidebar-hidden`). En móvil abre overlay.
+- Pestañas compactas sobre barra `--sj-navy`; acento activo en azul (no gold). Figtree 400–700.
 - Idioma con cambio de session (`es`, `en`).
 - Modales de seleccion de ubicacion con mapa, buscador textual y control de capas (hibrido / calles).
 - Cluster de mapa con icono personalizado y contador; popup de lista de armas con zona scrolleable.
@@ -1848,6 +1858,7 @@ Suite actual en `tests/`:
 - Feature de `Subir armas` / cargas masivas, incluyendo preview, progreso/ejecucion de lote y descarga de plantillas Excel (`ImportTemplateExporterTest`).
 - Feature de import de **Chalecos** (`VestImportValidationTest`): validación en preview de cliente/puesto/trabajador.
 - Feature de rol **ALMACEN** (`AlmacenRoleTest`): acceso a Chalecos, bloqueo del resto de módulos, redirect post-login y alta de usuario por ADMIN.
+- Unit/Feature de shell de módulos (`ModuleNavBuilderTest`, `ModuleNavigationTest`): visibilidad por rol y pestañas del módulo activo.
 - Feature de inventario operativo (`WeaponOperationalInventoryTest`), incluyendo listado con transferencia pendiente y asignación de cliente legacy cerrada (`operationalDisplayClient`).
 
 Comando:
@@ -1884,6 +1895,7 @@ Checklist minimo de produccion:
 - `app/Models`: modelo de dominio y relaciones.
 - `database/migrations`: esquema.
 - `database/seeders`: datos iniciales.
+- `app/Support`: utilidades de dominio (p. ej. `Navigation\ModuleNavBuilder` para el shell).
 - `resources/views`: UI Blade.
 - `resources/js`: frontend modular (app, mapa, location-picker).
 - `resources/css`: estilos Tailwind.

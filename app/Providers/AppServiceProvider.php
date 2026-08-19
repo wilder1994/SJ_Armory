@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Support\LocalNetworkHost;
+use App\Support\Navigation\ModuleNavBuilder;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -27,6 +28,11 @@ class AppServiceProvider extends ServiceProvider
 
         \Illuminate\Support\Facades\View::composer('layouts.app', function (\Illuminate\View\View $view): void {
             $user = auth()->user();
+            $view->with(
+                'moduleNav',
+                $user !== null ? app(ModuleNavBuilder::class)->forUser($user) : ['home_url' => url('/'), 'active_module' => '', 'active_module_key' => null, 'tabs' => [], 'modules' => []]
+            );
+
             if ($user === null || $user->isAuditor()) {
                 $view->with('notificationBellEnabled', false);
                 $view->with('unreadNotificationCount', 0);

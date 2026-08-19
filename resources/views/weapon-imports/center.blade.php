@@ -152,6 +152,19 @@
         });
     });
 
+    const openIntent = () => {
+        const intent = new URLSearchParams(window.location.search).get('intent');
+        if (intent === 'permit') {
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'permit-authenticated-upload' }));
+            return;
+        }
+        if (intent === 'weapon' || intent === 'client') {
+            applyType(intent);
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'mass-import-upload' }));
+        }
+    };
+    window.setTimeout(openIntent, 120);
+
     input.addEventListener('change', () => {
         const file = input.files && input.files[0] ? input.files[0] : null;
         setFile(file);
