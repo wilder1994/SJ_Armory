@@ -236,8 +236,11 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('revista.staff')->prefix('revista-armas')->name('revista-armas.')->group(function () {
         Route::get('/', [RevistaArmasController::class, 'index'])->name('index');
+        Route::get('/armas/buscar', [RevistaArmasController::class, 'searchAssignableWeapons'])->name('weapons.search');
         Route::get('/armas/{weapon}/revision/{temporary_photo_user}', [RevistaArmasController::class, 'review'])->name('review');
         Route::post('/accesos', [TemporaryPhotoAccessController::class, 'store'])->name('access.store');
+        Route::post('/accesos/renovar', [TemporaryPhotoAccessController::class, 'renew'])->name('access.renew');
+        Route::get('/accesos/contexto/{temporary_photo_user}', [TemporaryPhotoAccessController::class, 'assignmentContext'])->name('access.context');
         Route::post('/accesos/{grant}/revocar', [TemporaryPhotoAccessController::class, 'revoke'])->name('access.revoke');
         Route::post('/armas/{weapon}/revision/{temporary_photo_user}/aprobar', [RevistaPhotoReviewController::class, 'approve'])->name('review.approve');
         Route::post('/armas/{weapon}/revision/{temporary_photo_user}/rechazar', [RevistaPhotoReviewController::class, 'reject'])->name('review.reject');

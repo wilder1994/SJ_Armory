@@ -86,7 +86,7 @@
             <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">{{ __('Detalle') }}</p>
-                    <h3 class="text-lg font-semibold text-gray-900">{{ __('Listado de reportes') }}</h3>
+                    <h3 class="sj-type-section text-gray-900">{{ __('Listado de reportes') }}</h3>
                     <p class="mt-1 max-w-2xl text-sm text-gray-600">
                         {{ __('Mismo alcance que los filtros de año y tipo. Busca por cualquier texto visible (serie, código, cliente, tipo…).') }}
                     </p>

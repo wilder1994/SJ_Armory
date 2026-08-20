@@ -39,7 +39,7 @@
                             <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{{ $selectedBatch->typeLabel() }}</span>
                             <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $selectedBatchBadge['classes'] }}">{{ $selectedBatchBadge['label'] }}</span>
                         </div>
-                        <h3 class="text-lg font-semibold text-gray-800">{{ $selectedBatch->source_name }}</h3>
+                        <h3 class="sj-type-section text-gray-800">{{ $selectedBatch->source_name }}</h3>
                         <div class="mt-1 text-sm text-gray-500">Subido por {{ $selectedBatch->uploadedBy?->name ?? 'Sistema' }} el {{ $selectedBatch->created_at?->format('d/m/Y H:i') }}</div>
                         @if ($selectedBatch->isExecuted() && $selectedBatch->executed_at)
                             <div class="mt-1 text-sm text-gray-500">Ejecutado por {{ $selectedBatch->executedBy?->name ?? 'Sistema' }} el {{ $selectedBatch->executed_at->format('d/m/Y H:i') }}</div>
@@ -64,10 +64,10 @@
                 </div>
 
                 <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                    <div class="rounded-lg bg-blue-50 px-4 py-3"><div class="text-xs font-semibold uppercase tracking-wide text-blue-700">Crear</div><div class="mt-1 text-2xl font-semibold text-blue-900">{{ $selectedBatch->create_count }}</div></div>
-                    <div class="rounded-lg bg-amber-50 px-4 py-3"><div class="text-xs font-semibold uppercase tracking-wide text-amber-700">Actualizar</div><div class="mt-1 text-2xl font-semibold text-amber-900">{{ $selectedBatch->update_count }}</div></div>
-                    <div class="rounded-lg bg-green-50 px-4 py-3"><div class="text-xs font-semibold uppercase tracking-wide text-green-700">Sin cambios</div><div class="mt-1 text-2xl font-semibold text-green-900">{{ $selectedBatch->no_change_count }}</div></div>
-                    <div class="rounded-lg bg-rose-50 px-4 py-3"><div class="text-xs font-semibold uppercase tracking-wide text-rose-700">Errores</div><div class="mt-1 text-2xl font-semibold text-rose-900">{{ $selectedBatch->error_count }}</div></div>
+                    <div class="rounded-lg bg-blue-50 px-4 py-3"><div class="text-xs font-semibold uppercase tracking-wide text-blue-700">Crear</div><div class="mt-1 sj-type-kpi text-blue-900">{{ $selectedBatch->create_count }}</div></div>
+                    <div class="rounded-lg bg-amber-50 px-4 py-3"><div class="text-xs font-semibold uppercase tracking-wide text-amber-700">Actualizar</div><div class="mt-1 sj-type-kpi text-amber-900">{{ $selectedBatch->update_count }}</div></div>
+                    <div class="rounded-lg bg-green-50 px-4 py-3"><div class="text-xs font-semibold uppercase tracking-wide text-green-700">Sin cambios</div><div class="mt-1 sj-type-kpi text-green-900">{{ $selectedBatch->no_change_count }}</div></div>
+                    <div class="rounded-lg bg-rose-50 px-4 py-3"><div class="text-xs font-semibold uppercase tracking-wide text-rose-700">Errores</div><div class="mt-1 sj-type-kpi text-rose-900">{{ $selectedBatch->error_count }}</div></div>
                 </div>
 
                 @if ($selectedBatch->isProcessing())
@@ -173,9 +173,9 @@
                 <div class="mt-4 h-3 overflow-hidden rounded-full bg-slate-200"><div id="weapon-import-execution-fill" class="h-full w-0 rounded-full bg-indigo-600"></div></div>
                 <div class="mt-3 flex items-center justify-between text-sm text-slate-600"><span id="weapon-import-execution-left">0 / 0 filas</span><span id="weapon-import-execution-right">Calculando ETA...</span></div>
                 <div class="mt-4 grid grid-cols-3 gap-3 text-center text-sm">
-                    <div class="rounded-xl bg-slate-50 p-3"><div class="text-slate-500">Procesadas</div><div id="weapon-import-execution-processed" class="mt-1 text-lg font-semibold text-slate-900">0</div></div>
-                    <div class="rounded-xl bg-slate-50 p-3"><div class="text-slate-500">Correctas</div><div id="weapon-import-execution-successful" class="mt-1 text-lg font-semibold text-slate-900">0</div></div>
-                    <div class="rounded-xl bg-slate-50 p-3"><div class="text-slate-500">Fallidas</div><div id="weapon-import-execution-failed" class="mt-1 text-lg font-semibold text-slate-900">0</div></div>
+                    <div class="rounded-xl bg-slate-50 p-3"><div class="text-slate-500">Procesadas</div><div id="weapon-import-execution-processed" class="mt-1 sj-type-kpi text-slate-900">0</div></div>
+                    <div class="rounded-xl bg-slate-50 p-3"><div class="text-slate-500">Correctas</div><div id="weapon-import-execution-successful" class="mt-1 sj-type-kpi text-slate-900">0</div></div>
+                    <div class="rounded-xl bg-slate-50 p-3"><div class="text-slate-500">Fallidas</div><div id="weapon-import-execution-failed" class="mt-1 sj-type-kpi text-slate-900">0</div></div>
                 </div>
                 <div id="weapon-import-execution-message" class="mt-4 text-sm text-slate-600">Esperando inicio...</div>
             </div>

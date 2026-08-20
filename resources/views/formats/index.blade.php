@@ -18,8 +18,8 @@
                 <article class="sj-ui-card">
                     <div class="sj-ui-card__body flex h-full min-h-[11.5rem] flex-col gap-4 p-5">
                         <div class="min-h-0 flex-1">
-                            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-700">FO-OP-03</p>
-                            <h3 class="mt-2 text-lg font-semibold leading-snug text-slate-900">{{ __('Revista mensual de armamento') }}</h3>
+                            <p class="sj-type-eyebrow text-indigo-700">FO-OP-03</p>
+                            <h3 class="mt-2 sj-type-section text-slate-900">{{ __('Revista mensual de armamento') }}</h3>
                         </div>
 
                         <div class="mt-auto flex flex-col gap-2.5">
@@ -42,8 +42,8 @@
                     <article class="sj-ui-card">
                         <div class="sj-ui-card__body flex h-full min-h-[11.5rem] flex-col gap-4 p-5">
                             <div class="min-h-0 flex-1">
-                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">{{ __('Carga · Chalecos') }}</p>
-                                <h3 class="mt-2 text-lg font-semibold leading-snug text-slate-900">{{ __('Carga masiva de chalecos') }}</h3>
+                                <p class="sj-type-eyebrow text-sky-700">{{ __('Carga · Chalecos') }}</p>
+                                <h3 class="mt-2 sj-type-section text-slate-900">{{ __('Carga masiva de chalecos') }}</h3>
                             </div>
 
                             <div class="mt-auto">
@@ -63,8 +63,8 @@
             <div class="flex-shrink-0 px-6 pt-6 pb-4">
                 <div class="flex items-start justify-between gap-4">
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-800">{{ __('Relación de armas para revista mensual') }}</h3>
-                        <p class="mt-1 text-sm text-gray-500">
+                        <h3 class="sj-type-section text-gray-800">{{ __('Relación de armas para revista mensual') }}</h3>
+                        <p class="mt-1 sj-type-page-sub text-gray-500">
                             {{ __('Seleccione las armas a exportar. Cada hoja del Excel conserva 20 filas para impresión en carta horizontal.') }}
                         </p>
                     </div>

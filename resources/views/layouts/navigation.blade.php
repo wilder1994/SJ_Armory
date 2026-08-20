@@ -7,11 +7,15 @@
     x-data="{
         mobileOpen: false,
         sidebarHidden: localStorage.getItem('sj-sidebar-hidden') === '1',
+        isDesktop: window.matchMedia('(min-width: 1024px)').matches,
         notificationsOpen: false,
         notificationHistoryMode: false,
         notificationItems: [],
         notificationLoading: false,
         notificationUnread: {{ (int) ($unreadNotificationCount ?? 0) }},
+        get sidebarCollapsed() {
+            return this.isDesktop ? this.sidebarHidden : !this.mobileOpen;
+        },
         init() {
             window.addEventListener('inbox-updated', (e) => {
                 const n = e.detail?.unread_count;
@@ -24,6 +28,7 @@
             });
             this._mq = window.matchMedia('(min-width: 1024px)');
             this._onMq = () => {
+                this.isDesktop = this._mq.matches;
                 if (this._mq.matches) {
                     this.mobileOpen = false;
                 }
@@ -38,8 +43,7 @@
             document.body.classList.toggle('sj-sidebar-hidden', this.sidebarHidden);
         },
         toggleSidebar() {
-            const desktop = window.matchMedia('(min-width: 1024px)').matches;
-            if (desktop) {
+            if (this.isDesktop) {
                 this.sidebarHidden = !this.sidebarHidden;
                 localStorage.setItem('sj-sidebar-hidden', this.sidebarHidden ? '1' : '0');
                 return;
@@ -128,19 +132,22 @@
 
     @include('layouts.partials.sidebar')
 
+    <button
+        type="button"
+        class="sj-sidebar-edge-toggle"
+        @click="toggleSidebar()"
+        :class="{ 'is-collapsed': sidebarCollapsed }"
+        :aria-expanded="(!sidebarCollapsed).toString()"
+        :aria-label="sidebarCollapsed ? '{{ __('Mostrar módulos') }}' : '{{ __('Ocultar módulos') }}'"
+        :title="sidebarCollapsed ? '{{ __('Mostrar módulos') }}' : '{{ __('Ocultar módulos') }}'"
+    >
+        <svg class="sj-sidebar-edge-toggle__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+        </svg>
+    </button>
+
     <header class="sj-topbar">
         <div class="sj-topbar__left">
-            <button
-                type="button"
-                class="sj-topbar__menu"
-                @click="toggleSidebar()"
-                :aria-expanded="(!sidebarHidden || mobileOpen).toString()"
-                :aria-label="sidebarHidden ? '{{ __('Mostrar módulos') }}' : '{{ __('Ocultar módulos') }}'"
-            >
-                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-            </button>
             @include('layouts.partials.module-tabs')
         </div>
 

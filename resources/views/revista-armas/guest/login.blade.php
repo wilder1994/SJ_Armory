@@ -1,6 +1,6 @@
 <x-revista-guest-layout :title="__('Ingreso')">
     <div class="mx-auto max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 class="text-lg font-bold text-slate-900">{{ __('Ingreso temporal') }}</h1>
+        <h1 class="sj-type-page text-slate-900">{{ __('Ingreso temporal') }}</h1>
         <p class="mt-1 text-sm text-slate-600">{{ __('Use el correo y el código que le envió su responsable.') }}</p>
 
         <form method="POST" action="{{ route('revista-armas.guest.login.store') }}" class="mt-6 space-y-4">

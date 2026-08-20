@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex flex-wrap items-center gap-2">
-                <h1 class="text-lg font-semibold leading-tight text-gray-900">{{ $vest->serial_number }}</h1>
+                <h1 class="sj-type-page text-gray-900">{{ $vest->serial_number }}</h1>
                 <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $alert['badge_class'] }}">{{ $alert['state'] }}</span>
             </div>
             <div class="flex flex-wrap items-center gap-2">
@@ -22,7 +22,7 @@
 
             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-stretch">
                 <section class="sj-ui-card flex h-full flex-col p-4">
-                    <h3 class="mb-3 shrink-0 text-sm font-semibold uppercase tracking-wide text-gray-500">{{ __('Datos del chaleco') }}</h3>
+                    <h3 class="mb-3 shrink-0 sj-type-eyebrow text-gray-500">{{ __('Datos del chaleco') }}</h3>
                     <dl class="grid flex-1 grid-cols-1 gap-2.5 text-sm sm:grid-cols-2 sm:content-start">
                         <div>
                             <dt class="text-xs font-medium uppercase tracking-wide text-gray-500">{{ __('Marca') }}</dt>

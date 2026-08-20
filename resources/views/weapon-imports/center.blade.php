@@ -592,7 +592,7 @@
                 <div class="mb-4 flex items-end justify-between gap-3">
                     <div>
                         <div class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Historial</div>
-                        <h3 class="text-lg font-semibold text-gray-800">Lotes ejecutados</h3>
+                        <h3 class="sj-type-section text-gray-800">Lotes ejecutados</h3>
                     </div>
                     <div class="text-sm text-gray-500">{{ $batches->count() }} lote(s)</div>
                 </div>
@@ -631,7 +631,7 @@
         <div id="permit-authenticated-upload-modal" class="p-6">
             <div class="flex items-start justify-between gap-4 border-b border-gray-100 pb-4">
                 <div>
-                    <h3 class="text-lg font-semibold text-gray-900">{{ __('Permiso autenticado global') }}</h3>
+                    <h3 class="sj-type-section text-gray-900">{{ __('Permiso autenticado global') }}</h3>
                     <p class="mt-1 max-w-2xl text-sm text-gray-500">{{ __('Dos referencias para todo el sistema (porte y tenencia). Se muestran en las fichas según el tipo de permiso del arma. Arrastra, pega con el puntero sobre la tarjeta o haz clic para elegir archivo.') }}</p>
                 </div>
                 <button type="button" x-data="" x-on:click.prevent="$dispatch('close-modal', 'permit-authenticated-upload')" class="shrink-0 rounded-md px-2 py-1 text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-700">
@@ -736,7 +736,7 @@
         <div id="mass-import-upload-modal" class="p-6">
             <div class="flex items-start justify-between gap-4">
                 <div>
-                    <h3 id="mass-import-title" class="text-lg font-semibold text-gray-800">Subir documento de armas</h3>
+                    <h3 id="mass-import-title" class="sj-type-section text-gray-800">Subir documento de armas</h3>
                     <p id="mass-import-copy" class="mt-1 text-sm text-gray-500">Carga masiva con validacion previa antes de crear o actualizar armas.</p>
                 </div>
                 <button type="button" x-data="" x-on:click.prevent="$dispatch('close-modal', 'mass-import-upload')" class="rounded-md px-2 py-1 text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-700">

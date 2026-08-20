@@ -14,10 +14,10 @@
                 <div class="client-directory-header__row">
                     <div class="client-directory-header__intro">
                         <div class="client-directory-header__copy">
-                            <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                            <h2 class="sj-type-page text-gray-800">
                                 {{ $pageTitle }}
                             </h2>
-                            <p class="mt-1 text-sm text-slate-500">
+                            <p class="mt-1 sj-type-page-sub text-slate-500">
                                 {{ __('Consulta y administra la base de clientes registrada en el sistema.') }}
                             </p>
                         </div>

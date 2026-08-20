@@ -70,7 +70,7 @@
             <div class="sj-ui-card p-6">
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-800">{{ $selectedBatch->source_name }}</h3>
+                        <h3 class="sj-type-section text-gray-800">{{ $selectedBatch->source_name }}</h3>
                         <div class="mt-1 text-sm text-gray-500">
                             Subido por {{ $selectedBatch->uploadedBy?->name ?? 'Sistema' }} el {{ $selectedBatch->created_at?->format('d/m/Y H:i') }}
                         </div>
@@ -124,19 +124,19 @@
                     <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                         <div class="rounded-lg bg-blue-50 px-4 py-3">
                             <div class="text-xs font-semibold uppercase tracking-wide text-blue-700">Crear</div>
-                            <div class="mt-1 text-2xl font-semibold text-blue-900">{{ $selectedBatch->create_count }}</div>
+                            <div class="mt-1 sj-type-kpi text-blue-900">{{ $selectedBatch->create_count }}</div>
                         </div>
                         <div class="rounded-lg bg-amber-50 px-4 py-3">
                             <div class="text-xs font-semibold uppercase tracking-wide text-amber-700">Actualizar</div>
-                            <div class="mt-1 text-2xl font-semibold text-amber-900">{{ $selectedBatch->update_count }}</div>
+                            <div class="mt-1 sj-type-kpi text-amber-900">{{ $selectedBatch->update_count }}</div>
                         </div>
                         <div class="rounded-lg bg-green-50 px-4 py-3">
                             <div class="text-xs font-semibold uppercase tracking-wide text-green-700">Sin cambios</div>
-                            <div class="mt-1 text-2xl font-semibold text-green-900">{{ $selectedBatch->no_change_count }}</div>
+                            <div class="mt-1 sj-type-kpi text-green-900">{{ $selectedBatch->no_change_count }}</div>
                         </div>
                         <div class="rounded-lg bg-rose-50 px-4 py-3">
                             <div class="text-xs font-semibold uppercase tracking-wide text-rose-700">Errores</div>
-                            <div class="mt-1 text-2xl font-semibold text-rose-900">{{ $selectedBatch->error_count }}</div>
+                            <div class="mt-1 sj-type-kpi text-rose-900">{{ $selectedBatch->error_count }}</div>
                         </div>
                     </div>
 
@@ -167,7 +167,7 @@
                     <div style="width: min(1400px, 100%); height: 100%; background: #ffffff; border-radius: 16px; box-shadow: 0 24px 48px rgba(15, 23, 42, 0.22); display: flex; flex-direction: column; overflow: hidden;">
                         <div style="flex: 0 0 auto; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 20px 24px; border-bottom: 1px solid #e5e7eb; background: #ffffff;">
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-800">Revisión del lote</h3>
+                                <h3 class="sj-type-section text-gray-800">Revisión del lote</h3>
                                 <p class="mt-1 text-sm text-gray-500">Verifica la acción de cada fila antes de ejecutar los cambios.</p>
                             </div>
                             @if ($selectedBatch->isDraft())

@@ -2,7 +2,7 @@
     <!-- Current Assignment Status -->
     <div class="bg-white rounded-lg border border-gray-200 p-4">
         <div class="text-xs font-semibold text-gray-500 mb-2">{{ __('weapons.internal_assignment_current') }}</div>
-        <div class="text-lg font-bold text-gray-900 space-y-1">
+        <div class="sj-type-section text-gray-900 space-y-1">
             @if ($weapon->activePostAssignment || $weapon->activeWorkerAssignment)
                 @if ($weapon->activeWorkerAssignment)
                     <div>{{ __('Trabajador:') }} {{ $weapon->activeWorkerAssignment->worker?->name }}

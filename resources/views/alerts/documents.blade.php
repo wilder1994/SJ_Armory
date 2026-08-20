@@ -4,7 +4,7 @@
         .alerts-toolbar-shell { margin: 0 auto; max-width: none; width: 100%; }
         .alerts-toolbar { display: flex; flex-direction: column; gap: 1rem; width: 100%; }
         .alerts-toolbar__top { display: grid; align-items: center; column-gap: 2.5rem; grid-template-columns: minmax(18rem, 1fr) auto minmax(7rem, 1fr); }
-        .alerts-toolbar__title { margin: 0; color: #111827; font-size: 1.12rem; font-weight: 800; letter-spacing: -0.01em; line-height: 1; white-space: nowrap; }
+        .alerts-toolbar__title { margin: 0; color: #111827; white-space: nowrap; }
         .alerts-toolbar__center, .alerts-toolbar__bottom { display: flex; justify-content: center; min-width: 0; }
         .alerts-toolbar__filters, .alerts-toolbar__bottom-group { display: flex; align-items: center; justify-content: center; gap: 1rem; min-width: 0; }
         .alerts-toolbar__filters { gap: 0.75rem; width: max-content; margin: 0 !important; }

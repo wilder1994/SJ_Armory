@@ -102,7 +102,7 @@
 
             <div class="sj-ui-card overflow-hidden">
                 <div class="sj-ui-card__body p-6">
-                    <h3 class="text-lg font-semibold text-slate-900">
+                    <h3 class="sj-type-section text-slate-900">
                         {{ $status === 'pending' ? __('Pendientes por aceptar') : __('Transferencias') . ' — ' . $statusLabel }}
                     </h3>
                     <div class="sj-table-wrap overflow-x-auto mt-3">
@@ -210,7 +210,7 @@
         <div class="p-6 text-gray-900">
             <div class="flex items-start justify-between gap-4">
                 <div>
-                    <h3 class="text-lg font-semibold text-gray-900">{{ __('Cancelar transferencia') }}</h3>
+                    <h3 class="sj-type-section text-gray-900">{{ __('Cancelar transferencia') }}</h3>
                     <p class="mt-2 text-sm text-gray-600 leading-relaxed">
                         {{ __('¿Cancelar esta transferencia pendiente?') }}
                     </p>
@@ -252,7 +252,7 @@
     <x-modal name="transfer-history" maxWidth="6xl">
         <div class="max-h-[85vh] overflow-y-auto p-6 text-gray-900">
             <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold">{{ __('Historial de transferencias') }}</h3>
+                <h3 class="sj-type-section">{{ __('Historial de transferencias') }}</h3>
                 <button type="button" class="text-sm text-gray-500 hover:text-gray-700"
                     x-on:click="$dispatch('close-modal', 'transfer-history')">
                     {{ __('Cerrar') }}
@@ -317,7 +317,7 @@
     <x-modal name="bulk-transfer" maxWidth="2xl">
         <div class="p-6 text-gray-900">
             <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold">{{ __('Transferir armas') }}</h3>
+                <h3 class="sj-type-section">{{ __('Transferir armas') }}</h3>
                 <button type="button" class="text-sm text-gray-500 hover:text-gray-700"
                     x-on:click="$dispatch('close-modal', 'bulk-transfer')">
                     {{ __('Cerrar') }}
@@ -462,7 +462,7 @@
     <x-modal name="accept-transfer" maxWidth="2xl">
         <div class="p-6 text-gray-900">
             <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold">{{ __('Asignar destino operativo') }}</h3>
+                <h3 class="sj-type-section">{{ __('Asignar destino operativo') }}</h3>
                 <button type="button" class="text-sm text-gray-500 hover:text-gray-700"
                     x-on:click="$dispatch('close-modal', 'accept-transfer')">
                     {{ __('Cerrar') }}

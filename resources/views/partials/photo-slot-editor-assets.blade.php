@@ -62,7 +62,7 @@
 
 <div id="weapon-photo-alert-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/40 p-4">
     <div class="w-full max-w-md rounded-xl bg-white p-5 shadow-xl" role="alertdialog" aria-modal="true">
-        <h3 class="text-lg font-bold text-slate-900">{{ __('Aviso') }}</h3>
+        <h3 class="sj-type-section text-slate-900">{{ __('Aviso') }}</h3>
         <p id="weapon-photo-alert-message" class="mt-3 text-sm text-slate-600"></p>
         <div class="mt-5 flex justify-end">
             <button type="button" id="weapon-photo-alert-ok" class="rounded-lg bg-[#0b6fb6] px-4 py-2 text-sm font-bold text-white">{{ __('Entendido') }}</button>
@@ -72,7 +72,7 @@
 
 <div id="weapon-photo-confirm-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/40 p-4">
     <div class="w-full max-w-md rounded-xl bg-white p-5 shadow-xl" role="alertdialog" aria-modal="true" aria-labelledby="weapon-photo-confirm-title">
-        <h3 id="weapon-photo-confirm-title" class="text-lg font-bold text-slate-900">{{ __('Atención') }}</h3>
+        <h3 id="weapon-photo-confirm-title" class="sj-type-section text-slate-900">{{ __('Atención') }}</h3>
         <p id="weapon-photo-confirm-message" class="mt-3 text-sm text-slate-600"></p>
         <div class="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button type="button" id="weapon-photo-confirm-cancel" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">{{ __('Cancelar') }}</button>

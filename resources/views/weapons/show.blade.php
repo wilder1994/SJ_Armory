@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex flex-wrap items-center gap-2">
-                <h1 class="text-lg font-semibold leading-tight text-gray-900">{{ $weapon->internal_code ?? $weapon->serial_number }}</h1>
+                <h1 class="sj-type-page text-gray-900">{{ $weapon->internal_code ?? $weapon->serial_number }}</h1>
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 @can('update', $weapon)

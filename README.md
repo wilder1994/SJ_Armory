@@ -18,7 +18,7 @@ Sistema web para **gestión de armamento**, **dotación (chalecos)**, **asignaci
 - ✅ **Chalecos** (`/vests`): módulo paralelo al inventario de armas (tablas y rutas propias); listado con **KPIs clicables** (barra de acento superior + hint contextual por categoría) y **filas de tabla coloreadas** con la misma semaforización (verde / ámbar / naranja / rojo); ficha compacta (datos + asignación en dos columnas, misma altura); formularios **create/edit pro** con comboboxes buscables (cliente, trabajador, puesto), **responsable dispositivo** derivado del cliente (o auto para responsable N1); **4 fotos** con editor pro en ficha/editar (clic, arrastrar, pegar, Cropper, JSON sin recarga) y pickers embebidos al **crear**; **import masivo** en `/subir-chalecos` con modal de subida (drag & drop, pegar, XHR), **descarga de plantilla** (`resources/templates/Chalecos.xlsx` + hoja `Instructivo`) y **validación en preview** de cliente, puesto y trabajador (cédula); columna **Cargo** alineada a los roles de `Worker`; rol **ALMACEN** (administrador exclusivo del módulo, inventario global, login directo a `/vests`).
 - ✅ **Dashboard**: fila de **6 KPIs** (Total, No operativas, En inventario, Incautadas en trámite, Vencidos, Por vencer), gráficos y estado “as of”.
 - ✅ **Alertas documentales** (`/alerts/documents`): tarjetas vencidos / por vencer / sin alertas; filtro **multi-mes** con panel de checkboxes (varios meses y años); modales con **filtros por columna** tipo Excel (multi-selección en encabezado); exportación `.docx` y vista previa PDF con nombre `Revalidacion_{mes}_{año}`.
-- ✅ **Revista armas** (`/revista-armas`): acceso temporal (12 h) para colaboradores de campo; usuarios temporales reutilizables; **usuarios compartidos** (solo **ADMIN** autoriza supervisores multi-zona con acceso unificado y mismo código); tabla staff con columna **Cliente**; modal **Asignar acceso temporal** con tabla scrollable (**Cliente**, **Serie**, **Tipo**); subida de **4 fotos técnicas** a staging; el invitado solo entra con código vigente; staff al filtrar ve armas del **último acceso** (aunque haya vencido) para revisar fotos en staging (✓/✕, **Ver**, **Actualizar**); confirmaciones en **modales**; historial de notas en la ficha del arma; **ADMIN** con gestión global.
+- ✅ **Revista armas** (`/revista-armas`): acceso temporal (12 h) para colaboradores de campo; usuarios temporales reutilizables; **usuarios compartidos** (solo **ADMIN** autoriza supervisores multi-zona con acceso unificado y mismo código); listado staff **requiere filtrar por usuario temporal** (paginado; armas del último acceso); columna **Realizado** (✓/✕) con consulta batch de staging; modal **Asignar acceso** con búsqueda AJAX, armas con fotos **bloqueadas**, **Renovar último acceso** (mismas armas + código nuevo) y validación: no se puede omitir ni reasignar a otro temporal un arma con staging pendiente (hay que **Actualizar** o **Rechazar** antes); subida de **4 fotos técnicas** a staging; confirmaciones en **modales**; historial en la ficha del arma; **ADMIN** con gestión global.
 - ✅ **Mapa**: geocodificación y visualización operativa de **armas**; pestaña del módulo **Armamento**; solo inventario operativo (sin novedad bloqueante ni custodia en taller / para mantenimiento).
 - ✅ **Auditoría**: registro de cambios y acciones críticas; etiquetas legibles en español vía `resources/lang/es/audit.php`.
 - ✅ **Realtime (Broadcasting)**: Laravel Reverb + Echo (WebSockets) para sincronización en tiempo real.
@@ -29,6 +29,7 @@ Sistema web para **gestión de armamento**, **dotación (chalecos)**, **asignaci
 - ✅ **Formatos** (`/formatos`): catálogo en **tarjetas** (`sj-ui-card`, grid 1/2/4 columnas); **Revista mensual de armamento** (FO-OP-03) con descarga vacía o con relación de armas (tabla con filtros por columna, selección por checkbox y exportación solo de las marcadas); **plantilla carga masiva de chalecos** (tarjeta visible con permiso `import` en `Vest`); archivos en `resources/templates/`; revista usa `phpoffice/phpspreadsheet` (requiere `composer install` con PHP 8.2+). Pestaña **Formatos** en el módulo **Plataforma** (no es un menú desplegable).
 - ✅ **Shell de navegación**: sidebar con **Armamento**, **Dotación**, **Supervisión** y **Plataforma**; pestañas del módulo activo en la barra superior (navy, misma altura); el sidebar se oculta con el botón hamburguesa (`localStorage`). **Mapa** vive en Armamento. **Cargas masivas** abre `/subir-armas` (ADMIN) o `/subir-chalecos` (quien solo importa chalecos). **Supervisión** (`/supervision`) es placeholder de patrulla. Árbol filtrado por rol en `App\Support\Navigation\ModuleNavBuilder`.
 - ✅ **Kit UI global** (`sj-ui-*` en `resources/css/app.css`): interfaz unificada en listados, formularios, reportes, cargas masivas, auth guest, dashboard y detalle de armas/chalecos — headers (`sj-section-header`), tarjetas (`sj-ui-card`), KPIs (`sj-ui-kpi` / `sj-kpi-card`), filtros (`sj-ui-filter-bar`), botones (`sj-ui-btn` vía componentes Blade y vistas), enlaces de tabla (`sj-ui-link`). Tras cambios en `app.css`: `npm run build`.
+- ✅ **Tipografía unificada** (tokens `.sj-type-*` / `--sj-type-*` en `app.css`): eyebrow, título de página, subtítulo, sección, cuerpo, meta y KPI (números con peso **600**); los encabezados `sj-section-header__*` y héroes/KPIs del dashboard consumen los mismos tamaños fijos (sin `clamp` en títulos de página).
 
 ---
 
@@ -1061,28 +1062,33 @@ Nombres de ruta staff relevantes: prefijo `revista-armas.*`; CRUD de temporales 
 #### Asignación de acceso
 
 - Tablas: `temporary_photo_access_grants` + `temporary_photo_access_weapons`.
-- Modal **Asignar acceso temporal** en el listado staff: fila **Usuario temporal** | **Buscar armas** (filtro local) | tabla con scroll (**Cliente**, **Serie**, **Tipo** + checkbox; encabezado fijo, cuerpo `max-h-52`); contador **Seleccionadas** y **Seleccionar todas visibles**. Columna **Tipo** = `weapon_type` (sin marca).
-
-> 🧩 **Despliegue:** solo Blade — **no** requiere `npm run build` ni subir `public/build/`.
-- Código válido **12 h**, correo `RevistaTemporaryAccessMail`; modal de éxito con enlace, correo y código copiable.
+- Modal **Asignar acceso temporal** (`resources/views/revista-armas/index.blade.php`):
+  - Usuario temporal + **Buscar armas** (AJAX `GET revista-armas/armas/buscar`, tope por página ~60; no carga todo el inventario en el HTML).
+  - Tabla (**Cliente**, **Serie**, **Tipo**, **Estado**): armas con staging del usuario quedan **bloqueadas** (“Con fotos”); armas con staging de **otro** temporal aparecen **Bloqueada**.
+  - Contexto `GET revista-armas/accesos/contexto/{temporary_photo_user}`: preselecciona armas del último grant + locks de staging.
+  - **Enviar** → `POST revista-armas/accesos` (`TemporaryPhotoAccessService::createGrant`).
+  - **Renovar último acceso** → `POST revista-armas/accesos/renovar` (`renewLatestGrant`): mismas armas del último grant, **código nuevo** 12 h; staging **intacta**.
+- **Regla de integridad (staging pendiente):**
+  - No se puede crear un acceso que **omit** armas con al menos una foto en staging de ese usuario (hay que **Actualizar** o **Rechazar** antes).
+  - No se puede asignar un arma a otro usuario temporal si **otro** temporal aún tiene staging en esa arma.
+  - Renovar (mismo set) no entra en conflicto con esa regla.
+- Código válido **12 h**, correo `RevistaTemporaryAccessMail`; modal de éxito distingue acceso nuevo / renovado / armas agregadas (compartido).
 - Revocar acceso no elimina staging ya subido.
+
+> 🧩 **Despliegue Blade + CSS tipografía:** si solo cambia Revista Blade, no hace falta rebuild; si se tocó `app.css` (tokens tipográficos), ejecutar `npm run build`.
 
 #### Vista staff (`/revista-armas`)
 
-- Lista armas según alcance (`RevistaArmasScopeService`: global para **ADMIN**, cartera/responsable activo para **RESPONSABLE** nivel 1).
-- Columnas: **Cliente** (operativo vía `operationalDisplayClient()`), Tipo, Marca, Serie, Calibre, Tipo permiso, Nº permiso, Vencimiento, Realizado, Acciones.
-- Barra de filtro en **una fila horizontal**: **Usuario temporal** | **Buscar armas** (filtro local en la tabla, sin recargar; incluye cliente) | **Filtrar** (`?temporary_photo_user_id=`).
-  - Sin usuario temporal seleccionado: todas las armas del alcance del responsable; columna **Realizado** muestra `—` y **Acciones** vacía.
-  - Con usuario temporal seleccionado: armas del **último acceso asignado** (`latestGrantFor` + `grantWeaponIds`), aunque el código haya vencido; aviso ámbar si no hay acceso vigente (`activeGrantFor`); el invitado solo entra con acceso vigente.
-  - Con filtro aplicado: **Realizado** = ✓ si 4/4 fotos en staging de **ese** colaborador; ✕ si falta alguna; botón **Ver** abre modal de revisión.
-  - El filtro de usuario temporal es necesario porque el progreso y la revisión son por par **(arma, usuario temporal)**, no por arma sola.
-- Modal **Ver**: muestra las **4 casillas** (con o sin imagen); API `revista-armas.review` devuelve `slots`, `uploaded_count`, `pending_count`, `is_complete`.
-- **Actualizar**:
-  - Si faltan fotos (`is_complete === false`): modal de **aviso** centrado — *«No se pueden actualizar las imágenes oficiales porque faltan N foto(s) pendiente(s).»* (sin `confirm` del navegador).
-  - Si están las 4: modal de **confirmación** centrado; al aceptar, `POST` `revista-armas.review.approve` → copia a `weapon_photos` + `syncRenewalDocument` + entrada en `weapon_histories` (tipo **Fotografías**, con fecha y colaborador temporal).
-  - Errores del servidor (p. ej. 422): modal de aviso; no recarga la página a ciegas.
-- **Rechazar**: modal de confirmación; elimina staging de ese temporal en esa arma.
-- UI: modales `#revista-confirm-modal`, `#revista-alert-modal` en `resources/views/revista-armas/index.blade.php` (misma familia visual que el modal de revisión).
+- Alcance: `RevistaArmasScopeService` (global **ADMIN**, cartera activa **RESPONSABLE** nivel 1).
+- **Rendimiento:** sin `temporary_photo_user_id` **no** se carga el inventario (mensaje para filtrar). Con filtro: solo armas del **último grant**, **paginadas (50)**, columna Realizado con **una** consulta batch (`completedWeaponIdsForTemporaryUser`), no N+1.
+- Columnas: **Cliente** (`operationalDisplayClient()`), Tipo, Marca, Serie, Calibre, Tipo permiso, Nº permiso, Vencimiento, Realizado, Acciones.
+- Barra: **Usuario temporal** | **Buscar armas** (filtro local sobre la página cargada) | **Filtrar** (`?temporary_photo_user_id=`).
+  - Sin usuario temporal: tabla vacía + instrucción de filtrar.
+  - Con usuario temporal: armas del **último acceso** (`latestGrantFor`), aunque el código haya vencido; aviso ámbar si no hay acceso vigente (`activeGrantFor`).
+  - **Realizado** = ✓ si 4/4 staging de **ese** colaborador; ✕ si falta; **Ver** abre revisión.
+- Modal **Ver**: API `revista-armas.review` → `slots`, `uploaded_count`, `pending_count`, `is_complete`.
+- **Actualizar** / **Rechazar**: modales de confirmación/aviso; approve copia a `weapon_photos` + historial; reject elimina solo el staging de ese temporal+arma.
+- UI: `#revista-confirm-modal`, `#revista-alert-modal`, `#revista-assign-modal`.
 
 #### Vista invitado (`/revista-armas/mis-armas`)
 
@@ -1095,11 +1101,13 @@ Nombres de ruta staff relevantes: prefijo `revista-armas.*`; CRUD de temporales 
 #### Staging y slots
 
 - Tabla `weapon_photo_staging`; descripciones fijas en `App\Support\RevistaWeaponPhotoSlots`: `lado_derecho`, `lado_izquierdo`, `canon_disparador_marca`, `serie`.
-- Servicios: `WeaponPhotoStagingService` (inyecta `WeaponHistoryService` al aprobar), `TemporaryPhotoAccessService` (`activeGrantFor`, `latestGrantFor`, asignación 12 h), `RevistaArmasScopeService`.
-- Reasignar o vencer acceso **no borra** staging; revocar acceso tampoco.
-- Controladores: `RevistaArmasController`, `RevistaPhotoReviewController` (`approve` / `reject`).
-- Migraciones: `2026_05_19_140000_create_revista_armas_tables.php` (índices/FK cortos para MySQL ≤ 64 caracteres); `2026_05_19_180000_create_weapon_histories_table.php`.
-- Tests: `tests/Feature/RevistaArmasTest.php` (incl. listado con último grant aunque el acceso haya vencido), `tests/Feature/WeaponHistoryTest.php`, `tests/Feature/WeaponPhotoTest.php`.
+- Staging es por **(usuario temporal, arma, descripción)**; dos temporales pueden tener borradores de la misma arma, pero la asignación **bloquea** cruzado mientras exista staging ajeno.
+- Servicios: `WeaponPhotoStagingService` (batch de completitud, conflictos, counts), `TemporaryPhotoAccessService` (`createGrant`, `renewLatestGrant`, `assignmentContext`, append en compartidos), `RevistaArmasScopeService`.
+- Reasignar/vencer/revocar **no borra** staging; solo **Rechazar** o **Actualizar** (promote) lo quita del borrador.
+- Controladores: `RevistaArmasController` (index, search, review), `TemporaryPhotoAccessController` (store, renew, context, revoke), `RevistaPhotoReviewController` (approve / reject).
+- Rutas clave: `revista-armas.weapons.search`, `revista-armas.access.store`, `revista-armas.access.renew`, `revista-armas.access.context`.
+- Migraciones: `2026_05_19_140000_create_revista_armas_tables.php`; `2026_05_19_180000_create_weapon_histories_table.php`.
+- Tests: `tests/Feature/RevistaArmasTest.php` (filtro por grant, omitir staging, staging ajeno, renovar, búsqueda AJAX), `tests/Feature/WeaponHistoryTest.php`, `tests/Feature/WeaponPhotoTest.php`.
 
 ### 5.15 Dashboard operativo
 
@@ -1591,6 +1599,7 @@ Caracteristicas:
   - **Plataforma**: Clientes, Puestos, Trabajadores, Usuarios, Cargas masivas, Formatos.
 - Sidebar ocultable (hamburguesa; estado en `localStorage` `sj-sidebar-hidden`). En móvil abre overlay.
 - Pestañas compactas sobre barra `--sj-navy`; acento activo en azul (no gold). Figtree 400–700.
+- **Escala tipográfica** (`.sj-type-eyebrow|page|page-sub|section|body|meta|kpi` y variables `--sj-type-*`): títulos de página fijos a `1.5rem` / peso 700; KPI/números a `1.5rem` / peso **600**. Encabezados `sj-section-header__*` y KPIs del dashboard usan estos tokens.
 - Idioma con cambio de session (`es`, `en`).
 - Modales de seleccion de ubicacion con mapa, buscador textual y control de capas (hibrido / calles).
 - Cluster de mapa con icono personalizado y contador; popup de lista de armas con zona scrolleable.

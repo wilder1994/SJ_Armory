@@ -35,6 +35,104 @@ class WeaponPhotoStagingService
             ->count();
     }
 
+    /**
+     * Weapon IDs with all required staging slots for the temporary user (single query).
+     *
+     * @param  list<int>  $weaponIds
+     * @return list<int>
+     */
+    public function completedWeaponIdsForTemporaryUser(int $temporaryPhotoUserId, array $weaponIds): array
+    {
+        if ($weaponIds === []) {
+            return [];
+        }
+
+        $required = RevistaWeaponPhotoSlots::requiredCount();
+        $keys = RevistaWeaponPhotoSlots::keys();
+
+        return WeaponPhotoStaging::query()
+            ->select('weapon_id')
+            ->where('temporary_photo_user_id', $temporaryPhotoUserId)
+            ->whereIn('weapon_id', $weaponIds)
+            ->whereIn('description', $keys)
+            ->groupBy('weapon_id')
+            ->havingRaw('COUNT(DISTINCT description) >= ?', [$required])
+            ->pluck('weapon_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    /**
+     * Weapon IDs that already have at least one staging photo for the temporary user.
+     *
+     * @return list<int>
+     */
+    public function weaponIdsWithAnyStagingForTemporaryUser(int $temporaryPhotoUserId): array
+    {
+        return WeaponPhotoStaging::query()
+            ->where('temporary_photo_user_id', $temporaryPhotoUserId)
+            ->whereIn('description', RevistaWeaponPhotoSlots::keys())
+            ->distinct()
+            ->pluck('weapon_id')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Staging held by other temporary users on the given weapons.
+     *
+     * @param  list<int>  $weaponIds
+     * @return list<array{weapon_id: int, serial_number: string|null, temporary_photo_user_id: int, temporary_user_name: string}>
+     */
+    public function foreignStagingConflicts(array $weaponIds, int $excludingTemporaryUserId): array
+    {
+        if ($weaponIds === []) {
+            return [];
+        }
+
+        return WeaponPhotoStaging::query()
+            ->with([
+                'temporaryPhotoUser:id,name',
+                'weapon:id,serial_number',
+            ])
+            ->whereIn('weapon_id', $weaponIds)
+            ->where('temporary_photo_user_id', '!=', $excludingTemporaryUserId)
+            ->whereIn('description', RevistaWeaponPhotoSlots::keys())
+            ->get()
+            ->unique(fn (WeaponPhotoStaging $row) => $row->weapon_id.'-'.$row->temporary_photo_user_id)
+            ->map(fn (WeaponPhotoStaging $row) => [
+                'weapon_id' => (int) $row->weapon_id,
+                'serial_number' => $row->weapon?->serial_number,
+                'temporary_photo_user_id' => (int) $row->temporary_photo_user_id,
+                'temporary_user_name' => $row->temporaryPhotoUser?->name ?? '—',
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  list<int>  $weaponIds
+     * @return array<int, int> weapon_id => photo count
+     */
+    public function stagingCountsByWeaponForTemporaryUser(int $temporaryPhotoUserId, array $weaponIds = []): array
+    {
+        $query = WeaponPhotoStaging::query()
+            ->selectRaw('weapon_id, COUNT(*) as staging_count')
+            ->where('temporary_photo_user_id', $temporaryPhotoUserId)
+            ->whereIn('description', RevistaWeaponPhotoSlots::keys())
+            ->groupBy('weapon_id');
+
+        if ($weaponIds !== []) {
+            $query->whereIn('weapon_id', $weaponIds);
+        }
+
+        return $query
+            ->pluck('staging_count', 'weapon_id')
+            ->map(fn ($count) => (int) $count)
+            ->all();
+    }
+
     public function isStagingComplete(TemporaryPhotoUser $temporaryUser, Weapon $weapon): bool
     {
         return $this->stagingCount($temporaryUser, $weapon) >= RevistaWeaponPhotoSlots::requiredCount();

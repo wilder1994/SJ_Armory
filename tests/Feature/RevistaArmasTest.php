@@ -244,8 +244,167 @@ class RevistaArmasTest extends TestCase
         $this->actingAs($responsible)
             ->get(route('revista-armas.index'))
             ->assertOk()
-            ->assertSee('REV-001', false)
-            ->assertSee('REV-OTHER-999', false);
+            ->assertSee(__('Seleccione un usuario temporal y pulse Filtrar para ver las armas de su último acceso.'), false)
+            ->assertDontSee('REV-001', false)
+            ->assertDontSee('REV-OTHER-999', false);
+    }
+
+    public function test_assignable_weapons_search_returns_scoped_results(): void
+    {
+        [$responsible, $weapon] = $this->createResponsibleWithWeapon();
+
+        $this->actingAs($responsible)
+            ->getJson(route('revista-armas.weapons.search', ['q' => 'REV-001']))
+            ->assertOk()
+            ->assertJsonFragment([
+                'id' => $weapon->id,
+                'serial_number' => 'REV-001',
+            ]);
+    }
+
+    public function test_cannot_create_grant_omitting_weapons_with_staging(): void
+    {
+        Storage::fake('public');
+
+        [$responsible, $weaponWithStaging] = $this->createResponsibleWithWeapon();
+
+        $weaponOther = Weapon::create([
+            'internal_code' => 'SJ-REV-003',
+            'serial_number' => 'REV-NEW-003',
+            'weapon_type' => 'Pistola',
+            'caliber' => '9MM',
+            'brand' => 'Other',
+            'capacity' => '15',
+            'ownership_type' => 'company_owned',
+            'permit_type' => 'porte',
+        ]);
+
+        WeaponClientAssignment::create([
+            'weapon_id' => $weaponOther->id,
+            'client_id' => $weaponWithStaging->activeClientAssignment->client_id,
+            'responsible_user_id' => $responsible->id,
+            'start_at' => now()->toDateString(),
+            'is_active' => true,
+            'assigned_by' => $responsible->id,
+        ]);
+
+        $temporaryUser = TemporaryPhotoUser::create([
+            'owner_responsible_user_id' => $responsible->id,
+            'created_by_user_id' => $responsible->id,
+            'name' => 'Con Staging',
+            'email' => 'staging-lock@example.com',
+            'is_active' => true,
+        ]);
+
+        $file = File::create([
+            'disk' => 'public',
+            'path' => 'test/lock.jpg',
+            'original_name' => 'lock.jpg',
+            'mime_type' => 'image/jpeg',
+            'size' => 100,
+        ]);
+
+        WeaponPhotoStaging::create([
+            'temporary_photo_user_id' => $temporaryUser->id,
+            'weapon_id' => $weaponWithStaging->id,
+            'description' => RevistaWeaponPhotoSlots::keys()[0],
+            'file_id' => $file->id,
+        ]);
+
+        $this->actingAs($responsible)
+            ->from(route('revista-armas.index'))
+            ->post(route('revista-armas.access.store'), [
+                'temporary_photo_user_id' => $temporaryUser->id,
+                'weapon_ids' => [$weaponOther->id],
+            ])
+            ->assertRedirect(route('revista-armas.index'))
+            ->assertSessionHasErrors('weapon_ids');
+    }
+
+    public function test_cannot_assign_weapon_with_foreign_staging(): void
+    {
+        Storage::fake('public');
+
+        [$responsible, $weapon] = $this->createResponsibleWithWeapon();
+
+        $userOne = TemporaryPhotoUser::create([
+            'owner_responsible_user_id' => $responsible->id,
+            'created_by_user_id' => $responsible->id,
+            'name' => 'Usuario Uno',
+            'email' => 'user-one@example.com',
+            'is_active' => true,
+        ]);
+
+        $userTwo = TemporaryPhotoUser::create([
+            'owner_responsible_user_id' => $responsible->id,
+            'created_by_user_id' => $responsible->id,
+            'name' => 'Usuario Dos',
+            'email' => 'user-two@example.com',
+            'is_active' => true,
+        ]);
+
+        $file = File::create([
+            'disk' => 'public',
+            'path' => 'test/foreign.jpg',
+            'original_name' => 'foreign.jpg',
+            'mime_type' => 'image/jpeg',
+            'size' => 100,
+        ]);
+
+        WeaponPhotoStaging::create([
+            'temporary_photo_user_id' => $userOne->id,
+            'weapon_id' => $weapon->id,
+            'description' => RevistaWeaponPhotoSlots::keys()[0],
+            'file_id' => $file->id,
+        ]);
+
+        $this->actingAs($responsible)
+            ->from(route('revista-armas.index'))
+            ->post(route('revista-armas.access.store'), [
+                'temporary_photo_user_id' => $userTwo->id,
+                'weapon_ids' => [$weapon->id],
+            ])
+            ->assertRedirect(route('revista-armas.index'))
+            ->assertSessionHasErrors('weapon_ids');
+    }
+
+    public function test_renew_latest_grant_keeps_same_weapons_and_issues_new_code(): void
+    {
+        [$responsible, $weapon] = $this->createResponsibleWithWeapon();
+
+        $temporaryUser = TemporaryPhotoUser::create([
+            'owner_responsible_user_id' => $responsible->id,
+            'created_by_user_id' => $responsible->id,
+            'name' => 'Renovable',
+            'email' => 'renew@example.com',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($responsible)
+            ->post(route('revista-armas.access.store'), [
+                'temporary_photo_user_id' => $temporaryUser->id,
+                'weapon_ids' => [$weapon->id],
+            ])
+            ->assertRedirect();
+
+        $firstGrant = TemporaryPhotoAccessGrant::query()->latest('id')->first();
+        $this->assertNotNull($firstGrant);
+
+        $this->actingAs($responsible)
+            ->post(route('revista-armas.access.renew'), [
+                'temporary_photo_user_id' => $temporaryUser->id,
+            ])
+            ->assertRedirect(route('revista-armas.index', ['temporary_photo_user_id' => $temporaryUser->id]))
+            ->assertSessionHas('revista_access_success');
+
+        $secondGrant = TemporaryPhotoAccessGrant::query()->latest('id')->first();
+        $this->assertNotNull($secondGrant);
+        $this->assertNotSame($firstGrant->id, $secondGrant->id);
+        $this->assertTrue($secondGrant->expires_at->isFuture());
+        $this->assertEqualsCanonicalizing(
+            [$weapon->id],
+            $secondGrant->weapons()->pluck('weapon_id')->all()
+        );
     }
 
     public function test_approve_staging_photos_records_weapon_history(): void

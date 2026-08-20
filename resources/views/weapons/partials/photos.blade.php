@@ -59,7 +59,7 @@
         <div class="bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 px-6 py-5">
             <div class="flex items-center justify-between">
                 <div>
-                    <h3 class="text-xl font-bold text-gray-900 flex items-center gap-3">
+                    <h3 class="sj-type-section text-gray-900 flex items-center gap-3">
                         <div class="bg-blue-100 p-2 rounded-lg">
                             <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -67,7 +67,7 @@
                         </div>
                         {{ __('Fotos') }}
                     </h3>
-                    <p class="mt-1 text-sm text-gray-600">{{ __('Fotografías del arma y permisos asociados') }}</p>
+                    <p class="mt-1 sj-type-page-sub text-gray-600">{{ __('Fotografías del arma y permisos asociados') }}</p>
                 </div>
                 @can('updatePhotos', $weapon)
                     <label class="sj-toggle sj-toggle--photo-mode" title="{{ __('Modo edición de fotos') }}">
@@ -312,7 +312,7 @@
 
         <div id="weapon-photo-alert-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/40 p-4">
             <div class="w-full max-w-md rounded-xl bg-white p-5 shadow-xl" role="alertdialog" aria-modal="true">
-                <h3 class="text-lg font-bold text-slate-900">{{ __('Aviso') }}</h3>
+                <h3 class="sj-type-section text-slate-900">{{ __('Aviso') }}</h3>
                 <p id="weapon-photo-alert-message" class="mt-3 text-sm text-slate-600"></p>
                 <div class="mt-5 flex justify-end">
                     <button type="button" id="weapon-photo-alert-ok" class="rounded-lg bg-[#0b6fb6] px-4 py-2 text-sm font-bold text-white">{{ __('Entendido') }}</button>
@@ -322,7 +322,7 @@
 
         <div id="weapon-photo-confirm-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/40 p-4">
             <div class="w-full max-w-md rounded-xl bg-white p-5 shadow-xl" role="alertdialog" aria-modal="true" aria-labelledby="weapon-photo-confirm-title">
-                <h3 id="weapon-photo-confirm-title" class="text-lg font-bold text-slate-900">{{ __('Atención') }}</h3>
+                <h3 id="weapon-photo-confirm-title" class="sj-type-section text-slate-900">{{ __('Atención') }}</h3>
                 <p id="weapon-photo-confirm-message" class="mt-3 text-sm text-slate-600"></p>
                 <div class="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                     <button type="button" id="weapon-photo-confirm-cancel" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">

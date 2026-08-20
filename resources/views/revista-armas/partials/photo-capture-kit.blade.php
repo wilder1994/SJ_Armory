@@ -50,7 +50,7 @@
 
 <div id="revista-photo-alert-modal" class="fixed inset-0 z-[1080] hidden items-center justify-center bg-black/40 p-4">
     <div class="w-full max-w-md rounded-xl bg-white p-5 shadow-xl" role="alertdialog" aria-modal="true">
-        <h3 class="text-lg font-bold text-slate-900">{{ __('Aviso') }}</h3>
+        <h3 class="sj-type-section text-slate-900">{{ __('Aviso') }}</h3>
         <p id="revista-photo-alert-message" class="mt-3 text-sm text-slate-600"></p>
         <div class="mt-5 flex justify-end">
             <button type="button" id="revista-photo-alert-ok" class="rounded-lg bg-[#0b6fb6] px-4 py-2 text-sm font-bold text-white">{{ __('Entendido') }}</button>

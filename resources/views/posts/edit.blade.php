@@ -123,7 +123,7 @@
 <div id="location-map-modal" class="fixed inset-0 z-[3000] hidden items-center justify-center bg-black/50 p-4">
     <div class="w-full max-w-4xl rounded-lg bg-white p-4 shadow-lg">
         <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold">{{ __('Seleccionar ubicación') }}</h3>
+            <h3 class="sj-type-section">{{ __('Seleccionar ubicación') }}</h3>
             <button type="button" class="text-gray-500 hover:text-gray-700" data-map-close>&times;</button>
         </div>
         <div id="location-map" class="mt-4 h-96 w-full rounded border"></div>

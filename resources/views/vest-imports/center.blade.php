@@ -57,7 +57,7 @@
                 <div class="mb-4 flex items-end justify-between gap-3">
                     <div>
                         <div class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">{{ __('Historial') }}</div>
-                        <h3 class="text-lg font-semibold text-gray-800">{{ __('Lotes ejecutados') }}</h3>
+                        <h3 class="sj-type-section text-gray-800">{{ __('Lotes ejecutados') }}</h3>
                     </div>
                     <div class="text-sm text-gray-500">{{ $batches->count() }} {{ __('lote(s)') }}</div>
                 </div>
@@ -86,7 +86,7 @@
         <div id="vest-import-upload-modal" class="p-6">
             <div class="flex items-start justify-between gap-4">
                 <div>
-                    <h3 class="text-lg font-semibold text-gray-800">{{ __('Subir documento de chalecos') }}</h3>
+                    <h3 class="sj-type-section text-gray-800">{{ __('Subir documento de chalecos') }}</h3>
                     <p class="mt-1 text-sm text-gray-500">{{ __('Validación previa antes de crear o actualizar chalecos.') }}</p>
                 </div>
                 <button

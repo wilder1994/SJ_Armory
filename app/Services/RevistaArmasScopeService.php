@@ -8,17 +8,19 @@ use Illuminate\Database\Eloquent\Builder;
 
 class RevistaArmasScopeService
 {
-    public function weaponsQueryForStaff(User $user): Builder
+    public function weaponsQueryForStaff(User $user, ?array $with = null): Builder
     {
+        $with ??= [
+            'activeClientAssignment.client',
+            'activeClientAssignment.responsible',
+            'activePendingTransfer.fromClient',
+            'activePendingTransfer.fromUser',
+            'activePostAssignment.post',
+            'activeWorkerAssignment.worker',
+        ];
+
         $query = Weapon::query()
-            ->with([
-                'activeClientAssignment.client',
-                'activeClientAssignment.responsible',
-                'activePendingTransfer.fromClient',
-                'activePendingTransfer.fromUser',
-                'activePostAssignment.post',
-                'activeWorkerAssignment.worker',
-            ])
+            ->with($with)
             ->orderBy('serial_number');
 
         if ($user->isAdmin()) {
